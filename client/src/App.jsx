@@ -1949,14 +1949,14 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
           {/* Right — search + actions */}
           <div className="app-header-right" style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1}}>
             <GlobalSearch db={db} setPage={setPage} />
-            <button className="app-session-btn" onClick={onSwitchSession}
+            <button className="app-session-btn app-mobile-hide" onClick={onSwitchSession}
               style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms'}}
               onMouseEnter={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.borderColor='#93c5fd';}}
               onMouseLeave={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.borderColor='#c7d9f5';}}>
               <span className="material-symbols-outlined" style={{fontSize:13}}>swap_horiz</span>
               {db.settings.year||'2025-26'}
             </button>
-            <NotificationBell db={db} setPage={setPage} />
+            <div className="app-mobile-hide"><NotificationBell db={db} setPage={setPage} /></div>
             <button className="app-print-btn" onClick={() => window.print()} style={{color:'#64748b',border:0,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',borderRadius:8,padding:6,transition:'all 150ms'}}
               onMouseEnter={e=>{e.currentTarget.style.color='#1960a3';e.currentTarget.style.background='#eef4ff';}}
               onMouseLeave={e=>{e.currentTarget.style.color='#64748b';e.currentTarget.style.background='transparent';}}>
@@ -3046,7 +3046,7 @@ function Students({ db, save, setPage }) {
           <button onClick={openAdd} className="px-4 md:px-6 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">add</span> Enroll New Student
           </button>
-          <button onClick={() => setPage && setPage('rep')} className="px-4 md:px-5 py-2.5 bg-surface-container-highest text-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors border-0 cursor-pointer font-sans flex-1 md:flex-none">
+          <button onClick={() => setPage && setPage('rep')} className="directory-desktop-only px-4 md:px-5 py-2.5 bg-surface-container-highest text-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">download</span> Export Data
           </button>
         </div>
@@ -3127,7 +3127,7 @@ function Students({ db, save, setPage }) {
             </select>
           </div>
           {/* Fee status filter */}
-          <div className="directory-status-group" style={{display:'flex',flexDirection:'column',gap:5}}>
+          <div className="directory-status-group directory-desktop-only" style={{display:'flex',flexDirection:'column',gap:5}}>
             <label style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em'}}>Fee Status</label>
             <div className="directory-status-pills" style={{display:'flex',gap:6}}>
               {['','Paid','Pending','Overdue'].map(s=>(
@@ -3144,7 +3144,7 @@ function Students({ db, save, setPage }) {
           </div>
           {/* Result count */}
           {(search||filterCls||filterStatus) && (
-            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8}}>
+            <div className="directory-clear-wrap" style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8}}>
               <span style={{fontSize:12,color:'#64748b'}}>{filtered.length} result{filtered.length!==1?'s':''}</span>
               <button onClick={()=>{setSearch('');setFilterCls('');setFilterStatus('');}}
                 style={{fontSize:11,color:'#ef4444',background:'#fee2e2',border:'none',borderRadius:8,padding:'4px 10px',cursor:'pointer',fontWeight:600}}>
@@ -3154,7 +3154,7 @@ function Students({ db, save, setPage }) {
           )}
         </div>
         {/* Outstanding card */}
-        <div className="directory-outstanding-card" style={{background:'linear-gradient(135deg,#1960a3,#002045)',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',justifyContent:'center',minWidth:180,boxShadow:'0 4px 16px rgba(25,96,163,0.25)'}}>
+        <div className="directory-outstanding-card directory-desktop-only" style={{background:'linear-gradient(135deg,#1960a3,#002045)',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',justifyContent:'center',minWidth:180,boxShadow:'0 4px 16px rgba(25,96,163,0.25)'}}>
           <p style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.6)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>Outstanding</p>
           <h3 style={{fontSize:22,fontWeight:800,color:'#fff',fontFamily:'Manrope,sans-serif',margin:0}}>₹{outstanding.toLocaleString('en-IN')}</h3>
           <p style={{fontSize:11,color:'rgba(255,255,255,0.55)',marginTop:4}}>{db.students.filter(s=>paidTotal(db.pays,s.id)<(s.fee||0)).length} pending</p>
@@ -3276,7 +3276,7 @@ function Students({ db, save, setPage }) {
       )}
 
       {/* Insight Footer */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+      <div className="directory-desktop-only mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
         {[
           { icon: 'trending_up', label: 'Total Enrolled', value: db.students.length + ' students' },
           { icon: 'payments', label: 'Fee Collected', value: '₹' + db.pays.reduce((s,p)=>s+p.amt,0).toLocaleString('en-IN') },
@@ -3499,7 +3499,7 @@ function Teachers({ db, save }) {
             className="flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-semibold text-sm border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">add</span> New Faculty
           </button>
-          <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container transition-all font-semibold text-sm text-primary bg-transparent cursor-pointer font-sans flex-1 md:flex-none">
+          <button className="directory-desktop-only flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container transition-all font-semibold text-sm text-primary bg-transparent cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">export_notes</span> Export List
           </button>
         </div>
@@ -3567,6 +3567,7 @@ function Teachers({ db, save }) {
         {/* Status filter pills */}
         {['','Active','On Leave','Resigned'].map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
+            className="directory-desktop-only"
             style={{padding:'8px 18px',borderRadius:24,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 150ms',
               background: filterStatus===s ? '#1960a3' : '#f1f5f9',
               color: filterStatus===s ? '#fff' : '#64748b',

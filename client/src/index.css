@@ -296,6 +296,7 @@ aside.sidebar-bg {
   .app-header-left { width: 100%; justify-content: space-between; }
   .app-session-btn { font-size: 10px !important; padding: 4px 10px !important; }
   .app-print-btn, .app-header-divider { display: none !important; }
+  .app-mobile-hide { display: none !important; }
   .app-menu-btn { display: inline-flex !important; align-items: center; justify-content: center; }
   .gs-root { flex: 1; }
   .gs-box { width: 100% !important; min-width: 0; }
@@ -308,6 +309,7 @@ aside.sidebar-bg {
   /* Directories (students/teachers and similar pages) */
   .directory-hero h1 { font-size: 1.7rem !important; line-height: 1.15; }
   .directory-hero-actions > button { min-height: 42px; }
+  .directory-desktop-only { display: none !important; }
   .directory-filter-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
   .directory-filter-panel {
     padding: 12px !important;
@@ -336,6 +338,11 @@ aside.sidebar-bg {
   .directory-filter-row .directory-search-group { width: 100%; }
   .directory-filter-row > button {
     flex: 1 1 calc(50% - 6px);
+  }
+  .directory-clear-wrap {
+    margin-left: 0 !important;
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
