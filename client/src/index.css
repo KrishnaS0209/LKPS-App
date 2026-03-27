@@ -179,3 +179,61 @@ aside.sidebar-bg {
 /* ─── Toast ─── */
 .toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; border-radius:10px; color:#fff; font-size:13px; font-weight:600; z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.2); animation:toast-in 200ms ease; }
 @keyframes toast-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+/* ─── Responsive (all pages) ─── */
+@media (max-width: 1024px) {
+  .card-head { padding: 12px 14px; gap: 8px; }
+  .card-title { font-size: 14px; }
+  .search-input { width: 170px; }
+  .search-input:focus { width: 200px; }
+  .tabs { overflow-x: auto; white-space: nowrap; }
+  .tab { flex: 0 0 auto; }
+}
+
+@media (max-width: 768px) {
+  html, body { font-size: 12px; }
+
+  /* Page containers that usually use large paddings */
+  .card { border-radius: 12px; margin-bottom: 14px; }
+  .card-head { padding: 10px 12px; }
+  .card-actions { width: 100%; }
+  .card-actions .btn { flex: 1; justify-content: center; }
+
+  .btn { padding: 8px 12px; font-size: 11px; }
+  .btn-sm { padding: 6px 9px; font-size: 10px; }
+
+  .search-wrap { width: 100%; }
+  .search-input { width: 100%; }
+  .search-input:focus { width: 100%; }
+
+  .form-grid { grid-template-columns: 1fr; gap: 10px; }
+  .modal { padding: 16px; border-radius: 12px; max-height: 88vh; }
+  .modal-lg { max-width: 100%; }
+  .modal-footer { flex-wrap: wrap; }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 760px; }
+  th { padding: 9px 10px; font-size: 9px; }
+  td { padding: 10px; font-size: 12px; }
+
+  .no-data { padding: 26px 14px; font-size: 12px; }
+  .photo-zone { width: 60px; height: 60px; border-radius: 10px; }
+
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-head { align-items: stretch; }
+  .tabs { gap: 2px; }
+  .tab { font-size: 11px; padding: 8px 10px; }
+  .badge { font-size: 9px; padding: 2px 7px; }
+  .avatar { width: 26px; height: 26px; font-size: 10px; margin-right: 6px; }
+}

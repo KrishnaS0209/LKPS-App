@@ -354,10 +354,54 @@ export default function LandingPage() {
 
         input:focus,textarea:focus{outline:none;border-color:#1960a3!important;}
         *{box-sizing:border-box;}
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px){
+          .lp-nav-links{display:none!important;}
+          .lp-nav-inner{padding:0 14px!important;}
+          .lp-nav-actions{gap:8px!important;}
+          .lp-hero-main{grid-template-columns:1fr!important;gap:34px!important;}
+          .lp-about-grid{grid-template-columns:1fr!important;gap:36px!important;}
+          .lp-values-grid{grid-template-columns:1fr 1fr!important;}
+          .lp-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:26px!important;}
+          .lp-academics-grid{grid-template-columns:repeat(2,1fr)!important;}
+          .lp-facilities-grid{grid-template-columns:1fr!important;}
+          .lp-contact-grid{grid-template-columns:1fr!important;}
+          .lp-footer-grid{grid-template-columns:1fr 1fr!important;gap:28px!important;}
+        }
+
+        @media (max-width: 768px){
+          .lp-nav{padding:10px 0!important;}
+          .lp-nav-brand div:first-child{font-size:14px!important;}
+          .lp-nav-brand div:last-child{font-size:9px!important;}
+          .lp-nav-actions .reg-btn{padding:8px 14px!important;font-size:12px!important;}
+          .lp-nav-actions a{padding:8px 12px!important;font-size:12px!important;}
+          .lp-hero-main{gap:24px!important;}
+          .lp-hero-copy{text-align:center!important;}
+          .lp-hero-copy p{margin-left:auto!important;margin-right:auto!important;}
+          .lp-hero-ctas{justify-content:center!important;}
+          .lp-hero-badges{justify-content:center!important;}
+          .lp-about-grid,.lp-academics,.lp-notices,.lp-facilities,.lp-contact,.lp-footer{padding-left:14px!important;padding-right:14px!important;}
+          .lp-values-grid{grid-template-columns:1fr!important;}
+          .lp-stats-grid{grid-template-columns:1fr 1fr!important;gap:22px!important;}
+          .lp-academics-grid{grid-template-columns:1fr!important;gap:16px!important;}
+          .lp-footer-grid{grid-template-columns:1fr!important;}
+        }
+
+        @media (max-width: 480px){
+          .lp-nav-actions .reg-btn{display:none!important;}
+          .lp-hero-copy h1,.lp-hero-copy h2{font-size:36px!important;line-height:1.12!important;}
+          .lp-hero-copy p{font-size:13px!important;}
+          .lp-hero-ctas .hero-cta{width:100%;justify-content:center!important;}
+          .lp-hero-badges{gap:12px!important;}
+          .lp-hero-card{padding:24px!important;}
+          .lp-stats-grid{grid-template-columns:1fr!important;}
+          .lp-notice-row{padding:16px 14px!important;gap:12px!important;}
+        }
       `}</style>
 
       {/* ── NAVBAR ── */}
-      <nav style={{
+      <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         padding: scrolled ? '10px 0' : '18px 0',
         background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent',
@@ -366,8 +410,8 @@ export default function LandingPage() {
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : 'none',
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <div className="lp-nav-inner" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             {/* Logo */}
             <img src={process.env.PUBLIC_URL + '/logo.png'} alt="Lord Krishna Public School"
               style={{ width: 48, height: 48, objectFit: 'contain', filter: scrolled ? 'none' : 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }} />
@@ -377,14 +421,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={e => { e.preventDefault(); scrollTo(l.toLowerCase()); }}
                 className={`nav-link ${scrolled ? 'nav-link-dark' : ''}`}>{l}</a>
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="lp-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button className="reg-btn" onClick={() => setRegOpen(true)}>Register Now</button>
             <a href="/login" style={{
               padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
@@ -476,10 +520,10 @@ export default function LandingPage() {
         ))}
 
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '120px 24px 80px', width: '100%', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
+          <div className="lp-hero-main" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
 
             {/* Left */}
-            <div style={{ animation: 'slideInL 0.9s cubic-bezier(0.16,1,0.3,1) both' }}>
+            <div className="lp-hero-copy" style={{ animation: 'slideInL 0.9s cubic-bezier(0.16,1,0.3,1) both' }}>
               <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 50, padding: '7px 18px', marginBottom: 28 }}>
                 <div style={{ position: 'relative', width: 8, height: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 12px #fbbf24', position: 'relative', zIndex: 1 }} />
@@ -559,7 +603,7 @@ export default function LandingPage() {
                 Nurturing young minds with strong values and a commitment to excellence.
               </p>
 
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              <div className="lp-hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 <button className="hero-cta hero-cta-primary" onClick={() => setRegOpen(true)}>
                   <Icon name="how_to_reg" size={18} /> Apply for Admission
                 </button>
@@ -568,7 +612,7 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
+              <div className="lp-hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
                 {[['verified', 'Est. 2009'], ['groups', '300+ Students'], ['emoji_events', '100% Results']].map(([ic, lb], i) => (
                   <div key={lb} style={{ display: 'flex', alignItems: 'center', gap: 8, animation: `popIn 0.5s ${0.8 + i * 0.15}s cubic-bezier(0.16,1,0.3,1) both` }}>
                     <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -582,7 +626,7 @@ export default function LandingPage() {
 
             {/* Right — glass card */}
             <div style={{ display: 'flex', justifyContent: 'center', animation: 'slideInR 0.9s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
-              <div className="float-card" style={{
+              <div className="float-card lp-hero-card" style={{
                 background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(28px)',
                 border: '1px solid rgba(255,255,255,0.14)', borderRadius: 28,
                 padding: 36, width: '100%', maxWidth: 380,
@@ -632,7 +676,7 @@ export default function LandingPage() {
         {[...Array(6)].map((_, i) => (
           <div key={i} style={{ position: 'absolute', width: 200 + i * 60, height: 200 + i * 60, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.04)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', animation: `ringOut ${8 + i * 2}s ${i * 1.2}s ease-out infinite`, pointerEvents: 'none' }} />
         ))}
-        <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 40, position: 'relative', zIndex: 1 }}>
+        <div className="lp-stats-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 40, position: 'relative', zIndex: 1 }}>
           {[
             { value: 100, suffix: '%', label: 'Annual Result' },
             { value: 300, suffix: '+', label: 'Students' },
@@ -649,8 +693,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── ABOUT ── */}
-      <section id="about" style={{ padding: '100px 24px', background: '#f8fafc' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+      <section id="about" className="lp-about-grid" style={{ padding: '100px 24px', background: '#f8fafc' }}>
+        <div className="lp-about-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
           <div data-reveal="right">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eef4ff', borderRadius: 50, padding: '6px 16px', marginBottom: 20 }}>
               <Icon name="info" size={14} style={{ color: '#1960a3' }} />
@@ -676,7 +720,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div data-reveal="left" className="d2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div data-reveal="left" className="d2 lp-values-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {VALUES.map(({ icon, color, bg, label, desc }) => (
               <div key={label} className="card-hover grad-border" style={{ borderRadius: 20, padding: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
@@ -691,7 +735,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── ACADEMICS ── */}
-      <section id="academics" style={{ padding: '100px 24px', background: '#fff' }}>
+      <section id="academics" className="lp-academics" style={{ padding: '100px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div data-reveal="up" style={{ textAlign: 'center', marginBottom: 60 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eef4ff', borderRadius: 50, padding: '6px 16px', marginBottom: 16 }}>
@@ -706,7 +750,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+          <div className="lp-academics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
             {ACADEMICS.map(({ icon, label, desc }, i) => (
               <div key={label} data-reveal="up" className={`d${i + 1} card-hover`} style={{
                 background: 'linear-gradient(160deg,#f8faff,#fff)', borderRadius: 24,
@@ -732,7 +776,7 @@ export default function LandingPage() {
 
       {/* ── NOTICES ── */}
       {/* ── FACILITIES ── */}
-      <section id="facilities" style={{ padding: '100px 24px', background: '#fff' }}>
+      <section id="facilities" className="lp-facilities" style={{ padding: '100px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div data-reveal="up" style={{ textAlign: 'center', marginBottom: 60 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eef4ff', borderRadius: 50, padding: '6px 16px', marginBottom: 16 }}>
@@ -747,7 +791,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 28 }}>
+          <div className="lp-facilities-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 28 }}>
 
             {/* Computer Lab */}
             <div data-reveal="right" className="d1 card-hover" style={{
@@ -861,7 +905,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="notices" style={{ padding: '100px 24px', background: '#f8fafc' }}>
+      <section id="notices" className="lp-notices" style={{ padding: '100px 24px', background: '#f8fafc' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div data-reveal="up" style={{ textAlign: 'center', marginBottom: 52 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eef4ff', borderRadius: 50, padding: '6px 16px', marginBottom: 16 }}>
@@ -883,7 +927,7 @@ export default function LandingPage() {
               const mon = d.toLocaleString('en-IN', { month: 'short' });
               const day = d.getDate();
               return (
-                <div key={n._id || i} className="notice-row" style={{
+                <div key={n._id || i} className="notice-row lp-notice-row" style={{
                   display: 'flex', alignItems: 'center', gap: 20, padding: '20px 28px',
                   borderBottom: i < notices.length - 1 ? '1px solid #f1f5f9' : 'none', cursor: 'default',
                 }}>
@@ -906,7 +950,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" style={{ padding: '100px 24px', background: '#fff' }}>
+      <section id="contact" className="lp-contact" style={{ padding: '100px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div data-reveal="up" style={{ textAlign: 'center', marginBottom: 60 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eef4ff', borderRadius: 50, padding: '6px 16px', marginBottom: 16 }}>
@@ -919,7 +963,7 @@ export default function LandingPage() {
             <p style={{ fontSize: 15, color: '#64748b' }}>We'd love to hear from you. Reach out anytime.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+          <div className="lp-contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
             <div data-reveal="right" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {[
                 { icon: 'location_on', color: '#1960a3', bg: '#eef4ff', label: 'Address', val: 'Ishapur, Laxminagar, Yamuna Par, Mathura, Uttar Pradesh' },
@@ -973,9 +1017,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: '#001529', padding: '60px 24px 32px' }}>
+      <footer className="lp-footer" style={{ background: '#001529', padding: '60px 24px 32px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 48, marginBottom: 48 }}>
+          <div className="lp-footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 48, marginBottom: 48 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <img src={process.env.PUBLIC_URL + '/logo.png'} alt="Lord Krishna Public School"
