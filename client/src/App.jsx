@@ -7398,10 +7398,11 @@ const TEACHER_NAV = [
 ];
 
 // Teacher-specific Sidebar (same visual as admin Sidebar but uses TEACHER_NAV)
-const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user, onLogout }) {
+const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user, onLogout, isMobile = false, mobileOpen = false, onMobileClose = () => {} }) {
   const ref = React.useRef(null);
   const open = React.useRef(false);
   const expand = () => {
+    if (isMobile) return;
     if (open.current) return; open.current = true;
     const el = ref.current; if (!el) return;
     el.style.width = '230px'; el.classList.add('sb-open');
@@ -7413,6 +7414,7 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
     el.querySelectorAll('.sb-active-pill').forEach(n => { n.style.opacity='1'; });
   };
   const collapse = () => {
+    if (isMobile) return;
     if (!open.current) return; open.current = false;
     const el = ref.current; if (!el) return;
     el.style.width = '60px'; el.classList.remove('sb-open');
@@ -7426,12 +7428,44 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
   const secColor = { Main:'#63b3ff', People:'#86efac', Academics:'#fbbf24' };
   const name = (user.fn||'') + ' ' + (user.ln||'');
   const initials = name.trim().split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'T';
+
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    if (isMobile) {
+      el.style.width = '230px';
+      el.classList.add('sb-open');
+      el.querySelectorAll('.sb-label').forEach(n => { n.style.opacity = '1'; n.style.maxWidth = '180px'; });
+      el.querySelectorAll('.sb-sec').forEach(n => { n.style.opacity = '1'; n.style.maxHeight = '24px'; });
+      el.querySelectorAll('.sb-user').forEach(n => { n.style.opacity = '1'; n.style.maxWidth = '160px'; });
+      el.querySelectorAll('.sb-logout-icon').forEach(n => { n.style.display = 'none'; });
+      el.querySelectorAll('.sb-logout-full').forEach(n => { n.style.display = 'flex'; });
+      el.querySelectorAll('.sb-active-pill').forEach(n => { n.style.opacity = '1'; });
+      open.current = true;
+      return;
+    }
+    collapse();
+  }, [isMobile]);
+
+  const doLogout = () => { onLogout(); if (isMobile) onMobileClose(); };
+
   return (
-    <aside ref={ref} onMouseEnter={expand} onMouseLeave={collapse}
-      style={{width:60,flexShrink:0,zIndex:50,overflow:'hidden',display:'flex',flexDirection:'column',
+    <aside ref={ref} onMouseEnter={isMobile ? undefined : expand} onMouseLeave={isMobile ? undefined : collapse}
+      style={{
+        width: isMobile ? 230 : 60,
+        flexShrink: 0,
+        zIndex: isMobile ? 1200 : 50,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        position: isMobile ? 'fixed' : 'relative',
+        left: 0,
+        top: isMobile ? 0 : undefined,
+        bottom: isMobile ? 0 : undefined,
+        transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-110%)') : 'none',
+        transition: isMobile ? 'transform 220ms ease' : 'width 260ms cubic-bezier(0.4,0,0.2,1)',
         backgroundColor:'#1a3a5c',
         backgroundImage:`radial-gradient(ellipse at 0% 0%, rgba(99,179,255,0.12) 0%, transparent 60%),radial-gradient(ellipse at 100% 100%, rgba(99,102,241,0.1) 0%, transparent 60%)`,
-        transition:'width 260ms cubic-bezier(0.4,0,0.2,1)',boxShadow:'4px 0 20px rgba(0,20,60,0.18)'}}>
+        boxShadow:'4px 0 20px rgba(0,20,60,0.18)'}}>
       {/* Logo */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:64,flexShrink:0,borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
         <div style={{width:34,height:34,borderRadius:10,background:'linear-gradient(135deg,#1960a3,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.3)'}}>
@@ -7449,7 +7483,7 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
             {g.items.map(it => {
               const active = page === it.id;
               return (
-                <button key={it.id} onClick={() => setPage(it.id)} title={it.label} className="sb-btn"
+                <button key={it.id} onClick={() => { setPage(it.id); if (isMobile) onMobileClose(); }} title={it.label} className="sb-btn"
                   style={{position:'relative',display:'flex',alignItems:'center',width:'100%',border:'none',borderRadius:10,cursor:'pointer',marginBottom:2,gap:0,
                     background: active?'rgba(255,255,255,0.12)':'transparent',
                     color: active?'#fff':'rgba(255,255,255,0.5)',
@@ -7474,7 +7508,7 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
       </nav>
       {/* Footer */}
       <div style={{borderTop:'1px solid rgba(255,255,255,0.06)',padding:'10px 8px',flexShrink:0,background:'rgba(0,0,0,0.12)'}}>
-        <button className="sb-logout-icon" onClick={onLogout} title="Sign Out"
+        <button className="sb-logout-icon" onClick={doLogout} title="Sign Out"
           style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',border:'none',borderRadius:10,cursor:'pointer',padding:'10px 0',background:'rgba(239,68,68,0.12)',color:'#fca5a5',transition:'background 150ms'}}>
           <span className="material-symbols-outlined" style={{fontSize:20}}>logout</span>
         </button>
@@ -7486,7 +7520,7 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
               <div style={{color:'rgba(255,255,255,0.4)',fontSize:10,whiteSpace:'nowrap'}}>{user.su||'Teacher'}</div>
             </div>
           </div>
-          <button onClick={onLogout} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:'none',borderRadius:10,cursor:'pointer',padding:'9px 12px',background:'rgba(239,68,68,0.15)',color:'#fca5a5',fontSize:12,fontWeight:700,transition:'background 150ms'}}
+          <button onClick={doLogout} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:'none',borderRadius:10,cursor:'pointer',padding:'9px 12px',background:'rgba(239,68,68,0.15)',color:'#fca5a5',fontSize:12,fontWeight:700,transition:'background 150ms'}}
             onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.28)'}
             onMouseLeave={e=>e.currentTarget.style.background='rgba(239,68,68,0.15)'}>
             <span className="material-symbols-outlined" style={{fontSize:18,flexShrink:0}}>logout</span>
@@ -7500,9 +7534,19 @@ const TeacherSidebar = React.memo(function TeacherSidebar({ page, setPage, user,
 
 function TeacherPortal({ db, save, teacher, onLogout }) {
   const [page, setPage] = useState('tdash');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const name = (teacher.fn||'') + ' ' + (teacher.ln||'');
   const photo = (db.tphotos||{})[teacher.id||teacher.tid] || null;
   const initials = name.trim().split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'T';
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  useEffect(() => { if (!isMobile) setMobileNavOpen(false); }, [isMobile]);
+  useEffect(() => { if (isMobile) setMobileNavOpen(false); }, [page, isMobile]);
 
   const pages = {
     tdash: <TeacherDash db={db} teacher={teacher} name={name} photo={photo} />,
@@ -7515,11 +7559,35 @@ function TeacherPortal({ db, save, teacher, onLogout }) {
 
   return (
     <div className="tapp-shell" style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
-      <TeacherSidebar page={page} setPage={setPage} user={teacher} onLogout={onLogout}/>
+      <TeacherSidebar
+        page={page}
+        setPage={setPage}
+        user={teacher}
+        onLogout={onLogout}
+        isMobile={isMobile}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
+      {isMobile && mobileNavOpen && (
+        <div
+          className="tapp-sidebar-overlay"
+          onClick={() => setMobileNavOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1100 }}
+        />
+      )}
       <div className="tapp-content" style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         {/* Header */}
         <header className="tapp-header" style={{height:64,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 32px',background:'#ffffff',borderBottom:'1px solid #e8edf5',boxShadow:'0 2px 12px rgba(0,31,77,0.07)',zIndex:100}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <button
+              type="button"
+              className="tapp-menu-btn"
+              onClick={() => setMobileNavOpen(v => !v)}
+              style={{ display: 'none', border: 0, background: 'transparent', cursor: 'pointer', color: '#1960a3', padding: 4 }}
+              aria-label="Open navigation menu"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
+            </button>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#1960a3,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(25,96,163,0.25)'}}>
                 <span className="material-symbols-outlined" style={{fontSize:18,color:'#fff'}}>school</span>
