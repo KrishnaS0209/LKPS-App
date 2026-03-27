@@ -267,6 +267,7 @@ aside.sidebar-bg {
     justify-content: space-between;
     gap: 8px !important;
   }
+  .app-menu-btn { display: inline-flex !important; align-items: center; justify-content: center; }
   .gs-root { flex: 1; }
   .gs-box { width: 100% !important; min-width: 0; }
   .app-main, .tapp-main { padding: 10px !important; }

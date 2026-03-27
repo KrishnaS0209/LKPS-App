@@ -1327,11 +1327,12 @@ function SidebarCalendar({ db, setPage }) {
   );
 }
 
-const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout }) {
+const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout, isMobile = false, mobileOpen = false, onMobileClose = () => {} }) {
   const ref = React.useRef(null);
   const open = React.useRef(false);
 
   const expand = () => {
+    if (isMobile) return;
     if (open.current) return;
     open.current = true;
     const el = ref.current; if (!el) return;
@@ -1344,6 +1345,7 @@ const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout }) {
   };
 
   const collapse = () => {
+    if (isMobile) return;
     if (!open.current) return;
     open.current = false;
     const el = ref.current; if (!el) return;
@@ -1358,11 +1360,31 @@ const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout }) {
   // section accent colors
   const secColor = { Main:'#63b3ff', People:'#86efac', Academics:'#fbbf24', Finance:'#f9a8d4', Tools:'#c4b5fd' };
 
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    if (isMobile) {
+      // On mobile, drawer is fully expanded when opened.
+      el.querySelectorAll('.sb-label').forEach(n => { n.style.opacity = '1'; n.style.maxWidth = '180px'; });
+      el.querySelectorAll('.sb-sec').forEach(n => { n.style.opacity = '1'; n.style.maxHeight = '24px'; });
+      el.querySelectorAll('.sb-btn').forEach(n => { n.style.justifyContent = 'flex-start'; n.style.padding = '10px 12px'; });
+      el.querySelectorAll('.sb-user').forEach(n => { n.style.opacity = '1'; n.style.maxWidth = '160px'; });
+      el.querySelectorAll('.sb-active-pill').forEach(n => { n.style.opacity = '1'; });
+      open.current = true;
+      return;
+    }
+    // Reset desktop default collapsed state.
+    collapse();
+  }, [isMobile]);
+
   return (
-    <aside ref={ref} onMouseEnter={expand} onMouseLeave={collapse}
+    <aside ref={ref} onMouseEnter={isMobile ? undefined : expand} onMouseLeave={isMobile ? undefined : collapse}
       style={{
-        width:60, flexShrink:0, zIndex:50, overflow:'hidden',
+        width: isMobile ? 230 : 60, flexShrink:0, zIndex: isMobile ? 1200 : 50, overflow:'hidden',
         display:'flex', flexDirection:'column',
+        position: isMobile ? 'fixed' : 'relative',
+        left: 0, top: isMobile ? 0 : undefined, bottom: isMobile ? 0 : undefined,
+        transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-110%)') : 'none',
+        transition: isMobile ? 'transform 220ms ease' : 'width 260ms cubic-bezier(0.4,0,0.2,1)',
         backgroundColor:'#1a3a5c',
         backgroundImage:`
           radial-gradient(ellipse at 0% 0%, rgba(99,179,255,0.12) 0%, transparent 60%),
@@ -1370,7 +1392,6 @@ const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout }) {
           url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.8' fill='%23ffffff' fill-opacity='0.04'/%3E%3C/svg%3E")
         `,
         backgroundSize:'auto,auto,24px 24px',
-        transition:'width 260ms cubic-bezier(0.4,0,0.2,1)',
         boxShadow:'4px 0 20px rgba(0,20,60,0.18)',
       }}>
 
@@ -1406,7 +1427,7 @@ const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout }) {
             {g.items.map(it => {
               const active = page === it.id;
               return (
-                <button key={it.id} onClick={() => setPage(it.id)}
+                <button key={it.id} onClick={() => { setPage(it.id); if (isMobile) onMobileClose(); }}
                   title={it.label}
                   className="sb-btn"
                   style={{
@@ -1838,6 +1859,23 @@ function AdminPopover({ user, setPage, onLogout }) {
 }
 
 function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSession, activeSessionId }) {
+  const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isMobile) setMobileNavOpen(false);
+  }, [isMobile]);
+
+  React.useEffect(() => {
+    if (isMobile) setMobileNavOpen(false);
+  }, [page, isMobile]);
+
   const pages = {
     dash:<Dashboard db={db} save={save} setPage={setPage}/>,
     adm:<NewAdmissions />,
@@ -1858,7 +1896,22 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
 
   return (
     <div className="app-shell" style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
-      <Sidebar page={page} setPage={setPage} user={user} onLogout={onLogout}/>
+      <Sidebar
+        page={page}
+        setPage={setPage}
+        user={user}
+        onLogout={onLogout}
+        isMobile={isMobile}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
+      {isMobile && mobileNavOpen && (
+        <div
+          className="app-sidebar-overlay"
+          onClick={() => setMobileNavOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1100 }}
+        />
+      )}
       <div className="app-content" style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         {/* Top header */}
         <header className="app-header" style={{
@@ -1875,6 +1928,14 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
             style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1,cursor:'pointer'}}
             title="Go to Dashboard"
           >
+            <button
+              className="app-menu-btn"
+              onClick={(e) => { e.stopPropagation(); setMobileNavOpen(v => !v); }}
+              style={{ display:'none', border:0, background:'transparent', cursor:'pointer', color:'#1960a3', padding:4 }}
+              aria-label="Toggle navigation menu"
+            >
+              <span className="material-symbols-outlined" style={{fontSize:22}}>menu</span>
+            </button>
             <SchoolBadge />
             {/* thin vertical divider + "Est. 2009" tag */}
             <div style={{display:'flex',alignItems:'center',gap:8}}>
