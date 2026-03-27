@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getApiBase } from './apiBase';
 
-const API = process.env.REACT_APP_API || 'http://localhost:5001';
+const API = getApiBase();
 
 /* ── Hooks ── */
 function useCountUp(target, duration = 2000, start = false) {
@@ -178,7 +179,7 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}/api/notices/public`)
+    fetch(`${API}/notices/public`)
       .then(r => r.json())
       .then(data => { if (Array.isArray(data) && data.length > 0) setNotices(data); })
       .catch(() => {});
@@ -216,7 +217,7 @@ export default function LandingPage() {
     if (!/^\d{10}$/.test(regForm.phone)) return setRegError('Enter a valid 10-digit phone number.');
     setRegLoading(true);
     try {
-      const res = await fetch(`${API}/api/admissions`, {
+      const res = await fetch(`${API}/admissions`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(regForm),
       });

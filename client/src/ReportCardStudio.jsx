@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { uid } from './db';
 import { toast } from './ui.jsx';
+import { getApiBase } from './apiBase';
 
 const CO_ACTIVITIES = [
   'General Knowledge','Art Education','Health & Physical Education',
@@ -461,7 +462,7 @@ export default function ReportCardStudio({ db, save, logo }) {
 
     // Collect all pages for print
     const allPages = [];
-    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const BASE = getApiBase();
     const token = sessionStorage.getItem('lkps_token');
     const pageCSS = css; // captured in closure
 

@@ -13,8 +13,10 @@ import {
 import ParentPortal from './ParentPortal';
 import AdminMessages from './AdminMessages';
 import ReportCardStudio from './ReportCardStudio';
+import { getApiBase } from './apiBase';
 
 const LOGO_SRC = process.env.PUBLIC_URL + '/logo.png';
+const API_BASE = getApiBase();
 
 export default function App() {
   const [db, setDB] = useState(null);
@@ -185,8 +187,8 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
     initSessions.forEach(s => {
       const sid = s.sid || s.id;
       Promise.all([
-        fetch(`http://localhost:5001/api/sessions/${sid}/students`, { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
-        fetch(`http://localhost:5001/api/sessions/${sid}/payments`, { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
+        fetch(`${API_BASE}/sessions/${sid}/students`, { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
+        fetch(`${API_BASE}/sessions/${sid}/payments`, { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
       ]).then(([students, pays]) => {
         setSessionStats(prev => ({
           ...prev,
@@ -1594,7 +1596,7 @@ function NotificationBell({ db, setPage }) {
     const fetchAdm = async () => {
       try {
         const token = sessionStorage.getItem('lkps_token') || '';
-        const r = await fetch('http://localhost:5001/api/admissions', { headers: { Authorization: 'Bearer ' + token } });
+        const r = await fetch(`${API_BASE}/admissions`, { headers: { Authorization: 'Bearer ' + token } });
         const data = await r.json();
         if (Array.isArray(data)) setPendingAdm(data.filter(a => a.status === 'Pending').length);
       } catch { /* silent */ }
@@ -2527,7 +2529,7 @@ function NewAdmissions() {
   const [admissions, setAdmissions] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [noteModal, setNoteModal] = React.useState(null);
-  const API = 'http://localhost:5001/api/admissions';
+  const API = `${API_BASE}/admissions`;
 
   const token = () => sessionStorage.getItem('lkps_token') || '';
 
@@ -2672,7 +2674,7 @@ function NoticeBoard() {
   const [modal, setModal] = React.useState(null); // null | { mode:'add'|'edit', data }
   const [form, setForm] = React.useState({ title:'', body:'', tag:'General', pinned:false, active:true });
   const [saving, setSaving] = React.useState(false);
-  const API = 'http://localhost:5001/api/notices';
+  const API = `${API_BASE}/notices`;
   const token = () => sessionStorage.getItem('lkps_token') || '';
 
   const load = async () => {

@@ -36,6 +36,14 @@ app.use('/api/marksheet', require('./routes/marksheet'));
 
 // ── Health check ──────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+app.get('/', (req, res) =>
+  res.json({
+    status: 'ok',
+    message: 'LKPS API is running',
+    health: '/api/health',
+  })
+);
 
 // ── 404 handler ───────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));

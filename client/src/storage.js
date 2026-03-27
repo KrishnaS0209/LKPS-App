@@ -1,5 +1,17 @@
-// ── API-backed storage — talks to lkps-backend on localhost:5001 ──
-const BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import { getApiBase, getApiRoot } from './apiBase';
+
+// ── API-backed storage (base from apiBase.js — ignores mistaken localhost env on Vercel) ──
+
+function urlsForPath(path) {
+  const root = getApiRoot().replace(/\/+$/, '');
+  const api = getApiBase().replace(/\/+$/, '');
+  // Try both forms so auth keeps working even if a stale/misconfigured base appears.
+  return Array.from(new Set([
+    `${api}${path}`,
+    `${root}${path}`,
+    `${root}/api${path}`,
+  ]));
+}
 
 // ── Token helpers ─────────────────────────────────────────────────
 export function getToken()        { return sessionStorage.getItem('lkps_token'); }
@@ -8,17 +20,29 @@ export function clearToken()      { sessionStorage.removeItem('lkps_token'); }
 
 async function req(method, path, body) {
   const token = getToken();
-  const res = await fetch(BASE + path, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: 'Bearer ' + token } : {}),
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || res.statusText);
-  return data;
+  const candidates = urlsForPath(path);
+  let lastErr = null;
+
+  for (const url of candidates) {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return data;
+
+    const msg = data.error || res.statusText || '';
+    lastErr = new Error(msg);
+    // If one base gives route miss, try the alternate base.
+    if (res.status === 404 && /route not found/i.test(msg)) continue;
+    throw lastErr;
+  }
+
+  throw lastErr || new Error('Request failed');
 }
 
 // ── Auth ──────────────────────────────────────────────────────────
