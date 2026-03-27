@@ -237,3 +237,40 @@ aside.sidebar-bg {
   .badge { font-size: 9px; padding: 2px 7px; }
   .avatar { width: 26px; height: 26px; font-size: 10px; margin-right: 6px; }
 }
+
+/* ─── App shell / dashboard responsiveness ─── */
+@media (max-width: 1024px) {
+  .app-header, .tapp-header { padding: 0 14px !important; }
+  .app-main, .tapp-main { padding: 14px !important; }
+  .app-header-left > div:nth-child(2) { display: none !important; } /* hide Est. block */
+  .gs-box { width: 190px !important; }
+  .gs-results { width: min(92vw, 320px) !important; }
+}
+
+@media (max-width: 768px) {
+  .app-shell, .tapp-shell {
+    height: auto !important;
+    min-height: 100vh;
+  }
+  .app-content, .tapp-content {
+    min-width: 0;
+  }
+  .app-header, .tapp-header {
+    height: auto !important;
+    min-height: 56px;
+    padding: 8px 10px !important;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .app-header-right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px !important;
+  }
+  .gs-root { flex: 1; }
+  .gs-box { width: 100% !important; min-width: 0; }
+  .app-main, .tapp-main { padding: 10px !important; }
+  .tapp-header > div:first-child > div > div:last-child {
+    display: none !important; /* hide teacher portal subtitle block */
+  }
+}

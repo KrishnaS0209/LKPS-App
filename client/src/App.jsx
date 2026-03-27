@@ -250,7 +250,7 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
   });
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 16px',background:'linear-gradient(145deg,#001530 0%,#002045 50%,#0a3060 100%)',position:'relative',overflow:'hidden',fontFamily:'Inter,sans-serif'}}>
+    <div className="sp-root" style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 16px',background:'linear-gradient(145deg,#001530 0%,#002045 50%,#0a3060 100%)',position:'relative',overflow:'hidden',fontFamily:'Inter,sans-serif'}}>
       <style>{`
         @keyframes sp-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
         @keyframes sp-pulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
@@ -268,6 +268,14 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
         .sp-icon-btn.edit:hover{background:rgba(96,165,250,0.15)!important;border-color:rgba(96,165,250,0.4)!important;color:#60a5fa!important}
         .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
         @keyframes sp-modal{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:none}}
+        @media (max-width: 768px){
+          .sp-root{padding:14px 10px!important}
+          .sp-wrap{max-width:100%!important}
+          .sp-head h2{font-size:30px!important}
+          .sp-grid-2{grid-template-columns:1fr!important}
+          .sp-actions{opacity:1!important}
+          .sp-cta-row{flex-direction:column!important}
+        }
       `}</style>
 
       {/* Background grid */}
@@ -277,10 +285,10 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
         <div key={i} style={{position:'absolute',width:o.w,height:o.h,top:o.top,right:o.right,bottom:o.bottom,left:o.left,borderRadius:'50%',background:'rgba(255,255,255,0.04)',filter:'blur(1px)',animation:`sp-float ${o.dur} ${o.delay} ease-in-out infinite`,pointerEvents:'none'}}/>
       ))}
 
-      <div style={{width:'100%',maxWidth:540,position:'relative',zIndex:1}}>
+      <div className="sp-wrap" style={{width:'100%',maxWidth:540,position:'relative',zIndex:1}}>
 
         {/* Header */}
-        <div style={{...anim(0),textAlign:'center',marginBottom:40}}>
+        <div className="sp-head" style={{...anim(0),textAlign:'center',marginBottom:40}}>
           {/* School name badge — no logo box */}
           <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'10px 22px',borderRadius:50,background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',backdropFilter:'blur(12px)',marginBottom:28,boxShadow:'0 4px 24px rgba(0,0,0,0.25)'}}>
             <span className="material-symbols-outlined" style={{fontSize:16,color:'#60a5fa'}}>school</span>
@@ -322,7 +330,7 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
                   /* ── Inline edit form ── */
                   <div style={{padding:'16px 18px',borderRadius:16,border:'1.5px solid rgba(96,165,250,0.5)',background:'rgba(96,165,250,0.08)',backdropFilter:'blur(8px)',animation:'sp-slidein 200ms ease'}}>
                     <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.5)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:12}}>Edit Session</div>
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+                    <div className="sp-grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
                       {[{label:'Session Name',val:editName,set:setEditName},{label:'Academic Year',val:editYear,set:setEditYear}].map(f=>(
                         <div key={f.label}>
                           <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>{f.label}</div>
@@ -430,7 +438,7 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
                 {nameErr&&<div style={{fontSize:11,color:'#fca5a5',background:'rgba(239,68,68,0.15)',padding:'9px 12px',borderRadius:9,marginBottom:14,border:'1px solid rgba(239,68,68,0.3)'}}>{nameErr}</div>}
 
                 {/* Name + Year inputs */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
+                <div className="sp-grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
                   {[{label:'Session Name',val:newName,set:v=>{setNewName(v);setNameErr('');},ph:'e.g. 2026-2027'},{label:'Academic Year',val:newYear,set:v=>{setNewYear(v);setNameErr('');},ph:'e.g. 2026-2027'}].map(f=>(
                     <div key={f.label}>
                       <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>{f.label}</div>
@@ -455,7 +463,7 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
                       </button>
                     </div>
 
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                    <div className="sp-grid-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                       {CARRY_OPTIONS.map(opt=>{
                         const on = carry[opt.k];
                         return (
@@ -485,7 +493,7 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
                 )}
 
                 {/* Action buttons */}
-                <div style={{display:'flex',gap:8}}>
+                <div className="sp-cta-row" style={{display:'flex',gap:8}}>
                   <button onClick={resetCreate}
                     style={{flex:1,padding:'11px',borderRadius:10,border:'1.5px solid rgba(255,255,255,0.15)',background:'transparent',color:'rgba(255,255,255,0.6)',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all 150ms'}}
                     onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';}}
@@ -569,7 +577,7 @@ function Login({ db, onLogin }) {
   });
 
   return (
-    <div style={{minHeight:'100vh',display:'flex',background:'var(--bg)',fontFamily:'Inter,sans-serif'}}>
+    <div className="lp-root" style={{minHeight:'100vh',display:'flex',background:'var(--bg)',fontFamily:'Inter,sans-serif'}}>
       <style>{`
         @keyframes lp-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-18px) scale(1.04)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
@@ -582,11 +590,20 @@ function Login({ db, onLogin }) {
         .lp-btn:active:not(:disabled){transform:scale(0.98)}
         .lp-feature:hover{background:rgba(255,255,255,0.11)!important;transform:translateY(-2px)}
         .lp-sess:hover{border-color:#1960a3!important;box-shadow:0 6px 20px rgba(25,96,163,0.14)!important;transform:translateY(-2px)}
+        @media (max-width: 1024px){
+          .lp-left{display:none!important}
+          .lp-panel{max-width:none!important;width:100%!important}
+        }
+        @media (max-width: 768px){
+          .lp-backrow{padding:14px 16px 0!important}
+          .lp-center{padding:14px 16px 20px!important}
+          .lp-role-grid{grid-template-columns:1fr!important}
+          .lp-footer{padding:10px 12px!important}
+        }
       `}</style>
 
       {/* Left hero */}
-      <div style={{flex:1,background:'linear-gradient(145deg,#001530 0%,#002045 50%,#0a3060 100%)',position:'relative',overflow:'hidden',display:'flex',flexDirection:'column',padding:'48px 56px'}}
-        className="hidden lg:flex">
+      <div className="hidden lg:flex lp-left" style={{flex:1,background:'linear-gradient(145deg,#001530 0%,#002045 50%,#0a3060 100%)',position:'relative',overflow:'hidden',display:'flex',flexDirection:'column',padding:'48px 56px'}}>
         {ORBS.map((o,i)=>(
           <div key={i} style={{position:'absolute',width:o.w,height:o.h,top:o.top,left:o.left,right:o.right,bottom:o.bottom,borderRadius:'50%',background:o.color,animation:`lp-float ${o.dur} ${o.delay} ease-in-out infinite`,pointerEvents:'none'}}/>
         ))}
@@ -636,7 +653,7 @@ function Login({ db, onLogin }) {
       </div>
 
       {/* Right form */}
-      <div style={{width:'100%',maxWidth:520,flexShrink:0,display:'flex',flexDirection:'column',background:'linear-gradient(160deg,#f0f4ff 0%,#ffffff 60%)',boxShadow:'-4px 0 40px rgba(0,32,69,0.1)',position:'relative',overflow:'hidden'}}>
+      <div className="lp-panel" style={{width:'100%',maxWidth:520,flexShrink:0,display:'flex',flexDirection:'column',background:'linear-gradient(160deg,#f0f4ff 0%,#ffffff 60%)',boxShadow:'-4px 0 40px rgba(0,32,69,0.1)',position:'relative',overflow:'hidden'}}>
 
         {/* Top color bar */}
         <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:'linear-gradient(90deg,#1960a3,#60a5fa,#a78bfa)',zIndex:3}}/>
@@ -645,7 +662,7 @@ function Login({ db, onLogin }) {
         <div style={{position:'absolute',bottom:-60,left:-60,width:200,height:200,borderRadius:'50%',background:'rgba(167,139,250,0.06)',pointerEvents:'none'}}/>
 
         {/* Back button row */}
-        <div style={{...anim(0),padding:'28px 36px 0',position:'relative',zIndex:2}}>
+        <div className="lp-backrow" style={{...anim(0),padding:'28px 36px 0',position:'relative',zIndex:2}}>
           <button onClick={() => window.location.href = '/'}
             style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px 8px 8px',borderRadius:24,border:'1.5px solid rgba(25,96,163,0.18)',background:'rgba(25,96,163,0.06)',color:'#1960a3',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 200ms',fontFamily:'inherit'}}
             onMouseEnter={e=>{e.currentTarget.style.background='rgba(25,96,163,0.12)';e.currentTarget.style.borderColor='rgba(25,96,163,0.4)';e.currentTarget.style.transform='translateX(-2px)';}}
@@ -658,7 +675,7 @@ function Login({ db, onLogin }) {
         </div>
 
         {/* Centered form */}
-        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 40px 32px',position:'relative',zIndex:2}}>
+        <div className="lp-center" style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 40px 32px',position:'relative',zIndex:2}}>
           <div style={{width:'100%',maxWidth:380}}>
 
             {/* Logo + heading */}
@@ -671,7 +688,7 @@ function Login({ db, onLogin }) {
             </div>
 
             {/* Role cards */}
-            <div style={{...anim(140),display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:26}}>
+            <div className="lp-role-grid" style={{...anim(140),display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:26}}>
               {[
                 {id:'admin',  icon:'admin_panel_settings', label:'Admin',   color:'#1960a3', grad:'linear-gradient(135deg,#1960a3,#3b82f6)'},
                 {id:'teacher',icon:'school',               label:'Teacher', color:'#059669', grad:'linear-gradient(135deg,#059669,#10b981)'},
@@ -744,7 +761,7 @@ function Login({ db, onLogin }) {
         </div>
 
         {/* Footer */}
-        <div style={{padding:'14px 36px',borderTop:'1px solid #f1f5f9',textAlign:'center',position:'relative',zIndex:2}}>
+        <div className="lp-footer" style={{padding:'14px 36px',borderTop:'1px solid #f1f5f9',textAlign:'center',position:'relative',zIndex:2}}>
           <span style={{fontSize:11,color:'#cbd5e1'}}>© 2026 Lord Krishna Public School, Mathura</span>
         </div>
       </div>
@@ -1504,8 +1521,8 @@ function GlobalSearch({ db, setPage }) {
   const typeColor = { student:'#1960a3', teacher:'#059669', page:'#cb9524' };
 
   return (
-    <div ref={ref} style={{position:'relative'}}>
-      <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:24,width:240,
+    <div className="gs-root" ref={ref} style={{position:'relative'}}>
+      <div className="gs-box" style={{display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:24,width:240,
         background: open ? '#f0f6ff' : '#f4f7fb',
         border: open ? '1.5px solid #1960a3' : '1.5px solid #e2e8f0',
         transition:'all 200ms'}}>
@@ -1525,7 +1542,7 @@ function GlobalSearch({ db, setPage }) {
       </div>
 
       {open && results.length > 0 && (
-        <div style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:300,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,overflow:'hidden',animation:'srch-in 150ms ease'}}>
+        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:300,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,overflow:'hidden',animation:'srch-in 150ms ease'}}>
           <style>{`@keyframes srch-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}} .gs-input::placeholder{color:#94a3b8}`}</style>
           {results.map((r,i) => (
             <button key={i} onClick={()=>go(r)}
@@ -1545,7 +1562,7 @@ function GlobalSearch({ db, setPage }) {
         </div>
       )}
       {open && q && results.length === 0 && (
-        <div style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:280,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,padding:'16px',textAlign:'center'}}>
+        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:280,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,padding:'16px',textAlign:'center'}}>
           <span className="material-symbols-outlined" style={{fontSize:24,color:'#c4c6cf'}}>search_off</span>
           <div style={{fontSize:12,color:'#74777f',marginTop:6}}>No results for "{q}"</div>
         </div>
@@ -1840,11 +1857,11 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
   };
 
   return (
-    <div style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
+    <div className="app-shell" style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
       <Sidebar page={page} setPage={setPage} user={user} onLogout={onLogout}/>
-      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+      <div className="app-content" style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         {/* Top header */}
-        <header style={{
+        <header className="app-header" style={{
           height:64, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between',
           padding:'0 32px', position:'relative', overflow:'visible',
           background:'#ffffff',
@@ -1853,7 +1870,7 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
           zIndex:100,
         }}>
           {/* Left — school name + aesthetic accent */}
-          <div
+          <div className="app-header-left"
             onClick={() => setPage('dash')}
             style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1,cursor:'pointer'}}
             title="Go to Dashboard"
@@ -1869,7 +1886,7 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
             </div>
           </div>
           {/* Right — search + actions */}
-          <div style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1}}>
+          <div className="app-header-right" style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1}}>
             <GlobalSearch db={db} setPage={setPage} />
             <button onClick={onSwitchSession}
               style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms'}}
@@ -1888,7 +1905,7 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
             <AdminPopover user={user} setPage={setPage} onLogout={onLogout} />
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-6" style={{
+        <div className="app-main flex-1 overflow-y-auto p-6" style={{
           backgroundColor:'#f0f4ff',
           backgroundImage:`
             radial-gradient(ellipse at 0% 0%, rgba(25,96,163,0.08) 0%, transparent 55%),
@@ -7436,11 +7453,11 @@ function TeacherPortal({ db, save, teacher, onLogout }) {
   };
 
   return (
-    <div style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
+    <div className="tapp-shell" style={{display:'flex',height:'100vh',background:'#f7fafc'}}>
       <TeacherSidebar page={page} setPage={setPage} user={teacher} onLogout={onLogout}/>
-      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+      <div className="tapp-content" style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
         {/* Header */}
-        <header style={{height:64,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 32px',background:'#ffffff',borderBottom:'1px solid #e8edf5',boxShadow:'0 2px 12px rgba(0,31,77,0.07)',zIndex:100}}>
+        <header className="tapp-header" style={{height:64,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 32px',background:'#ffffff',borderBottom:'1px solid #e8edf5',boxShadow:'0 2px 12px rgba(0,31,77,0.07)',zIndex:100}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#1960a3,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(25,96,163,0.25)'}}>
@@ -7463,7 +7480,7 @@ function TeacherPortal({ db, save, teacher, onLogout }) {
           </div>
         </header>
         {/* Page content */}
-        <main style={{flex:1,overflowY:'auto',padding:'28px 32px'}}>
+        <main className="tapp-main" style={{flex:1,overflowY:'auto',padding:'28px 32px'}}>
           {pages[page] || pages.tdash}
         </main>
       </div>
