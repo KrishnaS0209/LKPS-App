@@ -1,0 +1,57 @@
+{
+  "name": "lkps-app",
+  "version": "1.0.0",
+  "description": "LORD KRISHNA PUBLIC SCHOOL — Full Stack App",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "server": "npm start --prefix server",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "electron:dev": "concurrently \"npm run server\" \"npm run client\" \"wait-on http://localhost:3000 && NODE_ENV=development electron .\"",
+    "build": "npm run build --prefix client",
+    "dist": "npm run build && electron-builder",
+    "install:all": "npm install --prefix server && npm install --prefix client"
+  },
+  "build": {
+    "appId": "com.lkps.school",
+    "productName": "LKPS School",
+    "icon": "electron/icon.png",
+    "mac": {
+      "icon": "electron/icon.png",
+      "category": "public.app-category.education",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "icon": "electron/icon.png",
+      "target": ["nsis"]
+    },
+    "linux": {
+      "icon": "electron/icon.png",
+      "target": ["AppImage"]
+    },
+    "files": [
+      "electron/**/*",
+      "client/build/**/*",
+      "server/**/*",
+      "!server/node_modules/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "server",
+        "to": "server",
+        "filter": ["**/*", "!node_modules/**/*"]
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^41.1.0",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.4"
+  }
+}
