@@ -1,3 +1,7 @@
 node_modules/
 dist/
+electron/
 .env
+*.dmg
+*.exe
+*.AppImage
