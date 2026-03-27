@@ -1949,7 +1949,7 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
           {/* Right — search + actions */}
           <div className="app-header-right" style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1}}>
             <GlobalSearch db={db} setPage={setPage} />
-            <button onClick={onSwitchSession}
+            <button className="app-session-btn" onClick={onSwitchSession}
               style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms'}}
               onMouseEnter={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.borderColor='#93c5fd';}}
               onMouseLeave={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.borderColor='#c7d9f5';}}>
@@ -1957,12 +1957,12 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
               {db.settings.year||'2025-26'}
             </button>
             <NotificationBell db={db} setPage={setPage} />
-            <button onClick={() => window.print()} style={{color:'#64748b',border:0,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',borderRadius:8,padding:6,transition:'all 150ms'}}
+            <button className="app-print-btn" onClick={() => window.print()} style={{color:'#64748b',border:0,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',borderRadius:8,padding:6,transition:'all 150ms'}}
               onMouseEnter={e=>{e.currentTarget.style.color='#1960a3';e.currentTarget.style.background='#eef4ff';}}
               onMouseLeave={e=>{e.currentTarget.style.color='#64748b';e.currentTarget.style.background='transparent';}}>
               <span className="material-symbols-outlined">print</span>
             </button>
-            <div style={{width:1,height:32,background:'#e2e8f0'}}/>
+            <div className="app-header-divider" style={{width:1,height:32,background:'#e2e8f0'}}/>
             <AdminPopover user={user} setPage={setPage} onLogout={onLogout} />
           </div>
         </header>
@@ -3035,34 +3035,34 @@ function Students({ db, save, setPage }) {
   return (
     <div>
       {/* Hero Header */}
-      <div className="mb-8 flex justify-between items-end">
+      <div className="directory-hero mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-3 md:gap-4">
         <div>
           <h1 className="text-4xl font-extrabold text-primary tracking-tight mb-2 font-headline">Student Directory</h1>
           <p className="text-on-surface-variant font-medium">
             {db.students.length} active enrollment{db.students.length !== 1 ? 's' : ''} · {db.settings.year || '2025-26'}
           </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={openAdd} className="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform border-0 cursor-pointer font-sans">
+        <div className="directory-hero-actions flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
+          <button onClick={openAdd} className="px-4 md:px-6 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">add</span> Enroll New Student
           </button>
-          <button onClick={() => setPage && setPage('rep')} className="px-5 py-2.5 bg-surface-container-highest text-primary rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-surface-container-high transition-colors border-0 cursor-pointer font-sans">
+          <button onClick={() => setPage && setPage('rep')} className="px-4 md:px-5 py-2.5 bg-surface-container-highest text-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">download</span> Export Data
           </button>
         </div>
       </div>
 
       {/* Filter Bar + Outstanding Bento */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:20,marginBottom:28}}>
+      <div className="directory-filter-grid" style={{display:'grid',gridTemplateColumns:'1fr auto',gap:20,marginBottom:28}}>
         {/* Search + filters */}
-        <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',padding:'16px 20px',display:'flex',flexWrap:'wrap',gap:16,alignItems:'flex-end',boxShadow:'0 2px 8px rgba(0,32,69,0.05)'}}>
+        <div className="directory-filter-panel" style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',padding:'16px 20px',display:'flex',flexWrap:'wrap',gap:16,alignItems:'flex-end',boxShadow:'0 2px 8px rgba(0,32,69,0.05)'}}>
           {/* Search with live dropdown */}
-          <div style={{display:'flex',flexDirection:'column',gap:5}}>
+          <div className="directory-search-group" style={{display:'flex',flexDirection:'column',gap:5}}>
             <label style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em'}}>Search</label>
             <div ref={searchRef} style={{position:'relative',display:'flex',alignItems:'center'}}>
               <span className="material-symbols-outlined" style={{position:'absolute',left:10,fontSize:16,color:'#94a3b8',pointerEvents:'none',zIndex:1}}>search</span>
               <input
-                style={{paddingLeft:34,paddingRight:search?32:12,paddingTop:8,paddingBottom:8,borderRadius:24,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',width:260,transition:'all 200ms',fontFamily:'inherit'}}
+                style={{paddingLeft:34,paddingRight:search?32:12,paddingTop:8,paddingBottom:8,borderRadius:24,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',width:'min(100%, 260px)',transition:'all 200ms',fontFamily:'inherit'}}
                 value={search}
                 onChange={e => { setSearch(e.target.value); setSearchOpen(true); }}
                 onFocus={e=>{e.target.style.borderColor='#1960a3';e.target.style.background='#f0f6ff';setSearchOpen(true);}}
@@ -3077,7 +3077,7 @@ function Students({ db, save, setPage }) {
               )}
               {/* Live dropdown */}
               {searchOpen && search && (
-                <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,width:320,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e8edf5',zIndex:999,overflow:'hidden'}}>
+                <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,width:'min(92vw, 320px)',background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e8edf5',zIndex:999,overflow:'hidden'}}>
                   {suggestions.length > 0 ? suggestions.map((s,i) => {
                     const paid = paidTotal(db.pays, s.id);
                     const bal = Math.max(0,(s.fee||0)-paid);
@@ -3118,18 +3118,18 @@ function Students({ db, save, setPage }) {
             </div>
           </div>
           {/* Class filter */}
-          <div style={{display:'flex',flexDirection:'column',gap:5}}>
+          <div className="directory-class-group" style={{display:'flex',flexDirection:'column',gap:5}}>
             <label style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em'}}>Class</label>
             <select value={filterCls} onChange={e=>setFilterCls(e.target.value)}
-              style={{padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',minWidth:130,cursor:'pointer',fontFamily:'inherit'}}>
+              style={{padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',minWidth:130,cursor:'pointer',fontFamily:'inherit',width:'100%'}}>
               <option value="">All Classes</option>
               {classes.map(c=><option key={c}>{c}</option>)}
             </select>
           </div>
           {/* Fee status filter */}
-          <div style={{display:'flex',flexDirection:'column',gap:5}}>
+          <div className="directory-status-group" style={{display:'flex',flexDirection:'column',gap:5}}>
             <label style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em'}}>Fee Status</label>
-            <div style={{display:'flex',gap:6}}>
+            <div className="directory-status-pills" style={{display:'flex',gap:6}}>
               {['','Paid','Pending','Overdue'].map(s=>(
                 <button key={s} onClick={()=>setFilterStatus(s)}
                   style={{padding:'7px 14px',borderRadius:20,border:'none',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 150ms',
@@ -3154,7 +3154,7 @@ function Students({ db, save, setPage }) {
           )}
         </div>
         {/* Outstanding card */}
-        <div style={{background:'linear-gradient(135deg,#1960a3,#002045)',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',justifyContent:'center',minWidth:180,boxShadow:'0 4px 16px rgba(25,96,163,0.25)'}}>
+        <div className="directory-outstanding-card" style={{background:'linear-gradient(135deg,#1960a3,#002045)',borderRadius:16,padding:'16px 20px',display:'flex',flexDirection:'column',justifyContent:'center',minWidth:180,boxShadow:'0 4px 16px rgba(25,96,163,0.25)'}}>
           <p style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.6)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>Outstanding</p>
           <h3 style={{fontSize:22,fontWeight:800,color:'#fff',fontFamily:'Manrope,sans-serif',margin:0}}>₹{outstanding.toLocaleString('en-IN')}</h3>
           <p style={{fontSize:11,color:'rgba(255,255,255,0.55)',marginTop:4}}>{db.students.filter(s=>paidTotal(db.pays,s.id)<(s.fee||0)).length} pending</p>
@@ -3276,7 +3276,7 @@ function Students({ db, save, setPage }) {
       )}
 
       {/* Insight Footer */}
-      <div className="mt-6 grid grid-cols-3 gap-5">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
         {[
           { icon: 'trending_up', label: 'Total Enrolled', value: db.students.length + ' students' },
           { icon: 'payments', label: 'Fee Collected', value: '₹' + db.pays.reduce((s,p)=>s+p.amt,0).toLocaleString('en-IN') },
@@ -3487,31 +3487,31 @@ function Teachers({ db, save }) {
   return (
     <div>
       {/* Hero Header */}
-      <div className="mb-8 flex justify-between items-end">
+      <div className="directory-hero mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-3 md:gap-4">
         <div>
           <h1 className="text-4xl font-extrabold text-primary tracking-tight mb-2 font-headline">Faculty Directory</h1>
           <p className="text-on-surface-variant">
             {db.teachers.length} faculty member{db.teachers.length !== 1 ? 's' : ''} · {db.settings.year || '2025-26'}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="directory-hero-actions flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
           <button onClick={openAdd}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-semibold text-sm border-0 cursor-pointer font-sans">
+            className="flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-semibold text-sm border-0 cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">add</span> New Faculty
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container transition-all font-semibold text-sm text-primary bg-transparent cursor-pointer font-sans">
+          <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container transition-all font-semibold text-sm text-primary bg-transparent cursor-pointer font-sans flex-1 md:flex-none">
             <span className="material-symbols-outlined text-sm">export_notes</span> Export List
           </button>
         </div>
       </div>
 
       {/* Filter bar */}
-      <div style={{display:'flex',gap:12,marginBottom:32,flexWrap:'wrap',alignItems:'center'}}>
+      <div className="directory-filter-row" style={{display:'flex',gap:12,marginBottom:32,flexWrap:'wrap',alignItems:'center'}}>
         {/* Search with live dropdown */}
-        <div ref={searchRef} style={{position:'relative'}}>
+        <div className="directory-search-group" ref={searchRef} style={{position:'relative'}}>
           <span className="material-symbols-outlined" style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:16,color:'#94a3b8',pointerEvents:'none',zIndex:1}}>search</span>
           <input
-            style={{paddingLeft:36,paddingRight:search?32:16,paddingTop:9,paddingBottom:9,borderRadius:24,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',width:280,transition:'all 200ms',fontFamily:'inherit'}}
+            style={{paddingLeft:36,paddingRight:search?32:16,paddingTop:9,paddingBottom:9,borderRadius:24,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',width:'min(100%, 280px)',transition:'all 200ms',fontFamily:'inherit'}}
             value={search}
             onChange={e => { setSearch(e.target.value); setSearchOpen(true); }}
             onFocus={e => { e.target.style.borderColor='#1960a3'; e.target.style.background='#f0f6ff'; setSearchOpen(true); }}
@@ -3526,7 +3526,7 @@ function Teachers({ db, save }) {
           )}
           {/* Live dropdown */}
           {searchOpen && search && (
-            <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,width:340,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e8edf5',zIndex:999,overflow:'hidden'}}>
+            <div style={{position:'absolute',top:'calc(100% + 6px)',left:0,width:'min(92vw, 340px)',background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e8edf5',zIndex:999,overflow:'hidden'}}>
               {suggestions.length > 0 ? suggestions.map((t,i) => {
                 const photo = (db.tphotos||{})[t.id];
                 const ini = `${(t.fn||'')[0]||''}${(t.ln||'')[0]||''}`.toUpperCase();
@@ -3877,7 +3877,7 @@ function Classes({ db, save }) {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-8">
         <div className="bg-surface-container-lowest p-5 rounded-xl border-l-4 border-primary">
           <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Total Classes</p>
           <p className="text-3xl font-extrabold text-primary font-headline">{db.classes.length}</p>

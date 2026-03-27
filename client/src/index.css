@@ -291,7 +291,11 @@ aside.sidebar-bg {
     width: 100%;
     justify-content: space-between;
     gap: 8px !important;
+    flex-wrap: wrap;
   }
+  .app-header-left { width: 100%; justify-content: space-between; }
+  .app-session-btn { font-size: 10px !important; padding: 4px 10px !important; }
+  .app-print-btn, .app-header-divider { display: none !important; }
   .app-menu-btn { display: inline-flex !important; align-items: center; justify-content: center; }
   .gs-root { flex: 1; }
   .gs-box { width: 100% !important; min-width: 0; }
@@ -300,4 +304,43 @@ aside.sidebar-bg {
     display: none !important; /* hide teacher portal subtitle block */
   }
   .tapp-menu-btn { display: inline-flex !important; align-items: center; justify-content: center; }
+
+  /* Directories (students/teachers and similar pages) */
+  .directory-hero h1 { font-size: 1.7rem !important; line-height: 1.15; }
+  .directory-hero-actions > button { min-height: 42px; }
+  .directory-filter-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .directory-filter-panel {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  .directory-search-group { width: 100%; min-width: 0; }
+  .directory-search-group input { width: 100% !important; }
+  .directory-class-group,
+  .directory-status-group { width: 100%; }
+  .directory-status-pills {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .directory-status-pills > button {
+    flex: 1 1 calc(50% - 4px);
+    text-align: center;
+  }
+  .directory-outstanding-card {
+    min-width: 0 !important;
+    width: 100%;
+  }
+  .directory-filter-row {
+    gap: 8px !important;
+    margin-bottom: 18px !important;
+  }
+  .directory-filter-row .directory-search-group { width: 100%; }
+  .directory-filter-row > button {
+    flex: 1 1 calc(50% - 6px);
+  }
+}
+
+@media (max-width: 480px) {
+  .directory-hero h1 { font-size: 1.45rem !important; }
+  .directory-status-pills > button,
+  .directory-filter-row > button { flex: 1 1 100%; }
 }
