@@ -1,9 +1,0 @@
-Place your school logo here as:
-    logo.png
-
-It will automatically appear in:
-- ID Cards (live preview + print)
-- Transfer Certificate
-- Character Certificate
-
-Recommended: PNG with transparent background, minimum 200x200px

@@ -5,3 +5,6 @@ electron/
 *.dmg
 *.exe
 *.AppImage
+client/node_modules/
+server/node_modules/
+client/build/
