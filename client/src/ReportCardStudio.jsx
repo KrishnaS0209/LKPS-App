@@ -747,6 +747,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
         _rcDiscGrades: entry.discGrades,
         _rcAttP: entry.attP,
         _rcAttT: entry.attT,
+        _rcRank: entry.rank,
       };
     });
     save({ ...db, students: updatedStudents });
@@ -949,6 +950,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                             discGrades:  s._rcDiscGrades|| {},
                             attP: s._rcAttP !== undefined ? s._rcAttP : undefined,
                             attT: s._rcAttT !== undefined ? s._rcAttT : undefined,
+                            rank: s._rcRank || undefined,
                           }
                         }));
                       }
@@ -1105,6 +1107,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     <div className="grid grid-cols-2 gap-4">
                       <div><label className={lbl}>Days Present</label><input type="number" min="0" value={attP} onChange={e=>setOvr(selStu,{attP:parseInt(e.target.value)||0})} className={inp}/></div>
                       <div><label className={lbl}>Total Working Days</label><input type="number" min="0" value={attT} onChange={e=>setOvr(selStu,{attT:parseInt(e.target.value)||0})} className={inp}/></div>
+                      <div><label className={lbl}>Rank</label><input type="number" min="1" value={ovr.rank||''} onChange={e=>setOvr(selStu,{rank:parseInt(e.target.value)||0})} className={inp} placeholder="e.g. 3"/></div>
                     </div>
                     <button onClick={()=>setOvr(selStu,{attP:undefined,attT:undefined})} className="text-xs text-slate-400 hover:text-red-500 transition-colors cursor-pointer border-0 bg-transparent">Reset to auto</button>
                   </div>;
@@ -1122,6 +1125,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     _rcDiscGrades: ovr.discGrades || s._rcDiscGrades,
                     _rcAttP: ovr.attP !== undefined ? ovr.attP : s._rcAttP,
                     _rcAttT: ovr.attT !== undefined ? ovr.attT : s._rcAttT,
+                    _rcRank: ovr.rank !== undefined ? ovr.rank : s._rcRank,
                   } : s);
                   save({ ...db, students: updated });
                   toast('All changes saved — updating PDF...');
