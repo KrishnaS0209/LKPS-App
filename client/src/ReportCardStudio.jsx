@@ -45,33 +45,8 @@ function admissionNo(s) {
   return v != null && String(v).trim() !== '' ? String(v).trim() : '—';
 }
 
-async function downloadPdfFromHtml(fullDocumentHtml, fileName) {
-  const html2pdf = (await import('html2pdf.js')).default;
-  const iframe = document.createElement('iframe');
-  iframe.setAttribute('title', 'marksheet-pdf-render');
-  iframe.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;visibility:hidden;pointer-events:none');
-  document.body.appendChild(iframe);
-  const idoc = iframe.contentDocument;
-  idoc.open();
-  idoc.write(fullDocumentHtml);
-  idoc.close();
-  await new Promise((resolve) => {
-    if (idoc.readyState === 'complete') resolve();
-    else iframe.onload = () => resolve();
-  });
-  await new Promise((r) => setTimeout(r, 400));
-  const body = idoc.body;
-  const safeName = fileName.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 120) || 'Marksheet';
-  const opt = {
-    margin: 0,
-    filename: `${safeName}.pdf`,
-    image: { type: 'jpeg', quality: 0.92 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'legacy'] },
-  };
-  await html2pdf().set(opt).from(body).save();
-  document.body.removeChild(iframe);
+function escapeDocTitle(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 const GradeSelect = ({ value, onChange }) => (
@@ -493,10 +468,11 @@ export default function ReportCardStudio({ db, save, logo }) {
 
     const output = opts.output || 'print';
     const wantPrint = !silent && (output === 'print' || output === 'both');
-    const wantDownload = output === 'download' || output === 'both';
+    const wantDownload = !silent && (output === 'download' || output === 'both');
     const skipServerSave = opts.skipServerSave === true || output === 'download';
 
-    const pw = wantPrint ? window.open('', '_blank') : null;
+    const openViewer = !silent && (wantPrint || wantDownload);
+    const pw = openViewer ? window.open('', '_blank') : null;
     if (pw) {
       pw.document.write('<html><head><title>Loading...</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666">Generating report card...</body></html>');
     }
@@ -650,34 +626,48 @@ export default function ReportCardStudio({ db, save, logo }) {
 
     const pageCSS2 = css;
     const allPageBodies = allPages.map(p => p.replace(/^[\s\S]*?<body>/,'').replace(/<\/body>[\s\S]*$/,'')).join('');
-    const docHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${pageCSS2}</style></head><body>${allPageBodies}</body></html>`;
 
-    if (wantDownload) {
-      try {
-        const s0 = students[0]?.s;
-        const pdfName = students.length === 1 && s0
-          ? (() => {
-              const r = (s0.roll || s0.admNo || s0.admno || '').toString().trim();
-              const n = `${s0.fn || ''}_${s0.ln || ''}`.trim().replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '-');
-              return r ? `Marksheet_${r}_${n || 'Student'}` : `Marksheet_${n || 'Student'}`;
-            })()
-          : `Marksheet_${String(cls).replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '-')}_${students.length}_students`;
-        await downloadPdfFromHtml(docHtml, pdfName);
-        if (!wantPrint) toast('PDF downloaded');
-      } catch (e) {
-        console.error(e);
-        toast('PDF download failed: ' + (e.message || 'unknown'), 'err');
-      }
-    }
+    const s0 = students[0]?.s;
+    const docTitle = students.length === 1 && s0
+      ? (() => {
+          const r = (s0.roll || s0.admNo || s0.admno || '').toString().trim();
+          const n = `${s0.fn || ''} ${s0.ln || ''}`.trim() || 'Student';
+          return r ? `Marksheet — ${r} — ${n}` : `Marksheet — ${n}`;
+        })()
+      : `Marksheet — ${cls} (${students.length} students)`;
 
-    if (wantPrint) {
+    const downloadOnly = wantDownload && !wantPrint;
+    const pdfHintCss = downloadOnly
+      ? `@media screen{.lkps-pdf-hint{position:fixed;top:0;left:0;right:0;background:#0f172a;color:#e2e8f0;padding:12px 16px;font:14px system-ui,-apple-system,sans-serif;text-align:center;z-index:999999;box-shadow:0 2px 12px rgba(0,0,0,.25)}}@media print{.lkps-pdf-hint{display:none!important}}`
+      : '';
+    const pdfHintHtml = downloadOnly
+      ? '<div class="lkps-pdf-hint">Same layout as preview — in the print dialog choose <strong>Save as PDF</strong> (or Microsoft Print to PDF) to download.</div>'
+      : '';
+
+    const docHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeDocTitle(docTitle)}</title><style>${pageCSS2}${pdfHintCss}</style></head><body>${pdfHintHtml}${allPageBodies}</body></html>`;
+
+    if (openViewer) {
       if (!pw) {
-        toast('Pop-up blocked — allow pop-ups to print, or use Download PDF.', 'err');
+        toast('Pop-up blocked — allow pop-ups to print or save as PDF.', 'err');
       } else {
-        const printHtml = docHtml.replace('</body>', '<script>window.onload=()=>window.print()<\/script></body>');
+        const fontDelay = downloadOnly ? 500 : 350;
+        const printHtml = docHtml.replace(
+          '</body>',
+          `<script>(function(){
+function run(){window.focus();window.print();}
+if(document.fonts&&document.fonts.ready){
+document.fonts.ready.then(function(){setTimeout(run,${fontDelay});});
+}else{
+setTimeout(run,${downloadOnly ? 900 : 700});
+}
+})();<\/script></body>`
+        );
         pw.document.open();
         pw.document.write(printHtml);
         pw.document.close();
+        if (downloadOnly) {
+          toast('Print dialog opened — pick Save as PDF for a file that matches preview.');
+        }
       }
     }
   };
@@ -1111,10 +1101,11 @@ export default function ReportCardStudio({ db, save, logo }) {
                 <span className="material-symbols-outlined text-lg">description</span>
                 {selStu==='all'?`Generate All (${clsStudents.length})`:'Generate This Student'}
               </button>
-              <button onClick={()=>downloadDirectoryPdf(selStu==='all'?clsStudents:[editStu].filter(Boolean))}
+              <button type="button" title="Opens the same marksheet as preview/print — in the dialog choose Save as PDF."
+                onClick={()=>downloadDirectoryPdf(selStu==='all'?clsStudents:[editStu].filter(Boolean))}
                 className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-colors border-0 cursor-pointer">
                 <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                Download PDF
+                Save as PDF
               </button>
               {selStu!=='all' && (
                 <button onClick={()=>genDirectory(clsStudents)}
@@ -1275,10 +1266,11 @@ export default function ReportCardStudio({ db, save, logo }) {
               <span className="material-symbols-outlined text-lg">description</span>
               Generate Report Card
             </button>
-            <button onClick={downloadGuestPdf}
+            <button type="button" title="Same layout as preview — choose Save as PDF in the print dialog."
+              onClick={downloadGuestPdf}
               className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-colors border-0 cursor-pointer">
               <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-              Download PDF
+              Save as PDF
             </button>
             <button onClick={()=>{
               setGuest(BLANK_GUEST);
