@@ -677,8 +677,9 @@ setTimeout(run,${downloadOnly ? 900 : 700});
     return studentsToGen.map(s => {
       const ovr = overrides[s.id] || {};
       const dbAtt = getAtt(s.id);
-      const attP = ovr.attP !== undefined ? ovr.attP : dbAtt.p;
-      const attT = ovr.attT !== undefined ? ovr.attT : dbAtt.t;
+      // Priority: manual override > saved _rcAtt > real attendance records
+      const attP = ovr.attP !== undefined ? ovr.attP : (dbAtt.t > 0 ? dbAtt.p : (s._rcAttP || 0));
+      const attT = ovr.attT !== undefined ? ovr.attT : (dbAtt.t > 0 ? dbAtt.t : (s._rcAttT || 0));
 
       // Use override rcMarks > saved _rcMarks > exam schedule marks
       const overrideMarks = ovr.rcMarks;
@@ -744,7 +745,8 @@ setTimeout(run,${downloadOnly ? 900 : 700});
         _rcMarks: entry.marks,
         _rcCoGrades: entry.coGrades,
         _rcDiscGrades: entry.discGrades,
-        ...(ovr.attP !== undefined ? { _rcAttP: entry.attP, _rcAttT: entry.attT } : {}),
+        _rcAttP: entry.attP,
+        _rcAttT: entry.attT,
       };
     });
     save({ ...db, students: updatedStudents });
@@ -945,8 +947,8 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                             rcMarks:     s._rcMarks     || {},
                             coGrades:    s._rcCoGrades  || {},
                             discGrades:  s._rcDiscGrades|| {},
-                            attP: s._rcAttP || undefined,
-                            attT: s._rcAttT || undefined,
+                            attP: s._rcAttP !== undefined ? s._rcAttP : undefined,
+                            attT: s._rcAttT !== undefined ? s._rcAttT : undefined,
                           }
                         }));
                       }
