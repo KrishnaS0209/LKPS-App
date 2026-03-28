@@ -4827,7 +4827,7 @@ function Exams({ db, save }) {
     const sts = db.students.filter(s => s.cls === rcCls);
     if (!sts.length) { toast('No students', 'err'); return; }
     const school = db.settings.school || 'LORD KRISHNA PUBLIC SCHOOL';
-    const yr     = db.settings.year   || '2025-2026';
+    const yr     = db.settings.reportAcademicYear || db.settings.year || '2025-2026';
     const addr   = db.settings.addr   || '';
     const prin   = db.settings.prin   || '';
     const phone  = db.settings.phone  || '';
@@ -7276,7 +7276,8 @@ function Settings({ db, save, user, setUser }) {
         <div className="text-sm font-semibold text-on-surface mb-4 pb-3" style={{borderBottom:'1px solid rgba(196,198,207,0.5)'}}>School Information</div>
         <Grid>
           <Field label="School Name"><Input value={form.school||''} onChange={sf('school')}/></Field>
-          <Field label="Academic Year"><Input value={form.year||''} onChange={sf('year')}/></Field>
+          <Field label="Academic Year"><Input value={form.year||''} onChange={sf('year')} placeholder="e.g. 2026-27"/></Field>
+          <Field label="Report card year (marksheets)"><Input value={form.reportAcademicYear||''} onChange={sf('reportAcademicYear')} placeholder="2025-2026"/></Field>
           <Field label="Principal"><Input value={form.prin||''} onChange={sf('prin')}/></Field>
           <Field label="Phone"><Input value={form.phone||''} onChange={sf('phone')}/></Field>
           <Span><Field label="Address"><Input value={form.addr||''} onChange={sf('addr')}/></Field></Span>

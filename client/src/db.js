@@ -3,7 +3,7 @@ const KEY = 'lkps_data';
 
 const DEFAULT = {
   admins: [{ id: 1, username: 'admin', password: 'admin123', name: 'Administrator', role: 'Admin' }],
-  settings: { school: 'LORD KRISHNA PUBLIC SCHOOL', year: '2025-2026', prin: '', phone: '9997360040, 8650616990', addr: 'Ishapur, Laxminagar, Mathura' },
+  settings: { school: 'LORD KRISHNA PUBLIC SCHOOL', year: '2025-2026', reportAcademicYear: '2025-2026', prin: '', phone: '9997360040, 8650616990', addr: 'Ishapur, Laxminagar, Mathura' },
   students: [], teachers: [], classes: [], att: {}, exams: [], marks: {}, pays: [], events: [],
   tt: [], fstr: { months: [], extras: [] }, photos: {}, tphotos: {},
   slots: [
@@ -18,7 +18,14 @@ const DEFAULT = {
 export function loadDB() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...DEFAULT, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT,
+        ...parsed,
+        settings: { ...DEFAULT.settings, ...(parsed.settings || {}) },
+      };
+    }
   } catch (e) {}
   return { ...DEFAULT };
 }

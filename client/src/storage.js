@@ -240,8 +240,16 @@ export async function loadSessionData(sessionId) {
       }
     });
 
+    const defaultSettings = {
+      school: 'LORD KRISHNA PUBLIC SCHOOL',
+      year: '2025-2026',
+      reportAcademicYear: '2025-2026',
+      prin: '',
+      phone: '',
+      addr: '',
+    };
     return {
-      settings: config.settings || {},
+      settings: { ...defaultSettings, ...(config.settings || {}) },
       classes:  (config.classes  || []).map(c => { const { _id, __v, ...rest } = c; return rest; }),
       tt:       (config.tt       || []).map(({ _id, __v, ...r }) => r),
       slots:    (config.slots    || []).map(({ _id, __v, ...r }) => r),

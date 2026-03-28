@@ -250,7 +250,7 @@ export default function ReportCardStudio({ db, save, logo }) {
   };
   const buildRC = async (students, opts = {}, previewOnly = false, silent = false) => {
     const school = db.settings.school || 'LORD KRISHNA PUBLIC SCHOOL';
-    const yr     = db.settings.year   || '2025-2026';
+    const yr     = db.settings.reportAcademicYear || db.settings.year || '2025-2026';
     const addr   = db.settings.addr   || '';
     const prin   = db.settings.prin   || '';
     const phone  = db.settings.phone  || '';

@@ -4,7 +4,7 @@ const DB_KEY = 'lkps_data';
 
 const defaultDB = {
   admins: [{ id: 1, username: 'admin', password: 'admin123', name: 'Administrator', role: 'Admin' }],
-  settings: { school: 'LORD KRISHNA PUBLIC SCHOOL', year: '2025-2026', prin: '', phone: '', addr: 'Ishapur, Laxminagar, Mathura' },
+  settings: { school: 'LORD KRISHNA PUBLIC SCHOOL', year: '2025-2026', reportAcademicYear: '2025-2026', prin: '', phone: '', addr: 'Ishapur, Laxminagar, Mathura' },
   students: [], teachers: [], classes: [], att: {}, exams: [], marks: {}, pays: [],
   tt: [], fstr: { months: [], extras: [] }, photos: {},
   slots: [
