@@ -5164,6 +5164,30 @@ function Exams({ db, save }) {
     w.document.write(html);
     w.document.close();
     toast('Report cards generated');
+
+    // Save marksheet data to each student's record for later editing in Documents
+    const updatedStudents = db.students.map(s => {
+      if (s.cls !== rcCls) return s;
+      const stuMarks = {};
+      subjects.forEach(su => {
+        const t1 = getSubjectExams(su, t1Exams);
+        const t2 = getSubjectExams(su, t2Exams);
+        const fc = (exams, kws) => { const e = exams.find(ex => kws.some(k => ex.name.toLowerCase().includes(k))); return e ? getMark(e.id, s.id) : null; };
+        stuMarks[su] = {
+          t1_pt: fc(t1,['per.test','periodic','per test','pt']),
+          t1_nb: fc(t1,['note','notebook','note book']),
+          t1_sea: fc(t1,['sea','sub enrich','enrichment']),
+          t1_hy: fc(t1,['half','half yearly','hy']),
+          t2_pt: fc(t2,['per.test','periodic','per test','pt']),
+          t2_nb: fc(t2,['note','notebook','note book']),
+          t2_sea: fc(t2,['sea','sub enrich','enrichment']),
+          t2_ye: fc(t2,['yearly','annual','year exam','ye']),
+        };
+      });
+      const { p: attP, t: attT } = getAttStats(s.id);
+      return { ...s, _rcMarks: stuMarks, _rcSubjects: subjects.join(', '), _rcAttP: attP, _rcAttT: attT };
+    });
+    save({ ...db, students: updatedStudents });
   };
 
   // Filtered exams for schedule tab

@@ -733,7 +733,22 @@ setTimeout(run,${downloadOnly ? 900 : 700});
   const downloadDirectoryPdf = async (studentsToGen) => {
     if (!rcCls) { toast('Select a class first','err'); return; }
     if (!studentsToGen?.length) { toast('No students to generate','err'); return; }
-    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls, output: 'download' });
+    // Save updated marks/grades/attendance to each student's record
+    const entries = buildDirectoryEntries(studentsToGen);
+    const updatedStudents = db.students.map(s => {
+      const entry = entries.find(e => e.s.id === s.id);
+      if (!entry) return s;
+      return {
+        ...s,
+        _rcMarks: entry.marks,
+        _rcCoGrades: entry.coGrades,
+        _rcDiscGrades: entry.discGrades,
+        _rcAttP: entry.attP,
+        _rcAttT: entry.attT,
+      };
+    });
+    save({ ...db, students: updatedStudents });
+    await buildRC(entries, { cls: rcCls, output: 'download' });
   };
 
   const genDirectorySilent = async (studentsToGen) => {
@@ -846,14 +861,37 @@ setTimeout(run,${downloadOnly ? 900 : 700});
     if (!guest.cls.trim()) { toast('Enter class name','err'); return; }
     const subs = guestSubjects.split(',').map(s=>s.trim()).filter(Boolean);
     if (!subs.length) { toast('Enter at least one subject','err'); return; }
+
+    // Save student to directory (same as genGuest)
+    const existingId = db.students.find(
+      s => s.fn.toLowerCase()===guest.fn.toLowerCase() &&
+           s.ln.toLowerCase()===(guest.ln||'').toLowerCase() &&
+           s.cls===guest.cls
+    )?.id;
+    const stuId = existingId || ('S' + uid());
+    const newStudent = {
+      id: stuId, sid: stuId,
+      fn: guest.fn, ln: guest.ln||'',
+      father: guest.father||'', mother: guest.mother||'',
+      dob: guest.dob||'', roll: guest.roll||'',
+      admNo: guest.admNo||'', addr: guest.addr||'',
+      cls: guest.cls, fst: 'Pending', mf: 0, fextras: [], fee: 0, gn: 'Male',
+      _rcMarks: guestMarks, _rcSubjects: guestSubjects,
+      _rcCoGrades: guestCoGrades, _rcDiscGrades: guestDiscGrades,
+      _rcAttP: parseInt(guestAttP)||0, _rcAttT: parseInt(guestAttT)||0,
+      _rcRank: parseInt(guestRank)||0,
+    };
+    const updatedStudents = existingId
+      ? db.students.map(s => s.id === existingId ? { ...s, ...newStudent } : s)
+      : [...db.students, newStudent];
+    save({ ...db, students: updatedStudents });
+    toast(existingId ? 'Student updated in directory' : 'Student added to directory');
+
     const entry = {
-      s: { ...guest, id: 'guest' },
-      subjects: subs,
-      marks: guestMarks,
-      attP: parseInt(guestAttP)||0,
-      attT: parseInt(guestAttT)||0,
-      coGrades: guestCoGrades,
-      discGrades: guestDiscGrades,
+      s: { ...newStudent },
+      subjects: subs, marks: guestMarks,
+      attP: parseInt(guestAttP)||0, attT: parseInt(guestAttT)||0,
+      coGrades: guestCoGrades, discGrades: guestDiscGrades,
       rank: parseInt(guestRank)||0,
     };
     await buildRC([entry], { cls: guest.cls, output: 'download' });
