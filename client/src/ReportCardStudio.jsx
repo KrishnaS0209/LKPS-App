@@ -738,13 +738,13 @@ setTimeout(run,${downloadOnly ? 900 : 700});
     const updatedStudents = db.students.map(s => {
       const entry = entries.find(e => e.s.id === s.id);
       if (!entry) return s;
+      const ovr = overrides[s.id] || {};
       return {
         ...s,
         _rcMarks: entry.marks,
         _rcCoGrades: entry.coGrades,
         _rcDiscGrades: entry.discGrades,
-        _rcAttP: entry.attP,
-        _rcAttT: entry.attT,
+        ...(ovr.attP !== undefined ? { _rcAttP: entry.attP, _rcAttT: entry.attT } : {}),
       };
     });
     save({ ...db, students: updatedStudents });
@@ -945,8 +945,8 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                             rcMarks:     s._rcMarks     || {},
                             coGrades:    s._rcCoGrades  || {},
                             discGrades:  s._rcDiscGrades|| {},
-                            attP: s._rcAttP,
-                            attT: s._rcAttT,
+                            attP: s._rcAttP || undefined,
+                            attT: s._rcAttT || undefined,
                           }
                         }));
                       }
