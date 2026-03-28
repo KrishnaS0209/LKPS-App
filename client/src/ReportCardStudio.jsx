@@ -39,6 +39,41 @@ function gradeBg(g) {
   return {A1:'#dcfce7',A2:'#d1fae5',B1:'#dbeafe',B2:'#eff6ff',C1:'#fef3c7',C2:'#fffbeb',D:'#ffedd5',E:'#fee2e2'}[g]||'#f3f4f6';
 }
 
+/** Student records use `admno` in forms; guest flow uses `admNo`. */
+function admissionNo(s) {
+  const v = s.admNo ?? s.admno;
+  return v != null && String(v).trim() !== '' ? String(v).trim() : '—';
+}
+
+async function downloadPdfFromHtml(fullDocumentHtml, fileName) {
+  const html2pdf = (await import('html2pdf.js')).default;
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('title', 'marksheet-pdf-render');
+  iframe.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;visibility:hidden;pointer-events:none');
+  document.body.appendChild(iframe);
+  const idoc = iframe.contentDocument;
+  idoc.open();
+  idoc.write(fullDocumentHtml);
+  idoc.close();
+  await new Promise((resolve) => {
+    if (idoc.readyState === 'complete') resolve();
+    else iframe.onload = () => resolve();
+  });
+  await new Promise((r) => setTimeout(r, 400));
+  const body = idoc.body;
+  const safeName = fileName.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 120) || 'Marksheet';
+  const opt = {
+    margin: 0,
+    filename: `${safeName}.pdf`,
+    image: { type: 'jpeg', quality: 0.92 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] },
+  };
+  await html2pdf().set(opt).from(body).save();
+  document.body.removeChild(iframe);
+}
+
 const GradeSelect = ({ value, onChange }) => (
   <select value={value||'A2'} onChange={e=>onChange(e.target.value)}
     style={{fontSize:11,fontWeight:700,padding:'2px 5px',borderRadius:5,border:'1px solid #bfdbfe',
@@ -373,7 +408,7 @@ export default function ReportCardStudio({ db, save, logo }) {
             </div>
             <div>
               <div class="ir"><span class="il">Roll No.</span><span class="iv">${s.roll||'—'}</span></div>
-              <div class="ir" style="margin-top:6px"><span class="il">Admission No.</span><span class="iv">${s.admNo||'—'}</span></div>
+              <div class="ir" style="margin-top:6px"><span class="il">Admission No.</span><span class="iv">${admissionNo(s)}</span></div>
             </div>
           </div>
         </div>
@@ -456,19 +491,27 @@ export default function ReportCardStudio({ db, save, logo }) {
 
     if (previewOnly) return html + '</body></html>';
 
-    // Open print window immediately only if not silent (must be sync with user gesture)
-    const pw = silent ? null : window.open('', '_blank');
-    if (pw) pw.document.write('<html><head><title>Loading...</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666">Generating report card...</body></html>');
+    const output = opts.output || 'print';
+    const wantPrint = !silent && (output === 'print' || output === 'both');
+    const wantDownload = output === 'download' || output === 'both';
+    const skipServerSave = opts.skipServerSave === true || output === 'download';
 
-    // Collect all pages for print
+    const pw = wantPrint ? window.open('', '_blank') : null;
+    if (pw) {
+      pw.document.write('<html><head><title>Loading...</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666">Generating report card...</body></html>');
+    }
+
     const allPages = [];
     const BASE = getApiBase();
     const token = sessionStorage.getItem('lkps_token');
-    const pageCSS = css; // captured in closure
+    const pageCSS = css;
+
+    let serverOk = 0;
+    let serverFail = 0;
 
     for (const entry of students) {
       const s = entry.s;
-      const roll = (s.roll || s.admNo || '').toString().trim();
+      const roll = (s.roll || s.admNo || s.admno || '').toString().trim();
       const name = `${s.fn || ''}${s.ln ? ' '+s.ln : ''}`.trim() || 'Student';
       const filename = roll ? `${roll},${name}` : name;
       const promotedCls = nextClass(cls);
@@ -489,8 +532,6 @@ export default function ReportCardStudio({ db, save, logo }) {
       const overallMax2 = subs2.length*100;
       const overallPct2 = overallMax2>0?Math.round(overallTotal2/overallMax2*100):0;
       const remarkText2 = overallPct2>=91?'Excellent!':overallPct2>=75?'Good!':overallPct2>=50?'Satisfactory':'Needs Improvement';
-      const remarkCls2 = overallPct2>=75?'rm-g':overallPct2>=50?'rm-o':'rm-r';
-      const barColor2 = overallPct2>=75?'#22c55e':overallPct2>=50?'#f59e0b':'#ef4444';
       const coG2 = entry.coGrades||{}, dG2 = entry.discGrades||{};
       const rank2 = entry.rank;
       const logoTag2 = logo ? `<img src="${logo}" class="wm" alt=""/>` : '';
@@ -527,7 +568,7 @@ export default function ReportCardStudio({ db, save, logo }) {
           </div>
           <div style="border-left:2px solid #D6EAF8;padding-left:24px">
             <div class="ir"><span class="il">Roll No.</span><span class="iv">${s.roll||'—'}</span></div>
-            <div class="ir" style="margin-top:6px"><span class="il">Admission No.</span><span class="iv">${s.admNo||'—'}</span></div>
+            <div class="ir" style="margin-top:6px"><span class="il">Admission No.</span><span class="iv">${admissionNo(s)}</span></div>
           </div>
         </div></div>
         <div class="tw"><table class="mt">
@@ -580,33 +621,64 @@ export default function ReportCardStudio({ db, save, logo }) {
 
       allPages.push(singleHtml);
 
-      try {
-        const resp = await fetch(`${BASE}/marksheet/save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-          body: JSON.stringify({ html: singleHtml, cls, filename }),
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error);
-      } catch (err) {
-        console.error('PDF save failed:', err);
-        toast('PDF save failed: ' + err.message, 'err');
-        return;
+      if (token && !skipServerSave) {
+        try {
+          const resp = await fetch(`${BASE}/marksheet/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ html: singleHtml, cls, filename }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok) throw new Error(data.error || resp.statusText || 'Save failed');
+          serverOk++;
+        } catch (err) {
+          console.warn('marksheet/save (optional):', err);
+          serverFail++;
+        }
       }
     }
 
-    toast(`Saved to Desktop → Report Cards (2025-26) → ${cls}`);
+    if (!silent && token && (serverOk || serverFail)) {
+      if (serverFail === 0 && serverOk > 0) {
+        toast(`Saved ${serverOk} PDF(s) on server (host Desktop folder when available)`);
+      } else if (serverOk > 0 && serverFail > 0) {
+        toast(`${serverOk} saved on server, ${serverFail} failed — use Print or Download PDF.`, 'err');
+      } else if (serverFail > 0) {
+        toast('Could not save on server — use Print or Download PDF.', 'err');
+      }
+    }
 
-    if (!silent) {
-      // Open print dialog with all pages combined
-      const pageCSS2 = css;
-      const allPageBodies = allPages.map(p => p.replace(/^[\s\S]*?<body>/,'').replace(/<\/body>[\s\S]*$/,'')).join('');
-      const printHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${pageCSS2}</style></head><body>${allPageBodies}<script>window.onload=()=>window.print()<\/script></body></html>`;
-      pw.document.open();
-      pw.document.write(printHtml);
-      pw.document.close();
-    } else {
-      // silent — PDF saved, no print window
+    const pageCSS2 = css;
+    const allPageBodies = allPages.map(p => p.replace(/^[\s\S]*?<body>/,'').replace(/<\/body>[\s\S]*$/,'')).join('');
+    const docHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${pageCSS2}</style></head><body>${allPageBodies}</body></html>`;
+
+    if (wantDownload) {
+      try {
+        const s0 = students[0]?.s;
+        const pdfName = students.length === 1 && s0
+          ? (() => {
+              const r = (s0.roll || s0.admNo || s0.admno || '').toString().trim();
+              const n = `${s0.fn || ''}_${s0.ln || ''}`.trim().replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '-');
+              return r ? `Marksheet_${r}_${n || 'Student'}` : `Marksheet_${n || 'Student'}`;
+            })()
+          : `Marksheet_${String(cls).replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '-')}_${students.length}_students`;
+        await downloadPdfFromHtml(docHtml, pdfName);
+        if (!wantPrint) toast('PDF downloaded');
+      } catch (e) {
+        console.error(e);
+        toast('PDF download failed: ' + (e.message || 'unknown'), 'err');
+      }
+    }
+
+    if (wantPrint) {
+      if (!pw) {
+        toast('Pop-up blocked — allow pop-ups to print, or use Download PDF.', 'err');
+      } else {
+        const printHtml = docHtml.replace('</body>', '<script>window.onload=()=>window.print()<\/script></body>');
+        pw.document.open();
+        pw.document.write(printHtml);
+        pw.document.close();
+      }
     }
   };
 
@@ -654,17 +726,29 @@ export default function ReportCardStudio({ db, save, logo }) {
       const discGrades = ovr.discGrades || s._rcDiscGrades || {};
       const rank       = ovr.rank !== undefined ? ovr.rank : (s._rcRank || 0);
 
-      return { s: { ...s, ...( ovr.info || {} ), addr: ovr.info?.addr || ovr.addr || s.addr }, subjects, marks, attP, attT, coGrades, discGrades, rank };
+      const info = ovr.info || {};
+      const mergedS = { ...s, ...info, addr: info.addr ?? ovr.addr ?? s.addr };
+      mergedS.admNo = info.admNo ?? info.admno ?? s.admNo ?? s.admno ?? mergedS.admNo;
+
+      return { s: mergedS, subjects, marks, attP, attT, coGrades, discGrades, rank };
     });
   };
 
   const genDirectory = async (studentsToGen) => {
     if (!rcCls) { toast('Select a class first','err'); return; }
+    if (!studentsToGen?.length) { toast('No students to generate','err'); return; }
     await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls });
+  };
+
+  const downloadDirectoryPdf = async (studentsToGen) => {
+    if (!rcCls) { toast('Select a class first','err'); return; }
+    if (!studentsToGen?.length) { toast('No students to generate','err'); return; }
+    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls, output: 'download' });
   };
 
   const genDirectorySilent = async (studentsToGen) => {
     if (!rcCls) return;
+    if (!studentsToGen?.length) return;
     await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls }, false, true);
   };
 
@@ -749,7 +833,7 @@ export default function ReportCardStudio({ db, save, logo }) {
     await buildRC([entry], { cls: guest.cls });
   };
 
-  const previewGuest = () => {
+  const previewGuest = async () => {
     if (!guest.fn.trim() || !guest.cls.trim()) return;
     const subs = guestSubjects.split(',').map(s=>s.trim()).filter(Boolean);
     if (!subs.length) return;
@@ -763,8 +847,26 @@ export default function ReportCardStudio({ db, save, logo }) {
       discGrades: guestDiscGrades,
       rank: parseInt(guestRank)||0,
     };
-    const html = buildRC([entry], { cls: guest.cls }, true);
+    const html = await buildRC([entry], { cls: guest.cls }, true);
     if (html) setPreviewHtml(html);
+  };
+
+  const downloadGuestPdf = async () => {
+    if (!guest.fn.trim()) { toast('Enter student first name','err'); return; }
+    if (!guest.cls.trim()) { toast('Enter class name','err'); return; }
+    const subs = guestSubjects.split(',').map(s=>s.trim()).filter(Boolean);
+    if (!subs.length) { toast('Enter at least one subject','err'); return; }
+    const entry = {
+      s: { ...guest, id: 'guest' },
+      subjects: subs,
+      marks: guestMarks,
+      attP: parseInt(guestAttP)||0,
+      attT: parseInt(guestAttT)||0,
+      coGrades: guestCoGrades,
+      discGrades: guestDiscGrades,
+      rank: parseInt(guestRank)||0,
+    };
+    await buildRC([entry], { cls: guest.cls, output: 'download' });
   };
 
   const inp = 'w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-blue-300 outline-none';
@@ -1003,11 +1105,16 @@ export default function ReportCardStudio({ db, save, logo }) {
           )}
 
           {rcCls && (
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-3">
               <button onClick={()=>genDirectory(selStu==='all'?clsStudents:[editStu].filter(Boolean))}
                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-colors border-0 cursor-pointer">
                 <span className="material-symbols-outlined text-lg">description</span>
                 {selStu==='all'?`Generate All (${clsStudents.length})`:'Generate This Student'}
+              </button>
+              <button onClick={()=>downloadDirectoryPdf(selStu==='all'?clsStudents:[editStu].filter(Boolean))}
+                className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-colors border-0 cursor-pointer">
+                <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                Download PDF
               </button>
               {selStu!=='all' && (
                 <button onClick={()=>genDirectory(clsStudents)}
@@ -1162,11 +1269,16 @@ export default function ReportCardStudio({ db, save, logo }) {
               </div>
             )}
           </div>
-          <div className="px-6 pb-6 flex gap-3">
+          <div className="px-6 pb-6 flex flex-wrap gap-3">
             <button onClick={genGuest}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-colors border-0 cursor-pointer">
               <span className="material-symbols-outlined text-lg">description</span>
               Generate Report Card
+            </button>
+            <button onClick={downloadGuestPdf}
+              className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-colors border-0 cursor-pointer">
+              <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+              Download PDF
             </button>
             <button onClick={()=>{
               setGuest(BLANK_GUEST);
