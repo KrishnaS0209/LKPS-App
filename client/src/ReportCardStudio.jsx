@@ -123,6 +123,121 @@ function GuestForm({ guest, setGuest, subjects, setSubjects, marks, setMarks }) 
   );
 }
 
+
+// ── Shared spreadsheet-style marks table ─────────────────────────
+const COLS = [
+  { key:'t1_pt',  label:'Per.Test', max:10,  term:1 },
+  { key:'t1_nb',  label:'NoteBook', max:5,   term:1 },
+  { key:'t1_sea', label:'SEA',      max:5,   term:1 },
+  { key:'t1_hy',  label:'Half Yrly',max:80,  term:1 },
+  { key:'t2_pt',  label:'Per.Test', max:10,  term:2 },
+  { key:'t2_nb',  label:'NoteBook', max:5,   term:2 },
+  { key:'t2_sea', label:'SEA',      max:5,   term:2 },
+  { key:'t2_ye',  label:'Yearly',   max:80,  term:2 },
+];
+
+function MarksTable({ subjects, marks, onChange }) {
+  const inputRefs = React.useRef({});
+
+  const handleKey = (e, suIdx, colIdx) => {
+    const totalCols = COLS.length;
+    const totalRows = subjects.length;
+    let nextSu = suIdx, nextCol = colIdx;
+
+    if (e.key === 'ArrowRight' || e.key === 'Tab') {
+      e.preventDefault();
+      nextCol = colIdx + 1;
+      if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nextCol = colIdx - 1;
+      if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
+    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+      e.preventDefault();
+      nextSu = suIdx + 1;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      nextSu = suIdx - 1;
+    } else {
+      return;
+    }
+
+    if (nextSu >= 0 && nextSu < totalRows) {
+      const ref = inputRefs.current[`${nextSu}_${nextCol}`];
+      if (ref) { ref.focus(); ref.select(); }
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-blue-200">
+      <table className="w-full border-collapse text-xs" style={{minWidth:'600px'}}>
+        <thead>
+          <tr>
+            <th className="bg-blue-600 text-white px-3 py-2 text-left font-semibold sticky left-0 z-10" style={{minWidth:'90px'}}>Subject</th>
+            {[1,2].map(term => (
+              <React.Fragment key={term}>
+                <th colSpan={4} className="bg-blue-500 text-white px-2 py-2 text-center font-semibold border-l border-blue-400">
+                  Term {term} (100)
+                </th>
+              </React.Fragment>
+            ))}
+          </tr>
+          <tr>
+            <th className="bg-blue-50 px-3 py-1.5 text-left text-slate-500 sticky left-0 z-10 border-b border-blue-200"></th>
+            {COLS.map((col, ci) => (
+              <th key={ci} className={`px-2 py-1.5 text-center text-slate-500 font-semibold border-b border-blue-200 ${ci===4?'border-l-2 border-l-blue-300':''}`}>
+                <div>{col.label}</div>
+                <div className="text-[9px] text-slate-400 font-normal">/{col.max}</div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {subjects.map((su, si) => {
+            const m = marks[su] || {};
+            return (
+              <tr key={su} className={si%2===0?'bg-white':'bg-blue-50/40'}>
+                <td className="px-3 py-1.5 font-semibold text-blue-700 sticky left-0 z-10 border-r border-blue-100" style={{background:si%2===0?'#fff':'#f0f7ff'}}>
+                  {su}
+                </td>
+                {COLS.map((col, ci) => {
+                  const val = m[col.key];
+                  const over = val !== null && val !== undefined && val > col.max;
+                  return (
+                    <td key={ci} className={`p-1 ${ci===4?'border-l-2 border-l-blue-200':''}`}>
+                      <input
+                        ref={el => inputRefs.current[`${si}_${ci}`] = el}
+                        type="number" min="0" max={col.max}
+                        value={val ?? ''}
+                        onChange={e => {
+                          const raw = e.target.value === '' ? null : parseFloat(e.target.value);
+                          onChange(su, col.key, raw);
+                        }}
+                        onBlur={e => {
+                          const r = parseFloat(e.target.value);
+                          if (!isNaN(r) && r > col.max) onChange(su, col.key, col.max);
+                        }}
+                        onKeyDown={e => handleKey(e, si, ci)}
+                        onFocus={e => e.target.select()}
+                        className={`w-full text-center rounded-md py-1.5 px-1 outline-none focus:ring-2 text-sm font-medium transition-all
+                          ${over
+                            ? 'bg-red-50 border border-red-300 focus:ring-red-200 text-red-600'
+                            : 'bg-white border border-blue-100 focus:ring-blue-300 focus:border-blue-400 text-slate-700'
+                          }`}
+                        style={{minWidth:'42px'}}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function ReportCardStudio({ db, save, logo }) {
   const classes = db.classes.map(c => c.name);
   const [mode, setMode] = useState('directory'); // 'directory' | 'guest'
@@ -1009,28 +1124,11 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   };
                   return (
                     <div className="space-y-3">
-                      {stuSubs.map(su => {
-                        const m = (savedMarks[su]) || {};
-                        return <div key={su} className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                          <p className="text-xs font-bold text-blue-700 mb-2">{su}</p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {[['T1 Per.Test','t1_pt'],['T1 NoteBook','t1_nb'],['T1 SEA','t1_sea'],['T1 Half Yearly','t1_hy'],
-                              ['T2 Per.Test','t2_pt'],['T2 NoteBook','t2_nb'],['T2 SEA','t2_sea'],['T2 Yearly','t2_ye'],
-                            ].map(([label,key])=>{
-                              const val = m[key];
-                              const over = val !== null && val !== undefined && val > maxMap[key];
-                              return <div key={key}>
-                                <label className="block text-[9px] font-bold text-slate-400 mb-1">{label} <span className="text-slate-300">/{maxMap[key]}</span></label>
-                                <input type="number" min="0" max={maxMap[key]} value={val??''}
-                                  onChange={e=>setMark(su, key, e.target.value===''?null:parseFloat(e.target.value))}
-                                  onBlur={e=>{ const r=parseFloat(e.target.value); if(!isNaN(r)&&r>maxMap[key]) setMark(su,key,maxMap[key]); }}
-                                  className={`w-full p-1.5 bg-white rounded-lg text-xs text-center text-slate-700 outline-none focus:ring-1 ${over?'border-2 border-red-400 focus:ring-red-300':'border border-blue-200 focus:ring-blue-300'}`}/>
-                                {over && <p className="text-[9px] text-red-500 mt-0.5 text-center">Max {maxMap[key]}</p>}
-                              </div>;
-                            })}
-                          </div>
-                        </div>;
-                      })}
+                      <MarksTable
+                        subjects={stuSubs}
+                        marks={savedMarks}
+                        onChange={(su, key, val) => setMark(su, key, val)}
+                      />
                     </div>
                   );
                 })()}
@@ -1234,49 +1332,20 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                 </div>
                 <div>
                   <p className={lbl + ' mb-3'}>Marks Entry</p>
-                  <div className="space-y-3">
-                    {guestSubjects.split(',').map(s=>s.trim()).filter(Boolean).map(su=>{
-                      const m=guestMarks[su]||{};
-                      const maxMap={t1_pt:10,t1_nb:5,t1_sea:5,t1_hy:80,t2_pt:10,t2_nb:5,t2_sea:5,t2_ye:80};
-                      return <div key={su} className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                        <p className="text-xs font-bold text-blue-700 mb-2">{su}</p>
-                        <div className="grid grid-cols-4 gap-2">
-                          {[['T1 Per.Test','t1_pt'],['T1 NoteBook','t1_nb'],['T1 SEA','t1_sea'],['T1 Half Yearly','t1_hy'],
-                            ['T2 Per.Test','t2_pt'],['T2 NoteBook','t2_nb'],['T2 SEA','t2_sea'],['T2 Yearly','t2_ye'],
-                          ].map(([label,key])=>{
-                            const val = m[key];
-                            const over = val !== null && val !== undefined && val > maxMap[key];
-                            return (
-                            <div key={key}>
-                              <label className="block text-[9px] font-bold text-slate-400 mb-1">{label} <span className="text-slate-300">/{maxMap[key]}</span></label>
-                              <input type="number" min="0" max={maxMap[key]} value={val??''}
-                                onChange={e=>{
-                                  const raw = e.target.value === '' ? null : parseFloat(e.target.value);
-                                  const newMk = {...guestMarks,[su]:{...guestMarks[su],[key]:raw}};
-                                  setGuestMarks(newMk);
-                                  // auto-update co/disc grades
-                                  const gSubs = guestSubjects.split(',').map(s=>s.trim()).filter(Boolean);
-                                  let tot=0,cnt=0;
-                                  gSubs.forEach(s=>{const m=newMk[s]||{};const t1=(m.t1_pt||0)+(m.t1_nb||0)+(m.t1_sea||0)+(m.t1_hy||0);const t2=(m.t2_pt||0)+(m.t2_nb||0)+(m.t2_sea||0)+(m.t2_ye||0);if(t1>0||t2>0){tot+=Math.round((t1+t2)/2);cnt++;}});
-                                  const avg=cnt>0?Math.round(tot/cnt):50;
-                                  const g=grade8(avg);
-                                  setGuestCoGrades(variedGrades(CO_ACTIVITIES, avg));
-                                  setGuestDiscGrades(variedGrades(DISCIPLINE_ITEMS, avg));
-                                }}
-                                onBlur={e=>{
-                                  const raw = parseFloat(e.target.value);
-                                  if (!isNaN(raw) && raw > maxMap[key])
-                                    setGuestMarks(mk=>({...mk,[su]:{...mk[su],[key]:maxMap[key]}}));
-                                }}
-                                className={`w-full p-1.5 bg-white rounded-lg text-xs text-center text-slate-700 outline-none focus:ring-1 ${over?'border-2 border-red-400 focus:ring-red-300':'border border-blue-200 focus:ring-blue-300'}`}/>
-                              {over && <p className="text-[9px] text-red-500 mt-0.5 text-center">Max {maxMap[key]}</p>}
-                            </div>
-                            );
-                          })}
-                        </div>
-                      </div>;
-                    })}
-                  </div>
+                  <MarksTable
+                    subjects={guestSubjects.split(',').map(s=>s.trim()).filter(Boolean)}
+                    marks={guestMarks}
+                    onChange={(su, key, raw) => {
+                      const newMk = {...guestMarks,[su]:{...guestMarks[su],[key]:raw}};
+                      setGuestMarks(newMk);
+                      const gSubs = guestSubjects.split(',').map(s=>s.trim()).filter(Boolean);
+                      let tot=0,cnt=0;
+                      gSubs.forEach(s=>{const m=newMk[s]||{};const t1=(m.t1_pt||0)+(m.t1_nb||0)+(m.t1_sea||0)+(m.t1_hy||0);const t2=(m.t2_pt||0)+(m.t2_nb||0)+(m.t2_sea||0)+(m.t2_ye||0);if(t1>0||t2>0){tot+=Math.round((t1+t2)/2);cnt++;}});
+                      const avg=cnt>0?Math.round(tot/cnt):50;
+                      setGuestCoGrades(variedGrades(CO_ACTIVITIES, avg));
+                      setGuestDiscGrades(variedGrades(DISCIPLINE_ITEMS, avg));
+                    }}
+                  />
                 </div>
               </div>
             )}
