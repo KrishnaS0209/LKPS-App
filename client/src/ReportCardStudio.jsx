@@ -124,6 +124,60 @@ function GuestForm({ guest, setGuest, subjects, setSubjects, marks, setMarks }) 
 }
 
 
+
+// ── Auto title-case: capitalise first letter of each word ────────
+const toTitleCase = (str) =>
+  str.replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+
+const titleCaseInput = (e, setter) => {
+  setter(toTitleCase(e.target.value));
+};
+
+// ── Address selector ──────────────────────────────────────────────
+const ADDRESSES = [
+  'Ishapur','Dengra','Abdul Navipur','Pratap Nagar',
+  'Shyamapuram','Shanti Ashram','Hansganj','Vishanganj',
+];
+
+function AddressSelect({ value, onChange, className }) {
+  const [custom, setCustom] = React.useState(false);
+  const isPreset = ADDRESSES.some(a => value === a + ', Mathura');
+  const selectedPreset = isPreset ? value.replace(', Mathura','') : '';
+
+  return (
+    <div className="space-y-2">
+      <select
+        value={custom ? '__custom__' : (selectedPreset || '')}
+        onChange={e => {
+          if (e.target.value === '__custom__') {
+            setCustom(true);
+            onChange('');
+          } else if (e.target.value === '') {
+            setCustom(false);
+            onChange('');
+          } else {
+            setCustom(false);
+            onChange(e.target.value + ', Mathura');
+          }
+        }}
+        className={className}
+      >
+        <option value="">Select Address</option>
+        {ADDRESSES.map(a => <option key={a} value={a}>{a}, Mathura</option>)}
+        <option value="__custom__">Custom address...</option>
+      </select>
+      {(custom || (!isPreset && value)) && (
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Type custom address"
+          className={className}
+        />
+      )}
+    </div>
+  );
+}
+
 // ── Shared spreadsheet-style marks table ─────────────────────────
 const COLS = [
   { key:'t1_pt',  label:'Per.Test',  max:10, term:1 },
@@ -1146,7 +1200,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                         <label className={lbl}>{label}</label>
                         <input
                           value={(overrides[selStu]?.info?.[key] ?? editStu[key]) || ''}
-                          onChange={e => setOvr(selStu, { info: { ...(overrides[selStu]?.info||{}), [key]: e.target.value } })}
+                          onChange={e => setOvr(selStu, { info: { ...(overrides[selStu]?.info||{}), [key]: toTitleCase(e.target.value) } })}
                           className={inp} placeholder={label}/>
                       </div>
                     ))}
@@ -1174,10 +1228,10 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     </div>
                     <div className="col-span-2">
                       <label className={lbl}>Address</label>
-                      <input
+                      <AddressSelect
                         value={(overrides[selStu]?.info?.addr ?? editStu.addr) || ''}
-                        onChange={e => setOvr(selStu, { info: { ...(overrides[selStu]?.info||{}), addr: e.target.value } })}
-                        className={inp} placeholder="Address"/>
+                        onChange={v => setOvr(selStu, { info: { ...(overrides[selStu]?.info||{}), addr: v } })}
+                        className={inp}/>
                     </div>
                     <div className="col-span-2 text-xs text-slate-400 italic">Changes are saved with the button below.</div>
                   </div>
@@ -1306,7 +1360,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     ['Roll No.','roll'],['Admission No.','admNo'],
                   ].map(([label,key])=>(
                     <div key={key}><label className={lbl}>{label}</label>
-                      <input value={guest[key]||''} onChange={e=>setGuest(g=>({...g,[key]:e.target.value}))} className={inp} placeholder={label}/></div>
+                      <input value={guest[key]||''} onChange={e=>setGuest(g=>({...g,[key]:toTitleCase(e.target.value)}))} className={inp} placeholder={label}/></div>
                   ))}
                   <div>
                     <label className={lbl}>Date of Birth (dd-mm-yyyy)</label>
@@ -1326,7 +1380,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                       className={inp}/>
                   </div>
                   <div className="col-span-2"><label className={lbl}>Address</label>
-                    <input value={guest.addr||''} onChange={e=>setGuest(g=>({...g,addr:e.target.value}))} className={inp} placeholder="Address"/></div>
+                    <AddressSelect value={guest.addr||''} onChange={v=>setGuest(g=>({...g,addr:v}))} className={inp}/></div>
                 </div>
                 <div>
                   <label className={lbl}>Subjects (comma separated)</label>
