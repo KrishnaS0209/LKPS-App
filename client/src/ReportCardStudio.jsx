@@ -178,6 +178,37 @@ function AddressSelect({ value, onChange, className }) {
   );
 }
 
+
+// ── Arrow-key navigation for info fields ─────────────────────────
+const INFO_FIELDS = ['fn','ln','father','mother','roll','admNo','dob','addr'];
+
+function useInfoNav(containerRef) {
+  return React.useCallback((e, fieldKey) => {
+    if (!['ArrowDown','ArrowUp','Enter'].includes(e.key)) return;
+    e.preventDefault();
+    const idx = INFO_FIELDS.indexOf(fieldKey);
+    if (idx === -1) return;
+    const next = e.key === 'ArrowUp' ? idx - 1 : idx + 1;
+    if (next < 0 || next >= INFO_FIELDS.length) return;
+    const el = containerRef.current?.querySelector(`[data-field="${INFO_FIELDS[next]}"]`);
+    if (el) { el.focus(); if (el.select) el.select(); }
+  }, [containerRef]);
+}
+
+
+// ── Navigate info fields with arrow keys ─────────────────────────
+const INFO_FIELDS = ['fn','ln','father','mother','roll','admNo','dob','addr'];
+
+const infoKeyDown = (e, fieldKey, containerSelector) => {
+  if (!['ArrowDown','ArrowUp','Enter','Tab'].includes(e.key)) return;
+  e.preventDefault();
+  const idx = INFO_FIELDS.indexOf(fieldKey);
+  const next = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey) ? idx - 1 : idx + 1;
+  if (next < 0 || next >= INFO_FIELDS.length) return;
+  const el = document.querySelector(`[data-info="${INFO_FIELDS[next]}"]`);
+  if (el) { el.focus(); try { el.select(); } catch(e){} }
+};
+
 // ── Shared spreadsheet-style marks table ─────────────────────────
 const COLS = [
   { key:'t1_pt',  label:'Per.Test',  max:10, term:1 },
@@ -1199,8 +1230,10 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                       <div key={key}>
                         <label className={lbl}>{label}</label>
                         <input
+                          data-info={key}
                           value={(overrides[selStu]?.info?.[key] ?? editStu[key]) || ''}
                           onChange={e => setOvr(selStu, { info: { ...(overrides[selStu]?.info||{}), [key]: toTitleCase(e.target.value) } })}
+                          onKeyDown={e=>infoKeyDown(e,key)}
                           className={inp} placeholder={label}/>
                       </div>
                     ))}
@@ -1360,7 +1393,12 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     ['Roll No.','roll'],['Admission No.','admNo'],
                   ].map(([label,key])=>(
                     <div key={key}><label className={lbl}>{label}</label>
-                      <input value={guest[key]||''} onChange={e=>setGuest(g=>({...g,[key]:toTitleCase(e.target.value)}))} className={inp} placeholder={label}/></div>
+                      <input
+                        data-info={key}
+                        value={guest[key]||''}
+                        onChange={e=>setGuest(g=>({...g,[key]:toTitleCase(e.target.value)}))}
+                        onKeyDown={e=>infoKeyDown(e,key)}
+                        className={inp} placeholder={label}/></div>
                   ))}
                   <div>
                     <label className={lbl}>Date of Birth (dd-mm-yyyy)</label>
