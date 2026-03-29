@@ -1,3 +1,5 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "buildCommand": "CI=false npm run build",
+  "framework": "create-react-app"
 }
