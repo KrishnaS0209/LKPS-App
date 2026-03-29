@@ -138,20 +138,18 @@ const COLS = [
 
 function MarksTable({ subjects, marks, onChange }) {
   const inputRefs = React.useRef({});
+  const tableId = React.useRef('mt_' + Math.random().toString(36).slice(2));
 
   const focusCell = (suIdx, colIdx) => {
     const totalRows = subjects.length;
     const totalCols = COLS.length;
     const si = Math.max(0, Math.min(totalRows - 1, suIdx));
     const ci = Math.max(0, Math.min(totalCols - 1, colIdx));
-    // Try ref first, fall back to DOM query
-    const ref = inputRefs.current[`${si}_${ci}`];
+    const key = `${si}_${ci}`;
+    const ref = inputRefs.current[key];
     if (ref) {
       ref.focus();
-      setTimeout(() => ref.select(), 0);
-    } else {
-      const el = document.querySelector(`[data-cell="${si}_${ci}"]`);
-      if (el) { el.focus(); setTimeout(() => el.select(), 0); }
+      setTimeout(() => { try { ref.select(); } catch(e){} }, 10);
     }
   };
 
@@ -225,12 +223,11 @@ function MarksTable({ subjects, marks, onChange }) {
                       <input
                         ref={el => { inputRefs.current[`${si}_${ci}`] = el; }}
                         data-cell={`${si}_${ci}`}
-                        type="text" inputMode="numeric"
+                        type="number" inputMode="numeric"
                         value={val ?? ''}
                         onChange={e => {
-                          const raw = e.target.value === '' ? null : parseFloat(e.target.value.replace(/[^0-9.]/g,''));
-                          if (e.target.value !== '' && isNaN(raw)) return; // ignore non-numeric
-                          onChange(su, col.key, raw);
+                          const raw = e.target.value === '' ? null : parseFloat(e.target.value);
+                          onChange(su, col.key, isNaN(raw) ? null : raw);
                         }}
                         onBlur={e => {
                           const r = parseFloat(e.target.value);
