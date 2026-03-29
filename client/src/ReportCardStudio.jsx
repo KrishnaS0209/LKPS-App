@@ -143,12 +143,20 @@ function MarksTable({ subjects, marks, onChange }) {
     const totalCols = COLS.length;
     const totalRows = subjects.length;
     let nextSu = suIdx, nextCol = colIdx;
+    const input = e.target;
+    const atEnd = input.selectionStart === input.value.length;
+    const atStart = input.selectionStart === 0;
 
-    if (e.key === 'ArrowRight' || e.key === 'Tab') {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      nextCol = e.shiftKey ? colIdx - 1 : colIdx + 1;
+      if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
+      if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
+    } else if (e.key === 'ArrowRight' && atEnd) {
       e.preventDefault();
       nextCol = colIdx + 1;
       if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
-    } else if (e.key === 'ArrowLeft') {
+    } else if (e.key === 'ArrowLeft' && atStart) {
       e.preventDefault();
       nextCol = colIdx - 1;
       if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
@@ -207,10 +215,11 @@ function MarksTable({ subjects, marks, onChange }) {
                     <td key={ci} className={`p-1 ${ci===4?'border-l-2 border-l-blue-200':''}`}>
                       <input
                         ref={el => inputRefs.current[`${si}_${ci}`] = el}
-                        type="number" min="0" max={col.max}
+                        type="text" inputMode="numeric" min="0" max={col.max}
                         value={val ?? ''}
                         onChange={e => {
-                          const raw = e.target.value === '' ? null : parseFloat(e.target.value);
+                          const raw = e.target.value === '' ? null : parseFloat(e.target.value.replace(/[^0-9.]/g,''));
+                          if (e.target.value !== '' && isNaN(raw)) return; // ignore non-numeric
                           onChange(su, col.key, raw);
                         }}
                         onBlur={e => {
