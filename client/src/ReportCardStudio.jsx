@@ -143,20 +143,17 @@ function MarksTable({ subjects, marks, onChange }) {
     const totalCols = COLS.length;
     const totalRows = subjects.length;
     let nextSu = suIdx, nextCol = colIdx;
-    const input = e.target;
-    const atEnd = input.selectionStart === input.value.length;
-    const atStart = input.selectionStart === 0;
 
     if (e.key === 'Tab') {
       e.preventDefault();
       nextCol = e.shiftKey ? colIdx - 1 : colIdx + 1;
       if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
       if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
-    } else if (e.key === 'ArrowRight' && atEnd) {
+    } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       nextCol = colIdx + 1;
       if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
-    } else if (e.key === 'ArrowLeft' && atStart) {
+    } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       nextCol = colIdx - 1;
       if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
@@ -170,10 +167,10 @@ function MarksTable({ subjects, marks, onChange }) {
       return;
     }
 
-    if (nextSu >= 0 && nextSu < totalRows) {
-      const ref = inputRefs.current[`${nextSu}_${nextCol}`];
-      if (ref) { ref.focus(); ref.select(); }
-    }
+    nextSu = Math.max(0, Math.min(totalRows - 1, nextSu));
+    nextCol = Math.max(0, Math.min(totalCols - 1, nextCol));
+    const ref = inputRefs.current[`${nextSu}_${nextCol}`];
+    if (ref) { ref.focus(); ref.select(); }
   };
 
   return (
