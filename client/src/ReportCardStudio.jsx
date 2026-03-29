@@ -147,6 +147,7 @@ function MarksTable({ subjects, marks, onChange }) {
     const ci = Math.max(0, Math.min(totalCols - 1, colIdx));
     const key = `${si}_${ci}`;
     const ref = inputRefs.current[key];
+    console.log('[MarksTable] focusCell', si, ci, 'ref:', !!ref, 'all keys:', Object.keys(inputRefs.current));
     if (ref) {
       ref.focus();
       setTimeout(() => { try { ref.select(); } catch(e){} }, 10);
