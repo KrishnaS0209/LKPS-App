@@ -203,6 +203,7 @@ function MarksTable({ subjects, marks, onChange }) {
                         }}
                         onKeyDown={e => {
                           const key = e.key;
+                          console.log('[MarksTable] keydown:', key, si, ci);
                           if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Enter'].includes(key)) return;
                           e.preventDefault();
                           e.stopPropagation();
