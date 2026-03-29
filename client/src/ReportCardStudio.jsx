@@ -179,34 +179,18 @@ function AddressSelect({ value, onChange, className }) {
 }
 
 
-// ── Arrow-key navigation for info fields ─────────────────────────
-const INFO_FIELDS = ['fn','ln','father','mother','roll','admNo','dob','addr'];
-
-function useInfoNav(containerRef) {
-  return React.useCallback((e, fieldKey) => {
-    if (!['ArrowDown','ArrowUp','Enter'].includes(e.key)) return;
-    e.preventDefault();
-    const idx = INFO_FIELDS.indexOf(fieldKey);
-    if (idx === -1) return;
-    const next = e.key === 'ArrowUp' ? idx - 1 : idx + 1;
-    if (next < 0 || next >= INFO_FIELDS.length) return;
-    const el = containerRef.current?.querySelector(`[data-field="${INFO_FIELDS[next]}"]`);
-    if (el) { el.focus(); if (el.select) el.select(); }
-  }, [containerRef]);
-}
-
-
 // ── Navigate info fields with arrow keys ─────────────────────────
 const INFO_FIELDS = ['fn','ln','father','mother','roll','admNo','dob','addr'];
 
-const infoKeyDown = (e, fieldKey, containerSelector) => {
-  if (!['ArrowDown','ArrowUp','Enter','Tab'].includes(e.key)) return;
+const infoKeyDown = (e, fieldKey) => {
+  if (!['ArrowDown','ArrowUp','Enter'].includes(e.key)) return;
   e.preventDefault();
   const idx = INFO_FIELDS.indexOf(fieldKey);
-  const next = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey) ? idx - 1 : idx + 1;
+  const next = e.key === 'ArrowUp' ? idx - 1 : idx + 1;
   if (next < 0 || next >= INFO_FIELDS.length) return;
-  const el = document.querySelector(`[data-info="${INFO_FIELDS[next]}"]`);
-  if (el) { el.focus(); try { el.select(); } catch(e){} }
+  const container = e.target.closest('.info-nav-container') || document;
+  const el = container.querySelector(`[data-info="${INFO_FIELDS[next]}"]`);
+  if (el) { el.focus(); try { el.select(); } catch(_){} }
 };
 
 // ── Shared spreadsheet-style marks table ─────────────────────────
@@ -1221,7 +1205,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   );
                 })()}
                 {activeTab==='info' && editStu && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="info-nav-container grid grid-cols-2 gap-4">
                     {[
                       ['First Name','fn'], ['Last Name','ln'],
                       ["Father's Name",'father'], ["Mother's Name",'mother'],
@@ -1375,7 +1359,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
           <div className="p-6">
             {guestTab==='info' && (
               <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 info-nav-container">
                   <div><label className={lbl}>Class *</label>
                     <select value={guest.cls} onChange={e=>{
                       const v=e.target.value;
