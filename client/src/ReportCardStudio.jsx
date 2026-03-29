@@ -223,21 +223,26 @@ function MarksTable({ subjects, marks, onChange }) {
                       <input
                         ref={el => { inputRefs.current[`${si}_${ci}`] = el; }}
                         data-cell={`${si}_${ci}`}
-                        type="number" inputMode="numeric"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={val ?? ''}
                         onChange={e => {
-                          const raw = e.target.value === '' ? null : parseFloat(e.target.value);
-                          onChange(su, col.key, isNaN(raw) ? null : raw);
+                          const v = e.target.value.replace(/[^0-9]/g, '');
+                          e.target.value = v; // strip non-numeric immediately
+                          const raw = v === '' ? null : parseInt(v, 10);
+                          onChange(su, col.key, raw);
                         }}
                         onBlur={e => {
-                          const r = parseFloat(e.target.value);
+                          const r = parseInt(e.target.value, 10);
                           if (!isNaN(r) && r > col.max) onChange(su, col.key, col.max);
                         }}
                         onKeyDown={e => {
-                          if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+                          if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Enter'].includes(e.key)) {
+                            e.preventDefault();
+                          }
                           handleKey(e, si, ci);
                         }}
-                        onWheel={e => e.target.blur()}
                         onFocus={e => e.target.select()}
                         className={`w-full text-center rounded-md py-1.5 px-1 outline-none focus:ring-2 text-sm font-medium transition-all
                           ${over
