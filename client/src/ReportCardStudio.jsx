@@ -233,7 +233,11 @@ function MarksTable({ subjects, marks, onChange }) {
                           const r = parseFloat(e.target.value);
                           if (!isNaN(r) && r > col.max) onChange(su, col.key, col.max);
                         }}
-                        onKeyDown={e => handleKey(e, si, ci)}
+                        onKeyDown={e => {
+                          if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+                          handleKey(e, si, ci);
+                        }}
+                        onWheel={e => e.target.blur()}
                         onFocus={e => e.target.select()}
                         className={`w-full text-center rounded-md py-1.5 px-1 outline-none focus:ring-2 text-sm font-medium transition-all
                           ${over
