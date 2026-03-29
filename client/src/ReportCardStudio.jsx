@@ -126,73 +126,39 @@ function GuestForm({ guest, setGuest, subjects, setSubjects, marks, setMarks }) 
 
 // ── Shared spreadsheet-style marks table ─────────────────────────
 const COLS = [
-  { key:'t1_pt',  label:'Per.Test', max:10,  term:1 },
-  { key:'t1_nb',  label:'NoteBook', max:5,   term:1 },
-  { key:'t1_sea', label:'SEA',      max:5,   term:1 },
-  { key:'t1_hy',  label:'Half Yrly',max:80,  term:1 },
-  { key:'t2_pt',  label:'Per.Test', max:10,  term:2 },
-  { key:'t2_nb',  label:'NoteBook', max:5,   term:2 },
-  { key:'t2_sea', label:'SEA',      max:5,   term:2 },
-  { key:'t2_ye',  label:'Yearly',   max:80,  term:2 },
+  { key:'t1_pt',  label:'Per.Test',  max:10, term:1 },
+  { key:'t1_nb',  label:'NoteBook',  max:5,  term:1 },
+  { key:'t1_sea', label:'SEA',       max:5,  term:1 },
+  { key:'t1_hy',  label:'Half Yrly', max:80, term:1 },
+  { key:'t2_pt',  label:'Per.Test',  max:10, term:2 },
+  { key:'t2_nb',  label:'NoteBook',  max:5,  term:2 },
+  { key:'t2_sea', label:'SEA',       max:5,  term:2 },
+  { key:'t2_ye',  label:'Yearly',    max:80, term:2 },
 ];
 
 function MarksTable({ subjects, marks, onChange }) {
-  const inputRefs = React.useRef({});
-  const tableId = React.useRef('mt_' + Math.random().toString(36).slice(2));
+  // Use a stable container ref to find inputs by data-cell
+  const containerRef = React.useRef(null);
 
-  const focusCell = (suIdx, colIdx) => {
+  const focusCell = React.useCallback((si, ci) => {
+    if (!containerRef.current) return;
     const totalRows = subjects.length;
     const totalCols = COLS.length;
-    const si = Math.max(0, Math.min(totalRows - 1, suIdx));
-    const ci = Math.max(0, Math.min(totalCols - 1, colIdx));
-    const key = `${si}_${ci}`;
-    const ref = inputRefs.current[key];
-    console.log('[MarksTable] focusCell', si, ci, 'ref:', !!ref, 'all keys:', Object.keys(inputRefs.current));
-    if (ref) {
-      ref.focus();
-      setTimeout(() => { try { ref.select(); } catch(e){} }, 10);
-    }
-  };
-
-  const handleKey = (e, suIdx, colIdx) => {
-    const totalCols = COLS.length;
-    const totalRows = subjects.length;
-
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      let nc = e.shiftKey ? colIdx - 1 : colIdx + 1;
-      let ns = suIdx;
-      if (nc >= totalCols) { nc = 0; ns++; }
-      if (nc < 0) { nc = totalCols - 1; ns--; }
-      focusCell(ns, nc);
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      let nc = colIdx + 1, ns = suIdx;
-      if (nc >= totalCols) { nc = 0; ns++; }
-      focusCell(ns, nc);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      let nc = colIdx - 1, ns = suIdx;
-      if (nc < 0) { nc = totalCols - 1; ns--; }
-      focusCell(ns, nc);
-    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
-      e.preventDefault();
-      focusCell(suIdx + 1, colIdx);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      focusCell(suIdx - 1, colIdx);
-    }
-  };
+    const r = Math.max(0, Math.min(totalRows - 1, si));
+    const c = Math.max(0, Math.min(totalCols - 1, ci));
+    const el = containerRef.current.querySelector(`[data-cell="${r}-${c}"]`);
+    if (el) { el.focus(); el.select(); }
+  }, [subjects.length]);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-blue-200">
+    <div ref={containerRef} className="overflow-x-auto rounded-xl border border-blue-200">
       <table className="w-full border-collapse text-xs" style={{minWidth:'600px'}}>
         <thead>
           <tr>
             <th className="bg-blue-600 text-white px-3 py-2 text-left font-semibold sticky left-0 z-10" style={{minWidth:'90px'}}>Subject</th>
             {[1,2].map(term => (
               <React.Fragment key={term}>
-                <th colSpan={4} className="bg-blue-500 text-white px-2 py-2 text-center font-semibold border-l border-blue-400">
+                <th colSpan={4} className={`bg-blue-500 text-white px-2 py-2 text-center font-semibold ${term===2?'border-l-2 border-l-blue-300':''}`}>
                   Term {term} (100)
                 </th>
               </React.Fragment>
@@ -222,15 +188,12 @@ function MarksTable({ subjects, marks, onChange }) {
                   return (
                     <td key={ci} className={`p-1 ${ci===4?'border-l-2 border-l-blue-200':''}`}>
                       <input
-                        ref={el => { inputRefs.current[`${si}_${ci}`] = el; }}
-                        data-cell={`${si}_${ci}`}
+                        data-cell={`${si}-${ci}`}
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
                         value={val ?? ''}
                         onChange={e => {
                           const v = e.target.value.replace(/[^0-9]/g, '');
-                          e.target.value = v; // strip non-numeric immediately
                           const raw = v === '' ? null : parseInt(v, 10);
                           onChange(su, col.key, raw);
                         }}
@@ -239,10 +202,23 @@ function MarksTable({ subjects, marks, onChange }) {
                           if (!isNaN(r) && r > col.max) onChange(su, col.key, col.max);
                         }}
                         onKeyDown={e => {
-                          if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Enter'].includes(e.key)) {
-                            e.preventDefault();
+                          const key = e.key;
+                          if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Enter'].includes(key)) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (key === 'ArrowRight' || (key === 'Tab' && !e.shiftKey)) {
+                            const nc = ci + 1 >= COLS.length ? 0 : ci + 1;
+                            const ns = ci + 1 >= COLS.length ? si + 1 : si;
+                            focusCell(ns, nc);
+                          } else if (key === 'ArrowLeft' || (key === 'Tab' && e.shiftKey)) {
+                            const nc = ci - 1 < 0 ? COLS.length - 1 : ci - 1;
+                            const ns = ci - 1 < 0 ? si - 1 : si;
+                            focusCell(ns, nc);
+                          } else if (key === 'ArrowDown' || key === 'Enter') {
+                            focusCell(si + 1, ci);
+                          } else if (key === 'ArrowUp') {
+                            focusCell(si - 1, ci);
                           }
-                          handleKey(e, si, ci);
                         }}
                         onFocus={e => e.target.select()}
                         className={`w-full text-center rounded-md py-1.5 px-1 outline-none focus:ring-2 text-sm font-medium transition-all
@@ -263,6 +239,7 @@ function MarksTable({ subjects, marks, onChange }) {
     </div>
   );
 }
+
 
 export default function ReportCardStudio({ db, save, logo }) {
   const classes = db.classes.map(c => c.name);
