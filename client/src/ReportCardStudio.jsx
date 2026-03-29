@@ -796,11 +796,16 @@ setTimeout(run,${downloadOnly ? 900 : 700});
     if (!subs.length) { toast('Enter at least one subject','err'); return; }
 
     // ── Save student to directory only ─────────────────────────────
-    const existingId = db.students.find(
-      s => s.fn.toLowerCase()===guest.fn.toLowerCase() &&
-           s.ln.toLowerCase()===(guest.ln||'').toLowerCase() &&
-           s.cls===guest.cls
-    )?.id;
+    // Match by roll+class or admNo+class (unique), fall back to name only if no identifiers
+    const existingId = db.students.find(s => {
+      if (s.cls !== guest.cls) return false;
+      if (guest.roll && s.roll && String(guest.roll) === String(s.roll)) return true;
+      if (guest.admNo && s.admNo && String(guest.admNo) === String(s.admNo)) return true;
+      if (!guest.roll && !guest.admNo)
+        return s.fn.toLowerCase()===guest.fn.toLowerCase() &&
+               s.ln.toLowerCase()===(guest.ln||'').toLowerCase();
+      return false;
+    })?.id;
 
     const stuId = existingId || ('S' + uid());
     const newStudent = {
@@ -866,11 +871,15 @@ setTimeout(run,${downloadOnly ? 900 : 700});
     if (!subs.length) { toast('Enter at least one subject','err'); return; }
 
     // Save student to directory (same as genGuest)
-    const existingId = db.students.find(
-      s => s.fn.toLowerCase()===guest.fn.toLowerCase() &&
-           s.ln.toLowerCase()===(guest.ln||'').toLowerCase() &&
-           s.cls===guest.cls
-    )?.id;
+    const existingId = db.students.find(s => {
+      if (s.cls !== guest.cls) return false;
+      if (guest.roll && s.roll && String(guest.roll) === String(s.roll)) return true;
+      if (guest.admNo && s.admNo && String(guest.admNo) === String(s.admNo)) return true;
+      if (!guest.roll && !guest.admNo)
+        return s.fn.toLowerCase()===guest.fn.toLowerCase() &&
+               s.ln.toLowerCase()===(guest.ln||'').toLowerCase();
+      return false;
+    })?.id;
     const stuId = existingId || ('S' + uid());
     const newStudent = {
       id: stuId, sid: stuId,
