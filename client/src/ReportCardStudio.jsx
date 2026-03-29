@@ -139,38 +139,50 @@ const COLS = [
 function MarksTable({ subjects, marks, onChange }) {
   const inputRefs = React.useRef({});
 
+  const focusCell = (suIdx, colIdx) => {
+    const totalRows = subjects.length;
+    const totalCols = COLS.length;
+    const si = Math.max(0, Math.min(totalRows - 1, suIdx));
+    const ci = Math.max(0, Math.min(totalCols - 1, colIdx));
+    // Try ref first, fall back to DOM query
+    const ref = inputRefs.current[`${si}_${ci}`];
+    if (ref) {
+      ref.focus();
+      setTimeout(() => ref.select(), 0);
+    } else {
+      const el = document.querySelector(`[data-cell="${si}_${ci}"]`);
+      if (el) { el.focus(); setTimeout(() => el.select(), 0); }
+    }
+  };
+
   const handleKey = (e, suIdx, colIdx) => {
     const totalCols = COLS.length;
     const totalRows = subjects.length;
-    let nextSu = suIdx, nextCol = colIdx;
 
     if (e.key === 'Tab') {
       e.preventDefault();
-      nextCol = e.shiftKey ? colIdx - 1 : colIdx + 1;
-      if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
-      if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
+      let nc = e.shiftKey ? colIdx - 1 : colIdx + 1;
+      let ns = suIdx;
+      if (nc >= totalCols) { nc = 0; ns++; }
+      if (nc < 0) { nc = totalCols - 1; ns--; }
+      focusCell(ns, nc);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      nextCol = colIdx + 1;
-      if (nextCol >= totalCols) { nextCol = 0; nextSu = suIdx + 1; }
+      let nc = colIdx + 1, ns = suIdx;
+      if (nc >= totalCols) { nc = 0; ns++; }
+      focusCell(ns, nc);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      nextCol = colIdx - 1;
-      if (nextCol < 0) { nextCol = totalCols - 1; nextSu = suIdx - 1; }
+      let nc = colIdx - 1, ns = suIdx;
+      if (nc < 0) { nc = totalCols - 1; ns--; }
+      focusCell(ns, nc);
     } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
       e.preventDefault();
-      nextSu = suIdx + 1;
+      focusCell(suIdx + 1, colIdx);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      nextSu = suIdx - 1;
-    } else {
-      return;
+      focusCell(suIdx - 1, colIdx);
     }
-
-    nextSu = Math.max(0, Math.min(totalRows - 1, nextSu));
-    nextCol = Math.max(0, Math.min(totalCols - 1, nextCol));
-    const ref = inputRefs.current[`${nextSu}_${nextCol}`];
-    if (ref) { ref.focus(); ref.select(); }
   };
 
   return (
@@ -211,8 +223,9 @@ function MarksTable({ subjects, marks, onChange }) {
                   return (
                     <td key={ci} className={`p-1 ${ci===4?'border-l-2 border-l-blue-200':''}`}>
                       <input
-                        ref={el => inputRefs.current[`${si}_${ci}`] = el}
-                        type="text" inputMode="numeric" min="0" max={col.max}
+                        ref={el => { inputRefs.current[`${si}_${ci}`] = el; }}
+                        data-cell={`${si}_${ci}`}
+                        type="text" inputMode="numeric"
                         value={val ?? ''}
                         onChange={e => {
                           const raw = e.target.value === '' ? null : parseFloat(e.target.value.replace(/[^0-9.]/g,''));
