@@ -166,19 +166,12 @@ export default function LandingPage() {
   const statsRef = useRef(null);
   const statsInView = useInView(statsRef, 0.2);
   const heroRef = useRef(null);
-  const topSentinelRef = useRef(null);
 
   useEffect(() => {
-    const node = topSentinelRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setScrolled(!entry.isIntersecting),
-      { threshold: 1, rootMargin: '-60px 0px 0px 0px' }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
+    const onScroll = () => setScrolled(window.scrollY > 140);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
@@ -240,7 +233,6 @@ export default function LandingPage() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", color: '#1e293b', overflowX: 'hidden' }}>
-      <div ref={topSentinelRef} style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1, pointerEvents: 'none' }} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800;900&display=swap');
 
@@ -423,12 +415,12 @@ export default function LandingPage() {
           maxWidth: 1200,
           margin: '0 auto',
           position: 'relative',
-          width: scrolled ? 'min(1200px, calc(100% - 32px))' : '100%',
-          padding: scrolled ? '14px 28px' : '0 24px',
+          width: scrolled ? 'min(1180px, calc(100% - 48px))' : '100%',
+          padding: scrolled ? '12px 26px' : '0 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderRadius: scrolled ? 22 : 0,
+          borderRadius: scrolled ? 20 : 0,
           background: 'transparent',
           backdropFilter: 'none',
           boxShadow: 'none',
@@ -439,9 +431,11 @@ export default function LandingPage() {
             <div style={{
               position: 'absolute',
               inset: 0,
-              borderRadius: 22,
-              background: '#0b4f8a',
-              boxShadow: '0 14px 34px rgba(11,79,138,0.28)',
+              borderRadius: 20,
+              background: 'linear-gradient(135deg, rgba(8,54,102,0.96), rgba(19,96,168,0.94))',
+              border: '1px solid rgba(255,255,255,0.10)',
+              boxShadow: '0 16px 40px rgba(6,35,71,0.24)',
+              backdropFilter: 'blur(14px)',
               zIndex: 0,
             }} />
           )}
