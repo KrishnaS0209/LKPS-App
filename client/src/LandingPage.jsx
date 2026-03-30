@@ -414,19 +414,30 @@ export default function LandingPage() {
         <div className="lp-nav-inner" style={{
           maxWidth: 1200,
           margin: '0 auto',
+          position: 'relative',
           width: scrolled ? 'min(1200px, calc(100% - 32px))' : '100%',
           padding: scrolled ? '14px 28px' : '0 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderRadius: scrolled ? 24 : 0,
-          background: scrolled ? '#08294a' : 'transparent',
-          backdropFilter: scrolled ? 'blur(14px)' : 'none',
-          boxShadow: scrolled ? '0 20px 50px rgba(0,20,60,0.24)' : 'none',
-          border: scrolled ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+          borderRadius: scrolled ? 22 : 0,
+          background: 'transparent',
+          backdropFilter: 'none',
+          boxShadow: 'none',
+          border: 'none',
           transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          {scrolled && (
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 22,
+              background: '#0b4f8a',
+              boxShadow: '0 14px 34px rgba(11,79,138,0.28)',
+              zIndex: 0,
+            }} />
+          )}
+          <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', position: 'relative', zIndex: 1 }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             {/* Logo */}
             <img src={process.env.PUBLIC_URL + '/logo.png'} alt="Lord Krishna Public School"
               style={{ width: 48, height: 48, objectFit: 'contain', filter: scrolled ? 'none' : 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }} />
@@ -436,14 +447,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, position: 'relative', zIndex: 1 }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={e => { e.preventDefault(); scrollTo(l.toLowerCase()); }}
                 className={`nav-link ${scrolled ? 'nav-link-dark' : ''}`}>{l}</a>
             ))}
           </div>
 
-          <div className="lp-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="lp-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
             <button className="reg-btn" onClick={() => setRegOpen(true)}>Register Now</button>
             <a href="/login" style={{
               padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
