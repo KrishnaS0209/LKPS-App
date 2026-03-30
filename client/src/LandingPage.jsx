@@ -403,7 +403,7 @@ export default function LandingPage() {
       {/* ── NAVBAR ── */}
       <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: scrolled ? '10px 0' : '18px 0',
+        padding: scrolled ? '12px 0' : '18px 0',
         background: 'transparent',
         backdropFilter: 'none',
         boxShadow: 'none',
@@ -413,15 +413,16 @@ export default function LandingPage() {
         <div className="lp-nav-inner" style={{
           maxWidth: 1200,
           margin: '0 auto',
-          padding: scrolled ? '12px 24px' : '0 24px',
+          width: scrolled ? 'min(1200px, calc(100% - 32px))' : '100%',
+          padding: scrolled ? '14px 28px' : '0 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderRadius: scrolled ? 22 : 0,
-          background: scrolled ? 'linear-gradient(135deg,rgba(0,32,69,0.96),rgba(25,96,163,0.94))' : 'transparent',
-          backdropFilter: scrolled ? 'blur(18px)' : 'none',
-          boxShadow: scrolled ? '0 18px 44px rgba(0,20,60,0.28)' : 'none',
-          border: scrolled ? '1px solid rgba(255,255,255,0.10)' : '1px solid transparent',
+          borderRadius: scrolled ? 24 : 0,
+          background: scrolled ? '#08294a' : 'transparent',
+          backdropFilter: scrolled ? 'blur(14px)' : 'none',
+          boxShadow: scrolled ? '0 20px 50px rgba(0,20,60,0.24)' : 'none',
+          border: scrolled ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
           transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         }}>
           <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
