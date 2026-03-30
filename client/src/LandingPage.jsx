@@ -404,11 +404,11 @@ export default function LandingPage() {
       <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         padding: scrolled ? '10px 0' : '18px 0',
-        background: scrolled ? 'rgba(255,255,255,0.97)' : 'transparent',
+        background: scrolled ? 'rgba(0,20,60,0.97)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.09)' : 'none',
+        boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.25)' : 'none',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
       }}>
         <div className="lp-nav-inner" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
