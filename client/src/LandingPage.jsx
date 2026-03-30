@@ -168,10 +168,19 @@ export default function LandingPage() {
   const heroRef = useRef(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 140);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const hero = heroRef.current;
+    if (!hero) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      {
+        threshold: 0,
+        rootMargin: '0px',
+      }
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -278,15 +287,16 @@ export default function LandingPage() {
 
         /* ── Hero ── */
         .hero-bg{
-          background:linear-gradient(135deg,#000d1a 0%,#001529 20%,#002045 40%,#0a3060 60%,#1960a3 80%,#0a3060 100%);
-          background-size:400% 400%;
-          animation:gradShift 20s ease infinite;
+          background:
+            radial-gradient(circle at top right, rgba(96,165,250,0.2), transparent 32%),
+            radial-gradient(circle at bottom left, rgba(251,191,36,0.16), transparent 28%),
+            linear-gradient(135deg,#f8fbff 0%,#eef6ff 48%,#fffdf7 100%);
         }
         .hero-grid{
           position:absolute;inset:0;pointer-events:none;
-          background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);
+          background-image:linear-gradient(rgba(25,96,163,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(25,96,163,0.06) 1px,transparent 1px);
           background-size:72px 72px;
-          mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 20%,transparent 100%);
+          mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 24%,transparent 100%);
         }
         .scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);animation:scanLine 8s linear infinite;pointer-events:none;}
 
@@ -302,10 +312,12 @@ export default function LandingPage() {
         .float-card{animation:bobY 6s ease-in-out infinite;will-change:transform;}
 
         /* ── Nav ── */
-        .nav-link{position:relative;color:rgba(255,255,255,0.85);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.02em;padding:4px 0;transition:color 0.2s;}
+        .nav-link{position:relative;color:#334155;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.01em;padding:4px 0;transition:color 0.2s;}
         .nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#fbbf24;border-radius:2px;transition:width 0.28s ease;}
-        .nav-link:hover{color:#fff;}.nav-link:hover::after{width:100%;}
-        .nav-link-dark{color:rgba(255,255,255,0.86);}.nav-link-dark:hover{color:#fff;}.nav-link-dark::after{background:#fbbf24;}
+        .nav-link:hover{color:#0f172a;}.nav-link:hover::after{width:100%;}
+        .nav-link-dark{color:#334155;}.nav-link-dark:hover{color:#0f172a;}.nav-link-dark::after{background:#1960a3;}
+        .lp-nav-menu{display:none;align-items:center;justify-content:center;width:42px;height:42px;border-radius:14px;border:1px solid #d7e2f0;background:rgba(255,255,255,0.92);color:#1960a3;cursor:pointer;box-shadow:0 8px 22px rgba(148,163,184,0.12);transition:transform 0.2s ease,box-shadow 0.2s ease;}
+        .lp-nav-menu:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(148,163,184,0.16);}
 
         /* ── Cards ── */
         .card-hover{transition:transform 0.35s cubic-bezier(0.16,1,0.3,1),box-shadow 0.35s ease;}
@@ -315,13 +327,13 @@ export default function LandingPage() {
         .notice-row:hover{background:#eef4ff;transform:translateX(8px);}
 
         /* ── Buttons ── */
-        .reg-btn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;border:none;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:800;cursor:pointer;transition:transform 0.22s,box-shadow 0.22s;box-shadow:0 4px 14px rgba(251,191,36,0.4);letter-spacing:0.02em;will-change:transform;}
-        .reg-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 14px 36px rgba(251,191,36,0.55);}
+        .reg-btn{background:linear-gradient(135deg,#ffc533,#f5a300);color:#132238;border:none;padding:10px 22px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;transition:transform 0.22s,box-shadow 0.22s,filter 0.22s;box-shadow:0 10px 24px rgba(245,163,0,0.26);letter-spacing:0.01em;will-change:transform;}
+        .reg-btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(245,163,0,0.32);filter:brightness(1.03);}
         .hero-cta{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:transform 0.25s,box-shadow 0.25s;border:none;will-change:transform;}
         .hero-cta-primary{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;box-shadow:0 8px 28px rgba(251,191,36,0.45);animation:glowPulse 3s ease-in-out infinite;}
         .hero-cta-primary:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 20px 48px rgba(251,191,36,0.6);}
-        .hero-cta-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.28);backdrop-filter:blur(8px);}
-        .hero-cta-secondary:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px);}
+        .hero-cta-secondary{background:#fff;color:#0f172a;border:1.5px solid #d7e2f0;box-shadow:0 12px 28px rgba(15,23,42,0.08);}
+        .hero-cta-secondary:hover{background:#f8fbff;transform:translateY(-2px);}
 
         /* ── Tags ── */
         .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.06em;}
@@ -359,6 +371,7 @@ export default function LandingPage() {
         /* ── Responsive ── */
         @media (max-width: 1024px){
           .lp-nav-links{display:none!important;}
+          .lp-nav-menu{display:inline-flex!important;}
           .lp-nav-inner{padding:0 14px!important;}
           .lp-nav-actions{gap:8px!important;}
           .lp-hero-main{grid-template-columns:1fr!important;gap:34px!important;}
@@ -372,7 +385,7 @@ export default function LandingPage() {
         }
 
         @media (max-width: 768px){
-          .lp-nav{padding:10px 0!important;}
+          .lp-nav{padding:0!important;}
           .lp-nav-brand div:first-child{font-size:14px!important;}
           .lp-nav-brand div:last-child{font-size:9px!important;}
           .lp-nav-actions .reg-btn{padding:8px 14px!important;font-size:12px!important;}
@@ -391,6 +404,7 @@ export default function LandingPage() {
 
         @media (max-width: 480px){
           .lp-nav-actions .reg-btn{display:none!important;}
+          .lp-nav-inner{padding:12px 14px!important;border-radius:0!important;}
           .lp-hero-copy h1,.lp-hero-copy h2{font-size:36px!important;line-height:1.12!important;}
           .lp-hero-copy p{font-size:13px!important;}
           .lp-hero-ctas .hero-cta{width:100%;justify-content:center!important;}
@@ -404,52 +418,45 @@ export default function LandingPage() {
       {/* ── NAVBAR ── */}
       <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: scrolled ? '12px 0' : '18px 0',
-        background: 'transparent',
-        backdropFilter: 'none',
-        boxShadow: 'none',
+        padding: 0,
+        background: scrolled
+          ? 'rgba(255,255,255,0.96)'
+          : 'linear-gradient(135deg,#f8fbff 0%,#eef6ff 52%,#edf5ff 100%)',
+        backdropFilter: 'blur(14px)',
+        boxShadow: scrolled ? '0 10px 30px rgba(15,23,42,0.08)' : 'none',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-        borderBottom: 'none',
+        borderBottom: scrolled ? '1px solid rgba(226,232,240,0.95)' : 'none',
       }}>
         <div className="lp-nav-inner" style={{
-          maxWidth: 1200,
+          maxWidth: '100%',
           margin: '0 auto',
-          position: 'relative',
-          width: scrolled ? 'min(1180px, calc(100% - 48px))' : '100%',
-          padding: scrolled ? '12px 26px' : '0 24px',
+          width: '100%',
+          padding: scrolled ? '14px 28px' : '16px 28px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderRadius: scrolled ? 20 : 0,
+          borderRadius: 0,
           background: 'transparent',
           backdropFilter: 'none',
           boxShadow: 'none',
           border: 'none',
           transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          {scrolled && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 20,
-              background: 'linear-gradient(135deg, rgba(8,54,102,0.96), rgba(19,96,168,0.94))',
-              border: '1px solid rgba(255,255,255,0.10)',
-              boxShadow: '0 16px 40px rgba(6,35,71,0.24)',
-              backdropFilter: 'blur(14px)',
-              zIndex: 0,
-            }} />
-          )}
-          <div className="lp-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', position: 'relative', zIndex: 1 }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div
+            className="lp-nav-brand"
+            style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', position: 'relative', zIndex: 1 }}
+            onClick={() => window.location.href = '/'}
+          >
             {/* Logo */}
             <img src={process.env.PUBLIC_URL + '/logo.png'} alt="Lord Krishna Public School"
-              style={{ width: 48, height: 48, objectFit: 'contain', filter: scrolled ? 'none' : 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }} />
+              style={{ width: 48, height: 48, objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(15,23,42,0.10))', transition: 'all 0.25s ease' }} />
             <div>
-              <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 900, fontSize: 17, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.01em' }}>LORD KRISHNA</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: scrolled ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.7)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 2 }}>PUBLIC SCHOOL · MATHURA</div>
+              <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 900, fontSize: 17, color: '#0f172a', lineHeight: 1.05, letterSpacing: '-0.01em', transition: 'all 0.25s ease' }}>LORD KRISHNA</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 3, transition: 'all 0.25s ease' }}>PUBLIC SCHOOL · MATHURA</div>
             </div>
           </div>
 
-          <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, position: 'relative', zIndex: 1 }}>
+          <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, position: 'relative', zIndex: 1, transition: 'gap 0.25s ease' }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={e => { e.preventDefault(); scrollTo(l.toLowerCase()); }}
                 className={`nav-link ${scrolled ? 'nav-link-dark' : ''}`}>{l}</a>
@@ -457,18 +464,25 @@ export default function LandingPage() {
           </div>
 
           <div className="lp-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
+            <button
+              className="lp-nav-menu"
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            >
+              <Icon name={menuOpen ? 'close' : 'menu'} size={22} />
+            </button>
             <button className="reg-btn" onClick={() => setRegOpen(true)}>Register Now</button>
             <a href="/login" style={{
-              padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
-              background: scrolled ? '#002045' : 'rgba(255,255,255,0.12)',
-              color: '#fff', textDecoration: 'none',
-              border: scrolled ? 'none' : '1.5px solid rgba(255,255,255,0.3)',
-              transition: 'all 0.2s', backdropFilter: 'blur(8px)',
+              padding: '9px 20px', borderRadius: 999, fontSize: 13, fontWeight: 700,
+              background: scrolled ? '#0f172a' : '#eef6ff',
+              color: scrolled ? '#fff' : '#0f172a', textDecoration: 'none',
+              border: scrolled ? '1px solid rgba(15,23,42,0.04)' : '1px solid #d7e2f0',
+              transition: 'all 0.2s', backdropFilter: 'blur(8px)', boxShadow: scrolled ? '0 8px 18px rgba(15,23,42,0.08)' : 'none',
             }}>Login</a>
           </div>
         </div>
         {menuOpen && (
-          <div style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ background: 'rgba(255,255,255,0.98)', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 18px 42px rgba(15,23,42,0.08)', backdropFilter: 'blur(16px)' }}>
             {NAV_LINKS.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={e => { e.preventDefault(); scrollTo(l.toLowerCase()); }}
                 style={{ color: '#334155', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>{l}</a>
@@ -479,157 +493,77 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section ref={heroRef} onMouseMove={onMouseMove} style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }} className="hero-bg">
+      <section
+        ref={heroRef}
+        onMouseMove={onMouseMove}
+        style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}
+        className="hero-bg"
+      >
+        <div className="hero-grid" style={{ opacity: 0.48 }} />
+        <div
+          className="orb orb1"
+          style={{
+            width: 560,
+            height: 560,
+            background: 'radial-gradient(circle,rgba(147,197,253,0.26) 0%,transparent 70%)',
+            top: -180,
+            right: -160,
+            transform: `translate(${mouse.x * -8}px, ${mouse.y * -6}px)`,
+            transition: 'transform 0.15s ease-out',
+          }}
+        />
+        <div
+          className="orb orb2"
+          style={{
+            width: 420,
+            height: 420,
+            background: 'radial-gradient(circle,rgba(251,191,36,0.18) 0%,transparent 70%)',
+            bottom: -120,
+            left: -80,
+            transform: `translate(${mouse.x * 6}px, ${mouse.y * 5}px)`,
+            transition: 'transform 0.15s ease-out',
+          }}
+        />
 
-        {/* Particle canvas */}
-        <ParticleCanvas />
-
-        {/* Scan line */}
-        <div className="scan-line" />
-
-        {/* Morphing blobs */}
-        <div className="blob" style={{ width: 700, height: 700, background: 'radial-gradient(circle,#1960a3,#002045)', top: -200, right: -200 }} />
-        <div className="blob" style={{ width: 500, height: 500, background: 'radial-gradient(circle,#fbbf24,#f97316)', bottom: -150, left: -150, animationDelay: '-9s' }} />
-
-        {/* Parallax orbs */}
-        <div className="orb orb1" style={{
-          width: 900, height: 900,
-          background: 'radial-gradient(circle,rgba(25,96,163,0.45) 0%,transparent 65%)',
-          top: -300, right: -250,
-          transform: `translate(${mouse.x * -18}px, ${mouse.y * -12}px)`,
-          transition: 'transform 0.15s ease-out',
-        }} />
-        <div className="orb orb2" style={{
-          width: 700, height: 700,
-          background: 'radial-gradient(circle,rgba(251,191,36,0.18) 0%,transparent 65%)',
-          bottom: -250, left: -200,
-          transform: `translate(${mouse.x * 14}px, ${mouse.y * 10}px)`,
-          transition: 'transform 0.15s ease-out',
-        }} />
-
-        {/* Grid */}
-        <div className="hero-grid" />
-
-        {/* Floating school icons */}
-        {[
-          { icon: 'menu_book',     size: 34, top: '10%', left: '4%',  dur: '9s',  delay: '0s',   op: 0.2,  col: '#fbbf24' },
-          { icon: 'school',        size: 42, top: '70%', left: '3%',  dur: '11s', delay: '1s',   op: 0.16, col: '#93c5fd' },
-          { icon: 'edit',          size: 28, top: '20%', left: '92%', dur: '8s',  delay: '0.5s', op: 0.2,  col: '#fff' },
-          { icon: 'science',       size: 36, top: '55%', left: '90%', dur: '12s', delay: '2s',   op: 0.16, col: '#fbbf24' },
-          { icon: 'calculate',     size: 30, top: '82%', left: '78%', dur: '10s', delay: '1.5s', op: 0.18, col: '#93c5fd' },
-          { icon: 'emoji_events',  size: 32, top: '15%', left: '78%', dur: '7s',  delay: '3s',   op: 0.2,  col: '#fbbf24' },
-          { icon: 'sports_soccer', size: 28, top: '88%', left: '40%', dur: '13s', delay: '0.8s', op: 0.14, col: '#fff' },
-          { icon: 'palette',       size: 30, top: '40%', left: '96%', dur: '9s',  delay: '2.5s', op: 0.16, col: '#93c5fd' },
-          { icon: 'music_note',    size: 26, top: '6%',  left: '35%', dur: '8s',  delay: '1.2s', op: 0.15, col: '#fbbf24' },
-          { icon: 'psychology',    size: 32, top: '75%', left: '55%', dur: '11s', delay: '3.5s', op: 0.13, col: '#fff' },
-          { icon: 'star',          size: 22, top: '30%', left: '8%',  dur: '6s',  delay: '0.3s', op: 0.22, col: '#fbbf24' },
-          { icon: 'lightbulb',     size: 28, top: '50%', left: '15%', dur: '10s', delay: '2.2s', op: 0.16, col: '#93c5fd' },
-        ].map((item, i) => (
-          <span key={i} className="material-symbols-outlined school-float" style={{
-            fontSize: item.size, top: item.top, left: item.left, opacity: item.op, color: item.col,
-            animation: `floatIcon ${item.dur} ${item.delay} ease-in-out infinite`,
-          }}>{item.icon}</span>
-        ))}
-
-        {/* Twinkling stars */}
-        {[
-          { top: '8%', left: '22%', d: '0s', s: '3s' }, { top: '18%', left: '60%', d: '0.7s', s: '2.8s' },
-          { top: '42%', left: '45%', d: '1.4s', s: '4s' }, { top: '65%', left: '25%', d: '0.3s', s: '3.5s' },
-          { top: '78%', left: '70%', d: '2s', s: '2.6s' }, { top: '92%', left: '50%', d: '1s', s: '3.2s' },
-          { top: '35%', left: '82%', d: '1.8s', s: '2.9s' }, { top: '55%', left: '6%', d: '2.5s', s: '3.8s' },
-          { top: '25%', left: '50%', d: '0.5s', s: '3.1s' }, { top: '60%', left: '88%', d: '3s', s: '2.7s' },
-        ].map((s, i) => (
-          <div key={i} style={{ position: 'absolute', width: i % 3 === 0 ? 4 : 2.5, height: i % 3 === 0 ? 4 : 2.5, borderRadius: '50%', background: '#fff', top: s.top, left: s.left, animation: `twinkle ${s.s} ${s.d} ease-in-out infinite`, pointerEvents: 'none', boxShadow: '0 0 6px rgba(255,255,255,0.8)' }} />
-        ))}
-
-        {/* Expanding rings */}
-        {[{ top: '25%', left: '20%', sz: 120, d: '0s', dur: '8s' }, { top: '60%', left: '75%', sz: 90, d: '2.5s', dur: '10s' }, { top: '85%', left: '35%', sz: 70, d: '5s', dur: '9s' }].map((r, i) => (
-          <div key={i} style={{ position: 'absolute', width: r.sz, height: r.sz, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)', top: r.top, left: r.left, animation: `ringOut ${r.dur} ${r.d} ease-out infinite`, pointerEvents: 'none' }} />
-        ))}
-
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '120px 24px 80px', width: '100%', position: 'relative', zIndex: 1 }}>
-          <div className="lp-hero-main" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
-
-            {/* Left */}
-            <div className="lp-hero-copy" style={{ animation: 'slideInL 0.9s cubic-bezier(0.16,1,0.3,1) both' }}>
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', borderRadius: 50, padding: '7px 18px', marginBottom: 28 }}>
-                <div style={{ position: 'relative', width: 8, height: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 12px #fbbf24', position: 'relative', zIndex: 1 }} />
-                  <div className="pulse-ring" style={{ width: 18, height: 18, top: -5, left: -5 }} />
-                  <div className="pulse-ring r2" style={{ width: 18, height: 18, top: -5, left: -5 }} />
-                  <div className="pulse-ring r3" style={{ width: 18, height: 18, top: -5, left: -5 }} />
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Admissions Open 2025–26</span>
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '150px 24px 96px', width: '100%', position: 'relative', zIndex: 1 }}>
+          <div className="lp-hero-main" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, alignItems: 'center' }}>
+            <div className="lp-hero-copy" style={{ animation: 'slideInL 0.8s cubic-bezier(0.16,1,0.3,1) both' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff8e1', border: '1px solid #f6dd9d', borderRadius: 999, padding: '8px 18px', marginBottom: 26, boxShadow: '0 10px 24px rgba(245, 158, 11, 0.08)' }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 10px rgba(245,158,11,0.35)' }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#b45309', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Admissions Open 2025-26</span>
               </div>
 
-              {/* ── School Name ── */}
-              <div style={{ marginBottom: 20, position: 'relative' }}>
+              <div style={{ maxWidth: 620 }}>
+                <h1 style={{ fontFamily: 'Manrope,sans-serif', fontSize: 'clamp(42px,6vw,72px)', fontWeight: 900, color: '#0f172a', lineHeight: 0.96, letterSpacing: '-0.04em', margin: 0 }}>
+                  Bright beginnings,
+                  <br />
+                  strong foundations
+                </h1>
+                <div style={{ marginTop: 18, width: 120, height: 4, borderRadius: 999, background: 'linear-gradient(90deg,#1960a3,#7dd3fc)' }} />
+              </div>
 
-                {/* "Lord Krishna" — letters wave */}
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <div style={{ fontFamily: 'Manrope,sans-serif', fontSize: 'clamp(34px,4.8vw,62px)', fontWeight: 900, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 4 }}>
-                    {'Lord Krishna'.split('').map((ch, i) => (
-                      <span key={i} className="school-name-letter" style={{
-                        animationDelay: `${i * 0.08}s`,
-                        animationDuration: `${2.2 + (i % 3) * 0.3}s`,
-                        color: ch === ' ' ? 'transparent' : '#fff',
-                        cursor: 'default',
-                      }}>{ch === ' ' ? '\u00A0' : ch}</span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* "Public School" — shimmer */}
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  {/* Twinkling stars */}
-                  {[
-                    { top: -14, left: '10%', size: 14, delay: '0s', dur: '2.1s' },
-                    { top: -18, left: '38%', size: 10, delay: '0.4s', dur: '1.8s' },
-                    { top: -12, left: '65%', size: 12, delay: '0.8s', dur: '2.4s' },
-                    { top: -16, left: '88%', size: 9,  delay: '1.2s', dur: '2s'   },
-                  ].map((s, i) => (
-                    <span key={i} className="material-symbols-outlined" style={{
-                      position: 'absolute', top: s.top, left: s.left,
-                      fontSize: s.size, color: '#fbbf24', pointerEvents: 'none',
-                      animation: `starPop ${s.dur} ${s.delay} ease-in-out infinite`,
-                      fontVariationSettings: "'FILL' 1",
-                    }}>star</span>
-                  ))}
-
-                  {/* "Public School" shimmer text */}
-                  <div style={{ fontFamily: 'Manrope,sans-serif', fontSize: 'clamp(34px,4.8vw,62px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.02em', position: 'relative' }}>
-                    {'Public School'.split('').map((ch, i) => (
-                      <span key={i} className="school-name-letter" style={{
-                        animationDelay: `${0.5 + i * 0.07}s`,
-                        animationDuration: `${2 + (i % 4) * 0.25}s`,
-                        background: 'linear-gradient(90deg,#fbbf24,#fb923c,#fde68a,#fbbf24)',
-                        backgroundSize: '300%',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        animation: `letterWave ${2 + (i % 4) * 0.25}s ${0.5 + i * 0.07}s ease-in-out infinite, shimmerTxt 4s ease infinite`,
-                        cursor: 'default',
-                      }}>{ch === ' ' ? '\u00A0' : ch}</span>
-                    ))}
-                  </div>
-
-                  {/* Gold underline draws itself */}
-                  <div style={{
-                    height: 4, borderRadius: 2, marginTop: 4,
-                    background: 'linear-gradient(90deg,#fbbf24,#fb923c,#fde68a)',
-                    animation: 'underlineGrow 1.2s 0.3s cubic-bezier(0.16,1,0.3,1) both',
-                    boxShadow: '0 2px 12px rgba(251,191,36,0.5)',
-                  }} />
-                </div>{/* end "Public School" wrapper */}
-              </div>{/* end school name outer */}
-
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 8, maxWidth: 480 }}>Ishapur, Laxminagar, Yamuna Par, Mathura</p>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.8, marginBottom: 12, maxWidth: 480 }}>
-                <Typewriter texts={['English-medium education since 2009.', 'Nursery to Class VIII.', '100% annual results, every year.', 'Where every child shines.']} />
+              <p style={{ fontSize: 20, color: '#334155', lineHeight: 1.6, margin: '24px 0 10px', maxWidth: 660, fontWeight: 600 }}>
+                A warm, modern English-medium school for Nursery to Class VIII in Mathura.
               </p>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.8, marginBottom: 36, maxWidth: 480 }}>
-                Nurturing young minds with strong values and a commitment to excellence.
+              <p style={{ fontSize: 14, color: '#1960a3', lineHeight: 1.8, margin: '0 0 12px', maxWidth: 620, fontWeight: 700 }}>
+                <Typewriter texts={['Focused learning with personal attention.', 'Safe classrooms, clear routines, and caring teachers.', 'Confident learners with strong values.']} />
               </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 14, maxWidth: 660, marginBottom: 30 }}>
+                {[
+                  ['verified', 'Structured learning from Nursery to Class VIII'],
+                  ['groups', 'Caring teachers and personal attention'],
+                  ['emoji_events', 'Strong values and confident growth'],
+                  ['apartment', 'Clean campus, activities, and modern facilities'],
+                ].map(([icon, text]) => (
+                  <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: 'rgba(255,255,255,0.76)', border: '1px solid #dbe7f5', borderRadius: 18, padding: '14px 16px', backdropFilter: 'blur(10px)', boxShadow: '0 12px 28px rgba(148,163,184,0.08)' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: '#eef6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon name={icon} size={18} style={{ color: '#1960a3' }} />
+                    </div>
+                    <span style={{ fontSize: 13, lineHeight: 1.6, color: '#334155', fontWeight: 600 }}>{text}</span>
+                  </div>
+                ))}
+              </div>
 
               <div className="lp-hero-ctas" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 <button className="hero-cta hero-cta-primary" onClick={() => setRegOpen(true)}>
@@ -640,59 +574,67 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <div className="lp-hero-badges" style={{ display: 'flex', gap: 24, marginTop: 48, flexWrap: 'wrap' }}>
-                {[['verified', 'Est. 2009'], ['groups', '300+ Students'], ['emoji_events', '100% Results']].map(([ic, lb], i) => (
-                  <div key={lb} style={{ display: 'flex', alignItems: 'center', gap: 8, animation: `popIn 0.5s ${0.8 + i * 0.15}s cubic-bezier(0.16,1,0.3,1) both` }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name={ic} size={15} style={{ color: '#fbbf24' }} />
-                    </div>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>{lb}</span>
+              <div className="lp-hero-badges" style={{ display: 'flex', gap: 24, marginTop: 34, flexWrap: 'wrap' }}>
+                {[
+                  ['location_on', 'Ishapur, Laxminagar, Mathura'],
+                  ['calendar_today', 'Established 2009'],
+                  ['school', 'Value-based learning'],
+                ].map(([icon, label]) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <Icon name={icon} size={16} style={{ color: '#1960a3' }} />
+                    <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right — glass card */}
-            <div style={{ display: 'flex', justifyContent: 'center', animation: 'slideInR 0.9s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
-              <div className="float-card lp-hero-card" style={{
-                background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(28px)',
-                border: '1px solid rgba(255,255,255,0.14)', borderRadius: 28,
-                padding: 36, width: '100%', maxWidth: 380,
-                boxShadow: '0 32px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12)',
-              }}>
-                <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                  <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
-                    <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg,#fbbf24,#f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 36px rgba(251,191,36,0.5)', animation: 'glowPulse 3s ease-in-out infinite' }}>
-                      <Icon name="school" size={36} style={{ color: '#fff' }} />
-                    </div>
-                    <div style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: '#fbbf24', border: '2px solid rgba(0,20,45,0.8)', animation: 'spinSlow 4s linear infinite', transformOrigin: '-20px 20px' }} />
+            <div style={{ display: 'flex', justifyContent: 'center', animation: 'slideInR 0.8s 0.12s cubic-bezier(0.16,1,0.3,1) both' }}>
+              <div style={{ width: '100%', maxWidth: 430, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #dbe7f5', borderRadius: 28, padding: 30, backdropFilter: 'blur(18px)', boxShadow: '0 28px 70px rgba(15,23,42,0.12)' }}>
+                  <div style={{ marginBottom: 22 }}>
+                    <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 900, fontSize: 22, color: '#0f172a' }}>Admissions & Enquiry</div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 6, lineHeight: 1.6 }}>Share your details and our team will contact you shortly.</div>
                   </div>
-                  <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 800, fontSize: 16, color: '#fff', marginBottom: 4 }}>Quick Enquiry</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Fill in your details to get started</div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                  {[{ ph: 'Student Name *', ic: 'person', key: 'name' }, { ph: 'Phone Number *', ic: 'phone', key: 'phone' }, { ph: 'Email (optional)', ic: 'mail', key: 'email' }].map(({ ph, ic, key }) => (
-                    <div key={key} style={{ position: 'relative' }}>
-                      <Icon name={ic} size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.35)' }} />
-                      <input placeholder={ph} value={regForm[key]} onChange={e => setRegForm(f => ({ ...f, [key]: e.target.value }))}
-                        style={{ width: '100%', padding: '11px 13px 11px 36px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 11, color: '#fff', fontSize: 13, transition: 'border 0.2s' }} />
-                    </div>
-                  ))}
-                  {regError && <div style={{ fontSize: 12, color: '#fca5a5' }}>{regError}</div>}
-                  <button onClick={handleReg} disabled={regLoading} style={{ marginTop: 4, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: '#1e293b', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: '0 6px 20px rgba(251,191,36,0.4)', opacity: regLoading ? 0.7 : 1 }}>
-                    {regLoading ? 'Submitting…' : 'Submit Enquiry'}
-                  </button>
-                  {regDone && <div style={{ textAlign: 'center', color: '#86efac', fontSize: 13, fontWeight: 600 }}>✓ Enquiry submitted! We'll contact you soon.</div>}
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+                    {[
+                      ['call', '9997360040 / 8650616990'],
+                      ['menu_book', 'Nursery to VIII'],
+                    ].map(([icon, value]) => (
+                      <div key={value} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#f8fbff', border: '1px solid #dbe7f5', borderRadius: 999, padding: '10px 14px' }}>
+                        <Icon name={icon} size={16} style={{ color: '#1960a3' }} />
+                        <div style={{ fontSize: 12, color: '#334155', fontWeight: 700, lineHeight: 1.4 }}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {[{ ph: 'Student Name *', ic: 'person', key: 'name' }, { ph: 'Phone Number *', ic: 'phone', key: 'phone' }, { ph: 'Email (optional)', ic: 'mail', key: 'email' }].map(({ ph, ic, key }) => (
+                      <div key={key} style={{ position: 'relative' }}>
+                        <Icon name={ic} size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                          placeholder={ph}
+                          value={regForm[key]}
+                          onChange={e => setRegForm(f => ({ ...f, [key]: e.target.value }))}
+                          style={{ width: '100%', padding: '13px 14px 13px 40px', background: '#fff', border: '1px solid #d7e2f0', borderRadius: 14, color: '#0f172a', fontSize: 14, transition: 'border 0.2s' }}
+                        />
+                      </div>
+                    ))}
+                    {regError && <div style={{ fontSize: 12, color: '#dc2626' }}>{regError}</div>}
+                    <button onClick={handleReg} disabled={regLoading} style={{ marginTop: 2, padding: 14, borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: '#1e293b', fontWeight: 900, fontSize: 15, cursor: 'pointer', boxShadow: '0 12px 28px rgba(251,191,36,0.34)', opacity: regLoading ? 0.7 : 1 }}>
+                      {regLoading ? 'Submitting...' : 'Request a Call Back'}
+                    </button>
+                    {regDone && <div style={{ textAlign: 'center', color: '#059669', fontSize: 13, fontWeight: 700 }}>Enquiry submitted. Our team will contact you soon.</div>}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Animated wave */}
         <div style={{ position: 'absolute', bottom: -2, left: 0, right: 0 }}>
           <svg viewBox="0 0 1440 90" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', width: '100%' }}>
-            <path d="M0,45 C240,90 480,0 720,45 C960,90 1200,0 1440,45 L1440,90 L0,90 Z" fill="#f8fafc" opacity="0.5" />
+            <path d="M0,45 C240,90 480,0 720,45 C960,90 1200,0 1440,45 L1440,90 L0,90 Z" fill="#f8fafc" opacity="0.52" />
             <path d="M0,55 C360,90 1080,10 1440,55 L1440,90 L0,90 Z" fill="#f8fafc" />
           </svg>
         </div>
@@ -729,14 +671,11 @@ export default function LandingPage() {
               <span style={{ fontSize: 11, fontWeight: 700, color: '#1960a3', letterSpacing: '0.1em', textTransform: 'uppercase' }}>About Us</span>
             </div>
             <h2 style={{ fontFamily: 'Manrope,sans-serif', fontSize: 'clamp(28px,4vw,44px)', fontWeight: 900, color: '#0f172a', lineHeight: 1.15, letterSpacing: '-0.02em', marginBottom: 20 }}>
-              Building Tomorrow's<br />
-              <span style={{ color: '#1960a3' }}>Leaders Since 2009</span>
+              A trusted school for<br />
+              <span style={{ color: '#1960a3' }}>steady learning and strong values</span>
             </h2>
-            <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.8, marginBottom: 16 }}>
-              Lord Krishna Public School was founded with a singular vision — to provide quality English-medium education to children of Ishapur and surrounding areas of Mathura.
-            </p>
             <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.8, marginBottom: 32 }}>
-              From Nursery to Class VIII, we blend academic rigour with character development, ensuring every child grows into a confident, curious, and compassionate individual.
+              Since 2009, Lord Krishna Public School has offered a balanced English-medium education with clear academics, caring teachers, and a safe environment for children across Mathura.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {[['location_on', 'Ishapur, Laxminagar, Mathura'], ['language', 'English Medium'], ['calendar_today', 'Est. 2009']].map(([ic, lb]) => (

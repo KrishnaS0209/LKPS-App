@@ -13,12 +13,28 @@ const PARENT_NAV = [
 
 export default function ParentPortal({ db, student, activeSessionId, onLogout }) {
   const [page, setPage] = useState('pdash');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const name = (student.fn || '') + ' ' + (student.ln || '');
   const photo = student.photo || '';
   const ini = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // Find child in db
   const child = db.students.find(s => (s.sid || s.id) === student.sid) || student;
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) setMobileNavOpen(false);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) setMobileNavOpen(false);
+  }, [page, isMobile]);
 
   const pages = {
     pdash:  <ParentDash db={db} child={child} student={student} setPage={setPage} />,
@@ -30,9 +46,12 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f7fafc', fontFamily: 'Inter,sans-serif' }}>
+    <div className="parent-portal-shell" style={{ display: 'flex', height: '100vh', background: '#f7fafc', fontFamily: 'Inter,sans-serif' }}>
       {/* Sidebar */}
-      <aside style={{ width: 220, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <aside className="parent-portal-sidebar" style={{ width: 220, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)', display: 'flex', flexDirection: 'column', flexShrink: 0,
+        position: isMobile ? 'fixed' : 'relative', left: 0, top: isMobile ? 0 : undefined, bottom: isMobile ? 0 : undefined,
+        transform: isMobile ? (mobileNavOpen ? 'translateX(0)' : 'translateX(-110%)') : 'none',
+        transition: isMobile ? 'transform 220ms ease' : 'none', zIndex: isMobile ? 1200 : 'auto' }}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 4 }}>Parent Portal</div>
@@ -71,11 +90,36 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
           </button>
         </div>
       </aside>
+      {isMobile && mobileNavOpen && (
+        <div className="parent-portal-overlay" onClick={() => setMobileNavOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:1100 }} />
+      )}
 
       {/* Main content */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '32px 36px' }}>
+      <div className="parent-portal-main" style={{ flex: 1, display:'flex', flexDirection:'column', minWidth:0 }}>
+        <header className="parent-portal-header" style={{ height:64, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', background:'#fff', borderBottom:'1px solid #e8edf5', boxShadow:'0 2px 12px rgba(0,31,77,0.07)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <button type="button" className="parent-portal-menu-btn" onClick={() => setMobileNavOpen(v => !v)} style={{ display:'none', border:0, background:'transparent', cursor:'pointer', color:'#1960a3', padding:4 }} aria-label="Open parent navigation">
+              <span className="material-symbols-outlined" style={{ fontSize:22 }}>menu</span>
+            </button>
+            <div>
+              <div style={{ fontSize:13, fontWeight:800, color:'#1e293b', fontFamily:'Manrope,sans-serif' }}>LORD KRISHNA PUBLIC SCHOOL</div>
+              <div style={{ fontSize:10, color:'#94a3b8', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase' }}>Parent Portal</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#1e293b' }}>{name}</div>
+              <div style={{ fontSize:10, color:'#94a3b8' }}>{child.cls || '—'} · Parent View</div>
+            </div>
+            <div style={{ width:34, height:34, borderRadius:'50%', background:'linear-gradient(135deg,#1960a3,#60a5fa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:'#fff', overflow:'hidden', flexShrink:0 }}>
+              {photo ? <img src={photo} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : ini}
+            </div>
+          </div>
+        </header>
+      <main className="parent-portal-content" style={{ flex: 1, overflowY: 'auto', padding: '32px 36px' }}>
         {pages[page] || pages.pdash}
       </main>
+      </div>
     </div>
   );
 }
@@ -123,7 +167,7 @@ function ParentDash({ db, child, student, setPage }) {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="parent-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
         {STATS.map(s => (
           <div key={s.label} onClick={() => s.page && setPage(s.page)}
             style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', cursor: s.page ? 'pointer' : 'default', transition: 'all 150ms' }}
@@ -139,7 +183,7 @@ function ParentDash({ db, child, student, setPage }) {
       </div>
 
       {/* Upcoming exams */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="parent-dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)' }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#1e293b', marginBottom: 14 }}>Upcoming Exams</div>
           {upcoming.length === 0 ? (
@@ -198,7 +242,7 @@ function ParentAttendance({ db, child }) {
   return (
     <div>
       <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', marginBottom: 24 }}>Attendance</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="parent-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {[{ label: 'Present', val: p, c: '#059669' }, { label: 'Absent', val: a, c: '#dc2626' }, { label: 'Late', val: l, c: '#d97706' }, { label: 'Attendance %', val: pct + '%', c: col }].map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: 14, padding: '18px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', textAlign: 'center' }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: s.c, fontFamily: 'Manrope,sans-serif' }}>{s.val}</div>
@@ -211,6 +255,7 @@ function ParentAttendance({ db, child }) {
         {history.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No attendance records yet</div>
         ) : (
+          <div className="parent-table-wrap" style={{ overflowX:'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Date', 'Status'].map(h => <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', background: '#f8fafc' }}>{h}</th>)}</tr></thead>
             <tbody>{history.slice(0, 60).map((r, i) => {
@@ -224,6 +269,7 @@ function ParentAttendance({ db, child }) {
               );
             })}</tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
@@ -250,6 +296,7 @@ function ParentMarks({ db, child }) {
         {results.length === 0 ? (
           <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No results available yet</div>
         ) : (
+          <div className="parent-table-wrap" style={{ overflowX:'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Exam', 'Subject', 'Date', 'Marks', 'Grade'].map(h => <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', background: '#f8fafc' }}>{h}</th>)}</tr></thead>
             <tbody>{results.map((r, i) => {
@@ -266,6 +313,7 @@ function ParentMarks({ db, child }) {
               );
             })}</tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
@@ -293,7 +341,7 @@ function ParentExams({ db, child }) {
   );
 
   return (
-    <div>
+    <div className="parent-exams-page">
       <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', marginBottom: 24 }}>Exams</h1>
       <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', marginBottom: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginBottom: 14 }}>Upcoming Exams</div>
@@ -336,7 +384,7 @@ function ParentCalendar({ db }) {
   };
 
   return (
-    <div>
+    <div className="parent-calendar-page">
       <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', marginBottom: 24 }}>Calendar & Holidays</h1>
       <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', marginBottom: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginBottom: 14 }}>Upcoming Events & Holidays</div>

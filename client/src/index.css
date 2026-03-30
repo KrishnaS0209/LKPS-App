@@ -123,6 +123,377 @@ aside.sidebar-bg {
 .card-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .table-wrap { overflow-x:auto; }
 
+.admissions-mobile-list { display: none; }
+.admissions-mobile-card {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px solid #e8edf5;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(0,32,69,0.06);
+}
+.admissions-mobile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.admissions-mobile-index {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.admissions-mobile-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Manrope', sans-serif;
+}
+.admissions-mobile-meta {
+  display: grid;
+  gap: 10px;
+}
+.admissions-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #475569;
+  font-size: 13px;
+}
+.admissions-mobile-row .material-symbols-outlined {
+  font-size: 18px;
+  color: #1960a3;
+}
+.admissions-mobile-row a {
+  color: #1960a3;
+  text-decoration: none;
+  font-weight: 700;
+}
+.admissions-mobile-note {
+  margin-top: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.admissions-mobile-note-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.admissions-mobile-note p {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
+}
+.admissions-mobile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.student-directory-mobile-list { display: none; }
+.student-directory-mobile-card {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 26px rgba(0,32,69,0.06);
+}
+.student-directory-mobile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.student-directory-mobile-id {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.student-directory-mobile-id span {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1960a3;
+}
+.student-directory-mobile-id small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+}
+.student-directory-mobile-fee {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.student-directory-mobile-student {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.student-directory-mobile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #eef4ff;
+  flex-shrink: 0;
+}
+.student-directory-mobile-avatar .avatar {
+  width: 48px;
+  height: 48px;
+  margin-right: 0;
+  font-size: 15px;
+}
+.student-directory-mobile-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Manrope', sans-serif;
+}
+.student-directory-mobile-class {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.student-directory-mobile-meta {
+  display: grid;
+  gap: 10px;
+}
+.student-directory-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569;
+}
+.student-directory-mobile-row .material-symbols-outlined {
+  font-size: 18px;
+  color: #1960a3;
+}
+.student-directory-mobile-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.student-directory-mobile-actions .btn {
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.student-directory-mobile-empty {
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  padding: 30px 18px;
+  text-align: center;
+}
+.student-directory-mobile-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eef4ff 0%, #dbeafe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.student-directory-mobile-empty-icon .material-symbols-outlined {
+  font-size: 30px;
+  color: #1960a3;
+}
+.student-directory-mobile-empty-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+.student-directory-mobile-empty-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.finance-overdue-mobile-list,
+.finance-history-mobile-list { display: none; }
+.finance-mobile-card {
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 26px rgba(0,32,69,0.06);
+}
+.finance-mobile-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.finance-mobile-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Manrope', sans-serif;
+}
+.finance-mobile-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.finance-mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.finance-mobile-badge-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.finance-mobile-badge-success {
+  background: #d1fae5;
+  color: #047857;
+}
+.finance-mobile-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.finance-mobile-metrics > div,
+.finance-mobile-meta-list > div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.finance-mobile-metrics span,
+.finance-mobile-meta-list span {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.finance-mobile-metrics strong,
+.finance-mobile-meta-list strong {
+  font-size: 13px;
+  color: #0f172a;
+}
+.finance-mobile-meta-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.finance-mobile-action {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: #1960a3;
+  color: #fff;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.finance-mobile-action-secondary {
+  background: #eef4ff;
+  color: #1960a3;
+  border: 1px solid #c7d9f5;
+}
+.finance-mobile-empty {
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  padding: 28px 18px;
+  text-align: center;
+  color: #64748b;
+}
+.finance-mobile-empty-icon {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.documents-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.documents-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.notices-mobile-list { display: none; }
+.notices-mobile-card {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px solid #e8edf5;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(0,32,69,0.06);
+}
+.notices-mobile-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.notices-mobile-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Manrope', sans-serif;
+}
+.notices-mobile-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.notices-mobile-date {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.notices-mobile-body {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.notices-mobile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 /* ─── Buttons ─── */
 .btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; font-size:12px; font-weight:600; cursor:pointer; transition:all 150ms; font-family:inherit; }
 .btn:hover { border-color:#1960a3; color:#1960a3; background:#eef4ff; }
@@ -223,6 +594,337 @@ aside.sidebar-bg {
   .card-head { padding: 10px 12px; }
   .card-actions { width: 100%; }
   .card-actions .btn { flex: 1; justify-content: center; }
+  .admissions-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .admissions-desktop-table { display: none; }
+  .admissions-mobile-list {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .student-directory-desktop-table,
+  .directory-desktop-footer {
+    display: none !important;
+  }
+  .student-directory-mobile-list {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .finance-page {
+    padding: 12px !important;
+    gap: 16px !important;
+  }
+  .finance-summary-card,
+  .finance-collect-panel {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .finance-summary-top {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .finance-collect-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .finance-collect-col {
+    grid-column: auto !important;
+  }
+  .finance-payment-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .finance-charge-create {
+    flex-wrap: wrap;
+  }
+  .finance-charge-create input:first-child {
+    min-width: 0;
+    width: 100%;
+  }
+  .finance-charge-create input[type="number"] {
+    flex: 1 1 110px;
+    width: auto !important;
+  }
+  .finance-tabs {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .finance-tabs > button {
+    flex: 0 0 auto;
+  }
+  .finance-overdue-table,
+  .finance-history-table {
+    display: none !important;
+  }
+  .finance-overdue-mobile-list,
+  .finance-history-mobile-list {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .finance-history-filter {
+    align-items: stretch !important;
+  }
+  .finance-history-filter > * {
+    width: 100%;
+  }
+  .finance-history-filter select {
+    width: 100% !important;
+  }
+  .finance-ledger-filter select {
+    width: 100% !important;
+  }
+  .documents-page {
+    padding: 12px !important;
+    gap: 16px !important;
+  }
+  .documents-page h2 {
+    font-size: 2rem !important;
+    line-height: 1.05 !important;
+  }
+  .documents-tabs {
+    gap: 18px !important;
+    white-space: nowrap;
+    padding-bottom: 2px;
+  }
+  .documents-tabs > button {
+    flex: 0 0 auto;
+    font-size: 14px !important;
+    padding-bottom: 12px !important;
+  }
+  .documents-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .documents-form-column,
+  .documents-preview-column {
+    grid-column: auto !important;
+  }
+  .documents-preview-column {
+    display: none !important;
+  }
+  .documents-form-card,
+  .documents-preview-panel,
+  .documents-student-list {
+    border-radius: 18px !important;
+    padding: 16px !important;
+  }
+  .documents-two-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .documents-student-list {
+    padding: 0 !important;
+  }
+  .documents-student-list > div:last-child {
+    max-height: 240px !important;
+  }
+  .documents-preview-wrap {
+    display: block !important;
+  }
+  .documents-preview-panel iframe {
+    max-width: 100%;
+  }
+  .documents-preview-column .relative.w-full.rounded-xl {
+    height: 360px !important;
+  }
+  .report-card-studio {
+    display: block !important;
+  }
+  .report-card-preview {
+    display: none !important;
+  }
+  .report-card-mode-toggle,
+  .report-card-tabbar {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .report-card-mode-toggle::-webkit-scrollbar,
+  .report-card-tabbar::-webkit-scrollbar {
+    display: none;
+  }
+  .report-card-mode-toggle > button,
+  .report-card-tabbar > button {
+    flex: 0 0 auto;
+  }
+  .report-card-config,
+  .report-card-editor {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .report-card-config > div.flex.flex-wrap.gap-4.items-end {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .report-card-config select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .report-card-info-grid,
+  .report-card-grade-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .report-card-actions {
+    flex-direction: column;
+  }
+  .report-card-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+  .reports-page h2 {
+    font-size: 2rem !important;
+    line-height: 1.08 !important;
+  }
+  .reports-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .reports-config-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .reports-left-col,
+  .reports-field-card {
+    gap: 14px !important;
+  }
+  .reports-format-grid {
+    flex-direction: column;
+  }
+  .reports-quick-format-row {
+    flex-wrap: wrap;
+  }
+  .reports-quick-format-row > span {
+    width: 100%;
+    margin-right: 0 !important;
+    margin-bottom: 4px;
+  }
+  .reports-field-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .reports-session-card {
+    padding: 16px !important;
+  }
+  .reports-session-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .reports-session-actions {
+    flex-direction: column;
+  }
+  .reports-action-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+  .reports-action-summary {
+    margin-right: 0 !important;
+  }
+  .reports-action-bar > button {
+    width: 100%;
+    justify-content: center;
+  }
+  .notices-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .notices-desktop-table {
+    display: none;
+  }
+  .notices-mobile-list {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .notices-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .settings-card {
+    padding: 16px !important;
+  }
+  .settings-admin-item {
+    flex-wrap: wrap;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .settings-admin-item > div:nth-child(2) {
+    min-width: 0;
+    flex: 1 1 calc(100% - 56px);
+  }
+  .settings-admin-btn {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+  }
+  .admin-messages-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .admin-messages-filterbar {
+    flex-wrap: wrap;
+  }
+  .admin-messages-filterbar > button {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+  .admin-message-row {
+    flex-direction: column;
+  }
+  .admin-message-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .admin-message-actions > button {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+  .parent-portal-shell {
+    height: auto !important;
+    min-height: 100vh;
+  }
+  .parent-portal-menu-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .parent-portal-header {
+    height: auto !important;
+    min-height: 56px;
+    padding: 8px 12px !important;
+    gap: 10px;
+  }
+  .parent-portal-content {
+    padding: 12px !important;
+  }
+  .parent-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .parent-dashboard-grid,
+  .teacher-dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .parent-table-wrap,
+  .teacher-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .parent-table-wrap table,
+  .teacher-table-wrap table {
+    min-width: 640px;
+  }
+  .teacher-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .teacher-subtab-bar {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .teacher-subtab-bar > button {
+    flex: 0 0 auto;
+  }
 
   .btn { padding: 8px 12px; font-size: 11px; }
   .btn-sm { padding: 6px 9px; font-size: 10px; }
@@ -261,6 +963,78 @@ aside.sidebar-bg {
   .tab { font-size: 11px; padding: 8px 10px; }
   .badge { font-size: 9px; padding: 2px 7px; }
   .avatar { width: 26px; height: 26px; font-size: 10px; margin-right: 6px; }
+  .admissions-summary-grid { grid-template-columns: 1fr !important; }
+  .admissions-mobile-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admissions-mobile-head select {
+    width: 100%;
+  }
+  .admissions-mobile-actions {
+    grid-template-columns: 1fr;
+  }
+  .student-directory-mobile-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .student-directory-mobile-fee {
+    align-self: flex-start;
+  }
+  .student-directory-mobile-actions {
+    grid-template-columns: 1fr;
+  }
+  .finance-mobile-card-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .finance-mobile-badge {
+    align-self: flex-start;
+  }
+  .finance-mobile-metrics {
+    grid-template-columns: 1fr;
+  }
+  .documents-page h2 {
+    font-size: 1.7rem !important;
+  }
+  .documents-tabs {
+    gap: 14px !important;
+  }
+  .documents-tabs > button {
+    font-size: 13px !important;
+  }
+  .report-card-mode-toggle > button,
+  .report-card-tabbar > button {
+    font-size: 12px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  .reports-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .notices-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .notices-mobile-head {
+    flex-direction: column;
+  }
+  .notices-mobile-actions {
+    grid-template-columns: 1fr;
+  }
+  .settings-admin-btn {
+    flex: 1 1 100%;
+  }
+  .admin-messages-filterbar > button,
+  .admin-message-actions > button {
+    flex: 1 1 100%;
+  }
+  .parent-stats-grid,
+  .teacher-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .parent-portal-header {
+    flex-wrap: wrap;
+  }
 }
 
 /* ─── App shell / dashboard responsiveness ─── */
@@ -270,6 +1044,15 @@ aside.sidebar-bg {
   .app-header-left > div:nth-child(2) { display: none !important; } /* hide Est. block */
   .gs-box { width: 190px !important; }
   .gs-results { width: min(92vw, 320px) !important; }
+  .dashboard-stats-grid,
+  .dashboard-main-grid,
+  .dashboard-lower-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dashboard-hero {
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -290,17 +1073,98 @@ aside.sidebar-bg {
   .app-header-right {
     width: 100%;
     justify-content: space-between;
+    align-items: center;
     gap: 8px !important;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
-  .app-header-left { width: 100%; justify-content: space-between; }
+  .app-header-left {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px !important;
+  }
   .app-session-btn { font-size: 10px !important; padding: 4px 10px !important; }
   .app-print-btn, .app-header-divider { display: none !important; }
   .app-mobile-hide { display: none !important; }
   .app-menu-btn { display: inline-flex !important; align-items: center; justify-content: center; }
-  .gs-root { flex: 1; }
-  .gs-box { width: 100% !important; min-width: 0; }
+  .school-badge {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .school-badge span {
+    display: block;
+    font-size: 13px !important;
+    letter-spacing: 0.12em !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gs-root {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+  .gs-root.gs-mobile-open {
+    flex: 1 1 auto;
+  }
+  .gs-root-mobile .gs-box {
+    width: 44px !important;
+    min-width: 44px;
+    max-width: 44px;
+  }
+  .gs-root-mobile.gs-mobile-open .gs-box {
+    width: 100% !important;
+    max-width: none;
+  }
+  .gs-root-mobile .gs-results {
+    left: 0;
+    right: auto;
+  }
+  .app-admin-trigger-mobile {
+    padding: 0 !important;
+    border-radius: 999px !important;
+  }
+  .app-mobile-tools {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .app-mobile-session-btn {
+    max-width: 112px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .app-mobile-bell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
   .app-main, .tapp-main { padding: 10px !important; }
+  .dashboard-hero {
+    margin-bottom: 14px !important;
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+  }
+  .dashboard-hero h2 {
+    font-size: 1.7rem !important;
+    line-height: 1.08 !important;
+  }
+  .dashboard-hero-actions {
+    width: 100%;
+  }
+  .dashboard-hero-actions > button {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+  }
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .dashboard-main-grid,
+  .dashboard-lower-grid {
+    gap: 12px !important;
+  }
   .tapp-header > div:first-child > div > div:last-child {
     display: none !important; /* hide teacher portal subtitle block */
   }
@@ -347,6 +1211,24 @@ aside.sidebar-bg {
 }
 
 @media (max-width: 480px) {
+  .school-badge span {
+    font-size: 11px !important;
+    letter-spacing: 0.08em !important;
+  }
+  .app-mobile-tools {
+    gap: 6px !important;
+  }
+  .app-mobile-session-btn {
+    padding: 6px 8px !important;
+    font-size: 9px !important;
+    max-width: 96px;
+  }
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dashboard-hero-actions > button {
+    flex: 1 1 100%;
+  }
   .directory-hero h1 { font-size: 1.45rem !important; }
   .directory-status-pills > button,
   .directory-filter-row > button { flex: 1 1 100%; }

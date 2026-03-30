@@ -39,10 +39,10 @@ export default function AdminMessages({ activeSessionId }) {
   const statusColor = { unread: { bg: '#dbeafe', c: '#1960a3' }, read: { bg: '#f1f5f9', c: '#64748b' }, resolved: { bg: '#dcfce7', c: '#059669' } };
 
   return (
-    <div>
+    <div className="admin-messages-page">
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Communication</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div className="admin-messages-header" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <h1 style={{ fontSize: 30, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', margin: 0 }}>Parent Messages</h1>
           {unreadCount > 0 && (
             <span style={{ padding: '4px 12px', borderRadius: 20, background: '#dbeafe', color: '#1960a3', fontSize: 12, fontWeight: 800 }}>{unreadCount} unread</span>
@@ -51,7 +51,7 @@ export default function AdminMessages({ activeSessionId }) {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div className="admin-messages-filterbar" style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {[{ v: 'all', label: 'All' }, { v: 'unread', label: 'Unread' }, { v: 'read', label: 'Read' }, { v: 'resolved', label: 'Resolved' }].map(f => (
           <button key={f.v} onClick={() => setFilter(f.v)}
             style={{ padding: '7px 18px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 12, transition: 'all 150ms',
@@ -79,8 +79,8 @@ export default function AdminMessages({ activeSessionId }) {
             const sc = statusColor[m.status] || statusColor.unread;
             const icon = typeIcon[m.type] || 'mail';
             return (
-              <div key={m._id} style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', borderLeft: m.status === 'unread' ? '4px solid #1960a3' : '4px solid transparent' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div key={m._id} className="admin-message-card" style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', borderLeft: m.status === 'unread' ? '4px solid #1960a3' : '4px solid transparent' }}>
+                <div className="admin-message-row" style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#1960a3' }}>{icon}</span>
                   </div>
@@ -97,7 +97,7 @@ export default function AdminMessages({ activeSessionId }) {
                     <div style={{ fontSize: 10, color: '#94a3b8' }}>{new Date(m.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <div className="admin-message-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                     {m.status === 'unread' && (
                       <button onClick={() => markStatus(m._id, 'read')} title="Mark as read"
                         style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>

@@ -1482,16 +1482,31 @@ const Sidebar = React.memo(function Sidebar({ page, setPage, user, onLogout, isM
   );
 });
 
-function GlobalSearch({ db, setPage }) {
+function GlobalSearch({ db, setPage, isMobile = false }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
   const ref = React.useRef(null);
+  const inputRef = React.useRef(null);
 
   useEffect(() => {
-    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = e => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        if (isMobile) setMobileExpanded(false);
+      }
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileExpanded(false);
+      return;
+    }
+    if (mobileExpanded && inputRef.current) inputRef.current.focus();
+  }, [isMobile, mobileExpanded]);
 
   const results = React.useMemo(() => {
     if (!q.trim() || !db) return [];
@@ -1537,33 +1552,66 @@ function GlobalSearch({ db, setPage }) {
     return out.slice(0, 8);
   }, [q, db]);
 
-  const go = (item) => { setPage(item.page); setQ(''); setOpen(false); };
+  const go = (item) => {
+    setPage(item.page);
+    setQ('');
+    setOpen(false);
+    if (isMobile) setMobileExpanded(false);
+  };
 
   const typeColor = { student:'#1960a3', teacher:'#059669', page:'#cb9524' };
+  const showMobileInput = !isMobile || mobileExpanded;
 
   return (
-    <div className="gs-root" ref={ref} style={{position:'relative'}}>
-      <div className="gs-box" style={{display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:24,width:240,
+    <div className={`gs-root${isMobile ? ' gs-root-mobile' : ''}${mobileExpanded ? ' gs-mobile-open' : ''}`} ref={ref} style={{position:'relative'}}>
+      <div className="gs-box" style={{display:'flex',alignItems:'center',gap:8,padding:isMobile ? (showMobileInput ? '7px 14px' : '7px') : '7px 14px',borderRadius:24,width:isMobile ? (showMobileInput ? 240 : 44) : 240,
         background: open ? '#f0f6ff' : '#f4f7fb',
         border: open ? '1.5px solid #1960a3' : '1.5px solid #e2e8f0',
+        justifyContent:isMobile && !showMobileInput ? 'center' : 'flex-start',
         transition:'all 200ms'}}>
-        <span className="material-symbols-outlined" style={{fontSize:16,color:'#94a3b8',flexShrink:0}}>search</span>
-        <input
-          style={{background:'transparent',border:'none',outline:'none',fontSize:13,color:'#1e293b',width:'100%',fontFamily:'inherit'}}
-          className="gs-input"
-          placeholder="Search…"
-          value={q}
-          onChange={e => { setQ(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={e => { if (e.key==='Escape') { setQ(''); setOpen(false); } }}
-        />
-        {q && <button onClick={()=>{setQ('');setOpen(false);}} style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',color:'#94a3b8'}}>
+        <button
+          type="button"
+          onClick={() => {
+            if (isMobile && !mobileExpanded) {
+              setMobileExpanded(true);
+              setOpen(Boolean(q.trim()));
+              return;
+            }
+            if (isMobile && mobileExpanded && !q.trim()) {
+              setMobileExpanded(false);
+              setOpen(false);
+            }
+          }}
+          style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',color:'#94a3b8',alignItems:'center',justifyContent:'center',flexShrink:0}}
+          aria-label={showMobileInput ? 'Collapse search' : 'Open search'}
+        >
+          <span className="material-symbols-outlined" style={{fontSize:16,color:'#94a3b8',flexShrink:0}}>search</span>
+        </button>
+        {showMobileInput && (
+          <input
+            ref={inputRef}
+            style={{background:'transparent',border:'none',outline:'none',fontSize:13,color:'#1e293b',width:'100%',fontFamily:'inherit'}}
+            className="gs-input"
+            placeholder="Search…"
+            value={q}
+            onChange={e => { setQ(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={e => {
+              if (e.key==='Escape') {
+                setQ('');
+                setOpen(false);
+                if (isMobile) setMobileExpanded(false);
+              }
+            }}
+          />
+        )}
+        {showMobileInput && q && <button onClick={()=>{setQ('');setOpen(false); if (isMobile) setMobileExpanded(false);}} style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',color:'#94a3b8'}}>
           <span className="material-symbols-outlined" style={{fontSize:14}}>close</span>
         </button>}
       </div>
 
-      {open && results.length > 0 && (
-        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:300,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,overflow:'hidden',animation:'srch-in 150ms ease'}}>
+      {showMobileInput && open && results.length > 0 && (
+        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:isMobile ? 'min(88vw, 320px)' : 300,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,overflow:'hidden',animation:'srch-in 150ms ease'}}>
           <style>{`@keyframes srch-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}} .gs-input::placeholder{color:#94a3b8}`}</style>
           {results.map((r,i) => (
             <button key={i} onClick={()=>go(r)}
@@ -1582,8 +1630,8 @@ function GlobalSearch({ db, setPage }) {
           ))}
         </div>
       )}
-      {open && q && results.length === 0 && (
-        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:280,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,padding:'16px',textAlign:'center'}}>
+      {showMobileInput && open && q && results.length === 0 && (
+        <div className="gs-results" style={{position:'absolute',top:'calc(100% + 8px)',left:0,width:isMobile ? 'min(82vw, 280px)' : 280,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,32,69,0.14)',border:'1px solid #e0e3e5',zIndex:999,padding:'16px',textAlign:'center'}}>
           <span className="material-symbols-outlined" style={{fontSize:24,color:'#c4c6cf'}}>search_off</span>
           <div style={{fontSize:12,color:'#74777f',marginTop:6}}>No results for "{q}"</div>
         </div>
@@ -1597,7 +1645,7 @@ function SchoolBadge() {
   const [shine, setShine] = useState(false);
   useEffect(()=>{ const t = setTimeout(()=>setShine(true), 500); return ()=>clearTimeout(t); },[]);
   return (
-    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    <div className="school-badge" onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{display:'inline-flex',alignItems:'center',position:'relative',overflow:'hidden',cursor:'default',padding:'4px 2px'}}>
       {/* Shimmer on mount */}
       <div style={{position:'absolute',inset:0,pointerEvents:'none',
@@ -1784,7 +1832,7 @@ function NotificationBell({ db, setPage }) {
   );
 }
 
-function AdminPopover({ user, setPage, onLogout }) {
+function AdminPopover({ user, setPage, onLogout, isMobile = false }) {
   const [open, setOpen] = useState(false);
   const ref = React.useRef(null);
   useEffect(() => {
@@ -1796,17 +1844,18 @@ function AdminPopover({ user, setPage, onLogout }) {
   return (
     <div ref={ref} style={{position:'relative'}}>
       <button onClick={() => setOpen(o => !o)}
-        style={{display:'flex',alignItems:'center',gap:10,background:'transparent',border:'none',cursor:'pointer',padding:'4px 6px',borderRadius:10,transition:'background 150ms'}}
+        className={isMobile ? 'app-admin-trigger app-admin-trigger-mobile' : 'app-admin-trigger'}
+        style={{display:'flex',alignItems:'center',gap:isMobile ? 0 : 10,background:'transparent',border:'none',cursor:'pointer',padding:isMobile ? 0 : '4px 6px',borderRadius:10,transition:'background 150ms'}}
         onMouseEnter={e=>e.currentTarget.style.background='#f1f5f9'}
         onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
         <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:13,color:'#fff',boxShadow:'0 2px 8px rgba(25,96,163,0.25)',flexShrink:0,overflow:'hidden'}}>
           {user.pic ? <img src={user.pic} alt={user.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : initials}
         </div>
-        <div style={{textAlign:'left'}}>
+        <div className="app-admin-meta" style={{textAlign:'left',display:isMobile ? 'none' : 'block'}}>
           <p style={{fontSize:12,fontWeight:700,color:'#1e293b',margin:0,lineHeight:1.3}}>{user.name||'Admin'}</p>
           <p style={{fontSize:10,color:'#94a3b8',margin:0}}>{user.role||'Administrator'}</p>
         </div>
-        <span className="material-symbols-outlined" style={{fontSize:16,color:'#94a3b8',marginLeft:2,transition:'transform 200ms',transform:open?'rotate(180deg)':'rotate(0deg)'}}>expand_more</span>
+        <span className="material-symbols-outlined app-admin-chevron" style={{fontSize:16,color:'#94a3b8',marginLeft:2,transition:'transform 200ms',transform:open?'rotate(180deg)':'rotate(0deg)',display:isMobile ? 'none' : 'inline-flex'}}>expand_more</span>
       </button>
 
       {open && (
@@ -1948,7 +1997,7 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
           </div>
           {/* Right — search + actions */}
           <div className="app-header-right" style={{display:'flex',alignItems:'center',gap:12,position:'relative',zIndex:1}}>
-            <GlobalSearch db={db} setPage={setPage} />
+            <GlobalSearch db={db} setPage={setPage} isMobile={isMobile} />
             <button className="app-session-btn app-mobile-hide" onClick={onSwitchSession}
               style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms'}}
               onMouseEnter={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.borderColor='#93c5fd';}}
@@ -1963,18 +2012,25 @@ function AdminApp({ db, save, page, setPage, user, setUser, onLogout, onSwitchSe
               <span className="material-symbols-outlined">print</span>
             </button>
             <div className="app-header-divider" style={{width:1,height:32,background:'#e2e8f0'}}/>
-            <AdminPopover user={user} setPage={setPage} onLogout={onLogout} />
+            <div className="app-mobile-tools" style={{display:'none',alignItems:'center',gap:8}}>
+              <button className="app-mobile-session-btn" onClick={onSwitchSession}
+                style={{background:'#eef4ff',color:'#1960a3',fontSize:10,fontWeight:800,padding:'6px 10px',borderRadius:999,border:'1px solid #c7d9f5',letterSpacing:'0.06em',cursor:'pointer',display:'flex',alignItems:'center',gap:4,transition:'all 150ms',whiteSpace:'nowrap'}}
+                onMouseEnter={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.borderColor='#93c5fd';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.borderColor='#c7d9f5';}}>
+                <span className="material-symbols-outlined" style={{fontSize:13}}>swap_horiz</span>
+                {db.settings.year||'2025-26'}
+              </button>
+              <div className="app-mobile-bell"><NotificationBell db={db} setPage={setPage} /></div>
+            </div>
+            <AdminPopover user={user} setPage={setPage} onLogout={onLogout} isMobile={isMobile} />
           </div>
         </header>
         <div className="app-main flex-1 overflow-y-auto p-6" style={{
-          backgroundColor:'#f0f4ff',
+          background:'#f6f8fc',
           backgroundImage:`
-            radial-gradient(ellipse at 0% 0%, rgba(25,96,163,0.08) 0%, transparent 55%),
-            radial-gradient(ellipse at 100% 100%, rgba(99,102,241,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse at 100% 0%, rgba(16,185,129,0.05) 0%, transparent 45%),
-            url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%231960a3' fill-opacity='0.07'/%3E%3C/svg%3E")
+            radial-gradient(circle at top left, rgba(25,96,163,0.08), transparent 34%),
+            linear-gradient(180deg, rgba(255,255,255,0.75), rgba(246,248,252,1))
           `,
-          backgroundSize:'auto,auto,auto,32px 32px',
         }}>
           {pages[page] || <div className="text-on-surface-variant">Page not found</div>}
         </div>
@@ -2301,301 +2357,117 @@ function Dashboard({ db, save, setPage }) {
   const fullyPaid = db.students.filter(s => paidTotal(db.pays, s.id) >= s.fee && s.fee > 0).length;
   const totalStudents = db.students.length;
   const upcomingExams = db.exams.filter(e => e.st === 'Upcoming');
-  const recentPays = [...db.pays].sort((a,b) => new Date(b.dt) - new Date(a.dt)).slice(0, 6);
 
   // Attendance overall
   let attPresent = 0, attTotal = 0;
   Object.values(db.att).forEach(day => Object.values(day).forEach(v => { attTotal++; if (v === 'P' || v === 'L') attPresent++; }));
   const attPct = attTotal > 0 ? Math.round(attPresent / attTotal * 100) : null;
 
-  // Class-wise data
-  const classData = db.classes.map(c => {
-    const stuIds = db.students.filter(s => s.cls === c.name).map(s => s.id);
-    let p = 0, t = 0;
-    Object.values(db.att).forEach(day => stuIds.forEach(sid => { if (day[sid] !== undefined) { t++; if (day[sid] === 'P' || day[sid] === 'L') p++; } }));
-    const pct = t > 0 ? Math.round(p / t * 100) : null;
-    const teacher = db.teachers.find(x => x.cls === c.name);
-    const collected = stuIds.reduce((s, sid) => s + paidTotal(db.pays, sid), 0);
-    return { name: c.name, count: stuIds.length, pct, teacher, collected };
-  });
+  const quickActions = [
+    { icon: 'person_add', label: 'New Admission', val: 'Add student', page: 'stu', color: '#1960a3' },
+    { icon: 'payments', label: 'Collect Fees', val: pen > 0 ? `₹${pen.toLocaleString('en-IN')} pending` : 'All clear', page: 'fee', color: '#cb9524' },
+    { icon: 'fact_check', label: 'Attendance', val: attPct !== null ? `${attPct}% overall` : 'No records', page: 'att', color: '#059669' },
+    { icon: 'event_note', label: 'Exams', val: upcomingExams.length ? `${upcomingExams.length} upcoming` : 'No schedule', page: 'exam', color: '#7c3aed' },
+  ];
 
-  // Gender split
-  const male = db.students.filter(s => s.gn === 'Male').length;
-  const female = db.students.filter(s => s.gn === 'Female').length;
-  const other = db.students.filter(s => s.gn !== 'Male' && s.gn !== 'Female').length;
+  const adminHighlights = [
+    { label: 'Students', value: totalStudents, sub: `${db.classes.length} active classes`, accent: '#1960a3', page: 'stu' },
+    { label: 'Teachers', value: db.teachers.length, sub: `${[...new Set(db.teachers.map(t => t.su).filter(Boolean))].length} subjects`, accent: '#059669', page: 'tea' },
+    { label: 'Collection', value: `₹${col.toLocaleString('en-IN')}`, sub: totalFee > 0 ? `${colPct}% of planned fees` : 'No fee plan set', accent: '#cb9524', page: 'fee' },
+    { label: 'Pending', value: `₹${pen.toLocaleString('en-IN')}`, sub: `${penStu.length} students pending`, accent: '#ba1a1a', page: 'fee' },
+  ];
+
+  const panelStyle = {
+    background: 'var(--s1)',
+    borderRadius: 22,
+    padding: '22px 24px',
+    border: '1px solid #e5ebf3',
+    boxShadow: '0 4px 18px rgba(0,32,69,0.05)',
+    height: '100%',
+  };
+
+  const sectionHeader = (title, subtitle, action) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--bl)', fontFamily: 'Manrope,sans-serif', lineHeight: 1.15 }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'var(--di)', marginTop: 4, lineHeight: 1.55 }}>{subtitle}</div>
+      </div>
+      {action}
+    </div>
+  );
 
   return (
-    <div style={{width:'100%'}}>
-      {/* Header */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:24}}>
-        <div>
-          <div style={{fontSize:11,fontWeight:700,color:'#1960a3',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Academic Session {db.settings.year||'2025-26'}</div>
-          <h2 style={{fontSize:28,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif',letterSpacing:'-0.02em',margin:0}}>Dashboard</h2>
-        </div>
-        <div style={{display:'flex',gap:10}}>
-          <button onClick={()=>setPage('rep')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:10,border:'1.5px solid var(--br)',background:'var(--s1)',color:'var(--bl)',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all 150ms'}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--sc)';e.currentTarget.style.color='var(--sc)';}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--br)';e.currentTarget.style.color='var(--bl)';}}>
-            <span className="material-symbols-outlined" style={{fontSize:16}}>download</span> Export
-          </button>
-          <button onClick={()=>setPage('stu')} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 20px',borderRadius:10,border:'none',background:'var(--bl)',color:'#fff',fontWeight:700,fontSize:12,cursor:'pointer',boxShadow:'0 4px 14px rgba(0,32,69,0.25)',transition:'all 150ms'}}
-            onMouseEnter={e=>{e.currentTarget.style.background='var(--sc)';e.currentTarget.style.boxShadow='0 6px 20px rgba(25,96,163,0.35)';}}
-            onMouseLeave={e=>{e.currentTarget.style.background='var(--bl)';e.currentTarget.style.boxShadow='0 4px 14px rgba(0,32,69,0.25)';}}>
-            <span className="material-symbols-outlined" style={{fontSize:16}}>add</span> New Admission
-          </button>
-        </div>
-      </div>
-
-      {/* Row 1 — 6 stat cards */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:12,marginBottom:16}}>
-        {[
-          {icon:'school',label:'Students',value:totalStudents,accent:'#1960a3',sub:'Enrolled',page:'stu',delay:0},
-          {icon:'record_voice_over',label:'Teachers',value:db.teachers.length,accent:'#059669',sub:'Faculty',page:'tea',delay:60},
-          {icon:'class',label:'Classes',value:db.classes.length,accent:'#7c3aed',sub:'Active',page:'cls',delay:120},
-          {icon:'payments',label:'Collected',value:col,prefix:'₹',accent:'#cb9524',sub:colPct+'%',page:'fee',delay:180},
-          {icon:'warning',label:'Outstanding',value:pen,prefix:'₹',accent:'#ba1a1a',sub:'Pending',page:'fee',delay:240},
-          {icon:'how_to_reg',label:'Fully Paid',value:fullyPaid,accent:'#059669',sub:'Students',page:'fee',delay:300},
-        ].map(c => <StatCard key={c.label} {...c} onClick={()=>setPage(c.page)}/>)}
-      </div>
-
-      {/* Row 2 — Fee chart full width */}
-      <Reveal delay={0}>
-        <div style={{background:'var(--s1)',borderRadius:16,padding:'22px 26px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.08)',marginBottom:16}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-            <div>
-              <div style={{fontSize:14,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Fee Collection Trends</div>
-              <div style={{fontSize:11,color:'var(--di)',marginTop:2}}>All 12 months — {db.settings.year||'2025-26'}</div>
+    <div className="dashboard-shell" style={{ width: '100%' }}>
+      <div className="dashboard-hero" style={{ background: 'linear-gradient(135deg,#08294a,#15508e)', color: '#fff', borderRadius: 24, padding: '26px 28px', boxShadow: '0 18px 42px rgba(8,41,74,0.16)', marginBottom: 20 }}>
+        <div className="dashboard-hero-inner" style={{ display: 'flex', justifyContent: 'space-between', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 700 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.68)', marginBottom: 8 }}>
+              Admin Dashboard · {db.settings.year || '2025-26'}
             </div>
-            <div style={{display:'flex',gap:12}}>
-              <span style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:600,color:'var(--di)'}}>
-                <span style={{width:8,height:8,borderRadius:2,background:'#1960a3',display:'inline-block'}}/>Collected
-              </span>
-              <span style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:600,color:'var(--di)'}}>
-                <span style={{width:8,height:8,borderRadius:2,background:'var(--br)',display:'inline-block'}}/>Upcoming
-              </span>
-            </div>
+            <h2 style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Manrope,sans-serif', lineHeight: 1.05, margin: 0 }}>
+              Daily school operations at a glance
+            </h2>
+            <p style={{ marginTop: 12, fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.74)', maxWidth: 640 }}>
+              Focus on admissions, collections, attendance, and the work that needs follow-up today.
+            </p>
           </div>
-          <FeeChart pays={db.pays} year={db.settings.year}/>
+          <div className="dashboard-hero-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={() => setPage('stu')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '11px 18px', borderRadius: 12, border: 'none', background: '#fbbf24', color: '#132238', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>person_add</span>
+              New Admission
+            </button>
+            <button onClick={() => setPage('rep')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+              Export Reports
+            </button>
+          </div>
         </div>
-      </Reveal>
+      </div>
 
-      {/* Row 3 — Attendance | Demographics | Upcoming Exams */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:16}}>
-        <Reveal delay={0} dir="up">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Attendance Overview</span>
-              <button onClick={()=>setPage('att')} style={{fontSize:11,fontWeight:700,color:'#1960a3',border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
-                View <span className="material-symbols-outlined" style={{fontSize:13}}>arrow_forward</span>
-              </button>
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:14}}>
-              <div style={{position:'relative',width:72,height:72,flexShrink:0}}>
-                <svg width="72" height="72" style={{transform:'rotate(-90deg)'}}>
-                  <circle cx="36" cy="36" r="28" fill="none" stroke="var(--s2)" strokeWidth="8"/>
-                  <circle cx="36" cy="36" r="28" fill="none" stroke={attPct===null?'var(--br)':attPct>=90?'#059669':attPct>=75?'#cb9524':'#ba1a1a'} strokeWidth="8"
-                    strokeDasharray={`${2*Math.PI*28}`}
-                    strokeDashoffset={`${2*Math.PI*28*(1-(attPct||0)/100)}`}
-                    strokeLinecap="round"
-                    style={{transition:'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)'}}/>
-                </svg>
-                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'var(--bl)'}}>{attPct!==null?attPct+'%':'—'}</div>
+      <div className="dashboard-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+        {adminHighlights.map((card, i) => (
+          <Reveal key={card.label} delay={i * 50}>
+            <div onClick={() => setPage(card.page)} style={{ background: 'var(--s1)', borderRadius: 18, padding: '18px 18px', border: '1px solid #e5ebf3', boxShadow: '0 3px 14px rgba(0,32,69,0.045)', cursor: 'pointer', minHeight: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: card.accent + '16', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: card.accent }} />
+                </div>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#94a3b8' }}>arrow_outward</span>
               </div>
-              <div>
-                <div style={{fontSize:11,color:'var(--di)',marginBottom:4}}>Overall attendance rate</div>
-                <div style={{fontSize:11,color:'var(--mu)'}}>{attPresent} present / {attTotal} records</div>
-              </div>
+              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{card.label}</div>
+              <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: '#0f172a', fontFamily: 'Manrope,sans-serif' }}>{card.value}</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 10, lineHeight: 1.5 }}>{card.sub}</div>
             </div>
-            <div style={{display:'flex',flexDirection:'column',gap:7}}>
-              {classData.slice(0,4).map(c=>{
-                const bc=c.pct===null?'var(--br)':c.pct>=90?'#059669':c.pct>=75?'#cb9524':'#ba1a1a';
-                return (
-                  <div key={c.name}>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:10,fontWeight:600,color:'var(--mu)',marginBottom:3}}>
-                      <span>{c.name}</span><span style={{color:bc}}>{c.pct!==null?c.pct+'%':'No data'}</span>
-                    </div>
-                    <div style={{height:5,background:'var(--s2)',borderRadius:3,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:(c.pct||0)+'%',background:bc,borderRadius:3,transition:'width 800ms cubic-bezier(0.4,0,0.2,1)'}}/>
-                    </div>
-                  </div>
-                );
-              })}
-              {classData.length===0&&<div style={{fontSize:11,color:'var(--di)',textAlign:'center',padding:'8px 0'}}>No classes yet</div>}
+          </Reveal>
+        ))}
+      </div>
+
+      <div className="dashboard-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'stretch' }}>
+        <Reveal>
+          <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column' }}>
+            {sectionHeader('Quick Actions', 'Jump straight into the tasks that matter today.', null)}
+            <div style={{ display: 'grid', gap: 10, flex: 1 }}>
+              {quickActions.map(item => <QuickStatItem key={item.label} item={item} setPage={setPage} />)}
             </div>
           </div>
         </Reveal>
 
-        <Reveal delay={80} dir="up">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif',marginBottom:14}}>Student Demographics</div>
-            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:16}}>
-              <div style={{position:'relative',width:72,height:72,flexShrink:0}}>
-                <svg width="72" height="72">
-                  {totalStudents>0?(() => {
-                    const r=28,cx=36,cy=36,circ=2*Math.PI*r;
-                    const slices=[{val:male,color:'#1960a3'},{val:female,color:'#e91e8c'},{val:other,color:'#cb9524'}];
-                    let offset=0;
-                    return slices.map((sl,i)=>{
-                      const pct=sl.val/totalStudents,dash=circ*pct;
-                      const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={sl.color} strokeWidth="8"
-                        strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={-offset}
-                        style={{transform:'rotate(-90deg)',transformOrigin:'36px 36px'}}/>;
-                      offset+=dash; return el;
-                    });
-                  })():<circle cx="36" cy="36" r="28" fill="none" stroke="var(--br)" strokeWidth="8"/>}
-                </svg>
-                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'var(--bl)'}}>{totalStudents}</div>
-              </div>
-              <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {[{label:'Male',val:male,color:'#1960a3'},{label:'Female',val:female,color:'#e91e8c'},{label:'Other',val:other,color:'#cb9524'}].map(g=>(
-                  <div key={g.label} style={{display:'flex',alignItems:'center',gap:6}}>
-                    <span style={{width:8,height:8,borderRadius:2,background:g.color,flexShrink:0,display:'inline-block'}}/>
-                    <span style={{fontSize:11,color:'var(--mu)',fontWeight:600}}>{g.label}</span>
-                    <span style={{fontSize:11,color:'var(--di)',marginLeft:'auto'}}>{g.val}</span>
+        <Reveal delay={80}>
+          <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column' }}>
+            {sectionHeader('Key Status', 'Only the essential operational indicators.', null)}
+            <div style={{ display: 'grid', gap: 10, flex: 1 }}>
+                {[
+                  { label: 'Collection rate', value: `${colPct}%`, tone: '#1960a3', bg: '#eef4ff' },
+                  { label: 'Fully paid students', value: fullyPaid, tone: '#059669', bg: '#ecfdf5' },
+                  { label: 'Pending students', value: penStu.length, tone: '#ba1a1a', bg: '#fff1f2' },
+                  { label: 'Active classes', value: db.classes.length, tone: '#7c3aed', bg: '#f5f3ff' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: item.bg, borderRadius: 14, padding: '13px 14px', minHeight: 70 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{item.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: item.tone, fontFamily: 'Manrope,sans-serif' }}>{item.value}</span>
                   </div>
                 ))}
-              </div>
             </div>
-            <div style={{fontSize:11,fontWeight:700,color:'var(--mu)',marginBottom:8}}>Fee Status</div>
-            {[
-              {label:'Fully Paid',val:fullyPaid,color:'#059669',bg:'#d1fae5'},
-              {label:'Pending',val:db.students.filter(s=>s.fst==='Pending'&&paidTotal(db.pays,s.id)<s.fee).length,color:'#cb9524',bg:'#ffdeaa'},
-              {label:'Overdue',val:penStu.length,color:'#ba1a1a',bg:'#ffdad6'},
-            ].map(f=>(
-              <div key={f.label} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 10px',borderRadius:8,background:f.bg,marginBottom:5}}>
-                <span style={{fontSize:11,fontWeight:600,color:f.color}}>{f.label}</span>
-                <span style={{fontSize:12,fontWeight:800,color:f.color}}>{f.val}</span>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-
-        <Reveal delay={160} dir="up">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Upcoming Exams</span>
-              <button onClick={()=>setPage('exam')} style={{fontSize:11,fontWeight:700,color:'#1960a3',border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
-                All <span className="material-symbols-outlined" style={{fontSize:13}}>arrow_forward</span>
-              </button>
-            </div>
-            {upcomingExams.length===0?(
-              <div style={{textAlign:'center',padding:'24px 0',color:'var(--di)',fontSize:12}}>No upcoming exams</div>
-            ):(
-              <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                {upcomingExams.slice(0,5).map((e,i)=>(
-                  <ExamItem key={e.id||i} e={e} i={i}/>
-                ))}
-              </div>
-            )}
-          </div>
-        </Reveal>
-      </div>
-
-      {/* Row 4 — Class breakdown | Recent payments */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-        <Reveal delay={0} dir="left">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Class Breakdown</span>
-              <button onClick={()=>setPage('cls')} style={{fontSize:11,fontWeight:700,color:'#1960a3',border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
-                Manage <span className="material-symbols-outlined" style={{fontSize:13}}>arrow_forward</span>
-              </button>
-            </div>
-            {classData.length===0?(
-              <div style={{textAlign:'center',padding:'20px 0',color:'var(--di)',fontSize:12}}>No classes configured</div>
-            ):(
-              <div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 50px 60px 80px',gap:'0 12px',paddingBottom:8,borderBottom:'1px solid var(--br)',marginBottom:4}}>
-                  {['Class','Students','Attendance','Collected'].map(h=>(
-                    <span key={h} style={{fontSize:9,fontWeight:800,color:'var(--di)',textTransform:'uppercase',letterSpacing:'0.07em'}}>{h}</span>
-                  ))}
-                </div>
-                {classData.map((c)=>(
-                  <ClassRow key={c.name} c={c}/>
-                ))}
-              </div>
-            )}
-          </div>
-        </Reveal>
-
-        <Reveal delay={80} dir="right">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Recent Payments</span>
-              <button onClick={()=>setPage('fee')} style={{fontSize:11,fontWeight:700,color:'#1960a3',border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
-                Ledger <span className="material-symbols-outlined" style={{fontSize:13}}>arrow_forward</span>
-              </button>
-            </div>
-            {recentPays.length===0?(
-              <div style={{textAlign:'center',padding:'20px 0',color:'var(--di)',fontSize:12}}>No payments recorded yet</div>
-            ):(
-              <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {recentPays.map((p,i)=>(
-                  <PayRow key={p.rc||i} p={p} students={db.students}/>
-                ))}
-              </div>
-            )}
-          </div>
-        </Reveal>
-      </div>
-
-      {/* Row 5 — Alerts | Faculty overview */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 2fr',gap:16,marginBottom:8}}>
-        <Reveal delay={0} dir="up">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-              <span className="material-symbols-outlined" style={{fontSize:16,color:'#ba1a1a'}}>notification_important</span>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Alerts</span>
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {penStu.length>0?(
-                <div style={{padding:'10px 12px',background:'var(--rdl)',borderRadius:9,borderLeft:'3px solid var(--rd)',cursor:'pointer'}} onClick={()=>setPage('fee')}>
-                  <div style={{fontSize:11,fontWeight:700,color:'var(--rd)',marginBottom:2}}>Fee Deadline Approaching</div>
-                  <div style={{fontSize:10,color:'var(--mu)'}}>{penStu.length} student{penStu.length>1?'s':''} with pending fees</div>
-                </div>
-              ):(
-                <div style={{padding:'10px 12px',background:'var(--gnl)',borderRadius:9,borderLeft:'3px solid var(--gn)'}}>
-                  <div style={{fontSize:11,fontWeight:700,color:'var(--gn)',marginBottom:2}}>All Clear</div>
-                  <div style={{fontSize:10,color:'var(--mu)'}}>No pending fee alerts</div>
-                </div>
-              )}
-              {upcomingExams.length>0&&(
-                <div style={{padding:'10px 12px',background:'var(--scl)',borderRadius:9,borderLeft:'3px solid var(--sc)',cursor:'pointer'}} onClick={()=>setPage('exam')}>
-                  <div style={{fontSize:11,fontWeight:700,color:'var(--sc)',marginBottom:2}}>{upcomingExams.length} Exam{upcomingExams.length>1?'s':''} Upcoming</div>
-                  <div style={{fontSize:10,color:'var(--mu)'}}>Next: {upcomingExams[0].name||upcomingExams[0].sub||'Exam'}</div>
-                </div>
-              )}
-              <div style={{padding:'10px 12px',background:'var(--s2)',borderRadius:9,cursor:'pointer'}} onClick={()=>setPage('cls')}>
-                <div style={{fontSize:11,fontWeight:700,color:'var(--bl)',marginBottom:2}}>{db.classes.length} Active Classes</div>
-                <div style={{fontSize:10,color:'var(--mu)'}}>{db.students.length} students enrolled</div>
-              </div>
-              {attPct!==null&&attPct<75&&(
-                <div style={{padding:'10px 12px',background:'var(--rdl)',borderRadius:9,borderLeft:'3px solid var(--rd)',cursor:'pointer'}} onClick={()=>setPage('att')}>
-                  <div style={{fontSize:11,fontWeight:700,color:'var(--rd)',marginBottom:2}}>Low Attendance: {attPct}%</div>
-                  <div style={{fontSize:10,color:'var(--mu)'}}>Overall attendance below 75%</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal delay={80} dir="up">
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'20px 22px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Faculty Overview</span>
-              <button onClick={()=>setPage('tea')} style={{fontSize:11,fontWeight:700,color:'#1960a3',border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
-                All Teachers <span className="material-symbols-outlined" style={{fontSize:13}}>arrow_forward</span>
-              </button>
-            </div>
-            {db.teachers.length===0?(
-              <div style={{textAlign:'center',padding:'20px 0',color:'var(--di)',fontSize:12}}>No teachers added yet</div>
-            ):(
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
-                {db.teachers.slice(0,6).map((t)=>(
-                  <TeacherCard key={t.id} t={t} photos={db.tphotos} students={db.students}/>
-                ))}
-              </div>
-            )}
           </div>
         </Reveal>
       </div>
@@ -2653,11 +2525,12 @@ function NewAdmissions() {
 
   const counts = { Pending: 0, Contacted: 0, Enrolled: 0, Rejected: 0 };
   admissions.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++; });
+  const formatReceivedDate = (value) => new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
   return (
     <div>
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="admissions-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {Object.entries(counts).map(([s, n]) => (
           <div key={s} style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', border: '1px solid #e8edf5', boxShadow: '0 2px 12px rgba(0,32,69,0.06)' }}>
             <div style={{ fontSize: 28, fontWeight: 900, color: STATUS_COLORS[s], fontFamily: 'Manrope,sans-serif' }}>{n}</div>
@@ -2679,45 +2552,94 @@ function NewAdmissions() {
           ) : admissions.length === 0 ? (
             <div className="no-data"><span className="material-symbols-outlined no-data-icon">inbox</span>No enquiries yet</div>
           ) : (
-            <table>
-              <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Note</th><th>Received</th><th>Actions</th></tr></thead>
-              <tbody>
+            <>
+              <table className="admissions-desktop-table">
+                <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Note</th><th>Received</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {admissions.map((a, i) => (
+                    <tr key={a._id}>
+                      <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
+                      <td style={{ fontWeight: 700 }}>{a.name}</td>
+                      <td>
+                        <a href={`tel:${a.phone}`} style={{ color: '#1960a3', textDecoration: 'none', fontWeight: 600 }}>{a.phone}</a>
+                      </td>
+                      <td style={{ color: '#64748b' }}>{a.email || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td>
+                        <select value={a.status} onChange={e => updateStatus(a._id, e.target.value)}
+                          style={{ padding: '4px 10px', borderRadius: 20, border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', background: STATUS_BG[a.status], color: STATUS_COLORS[a.status], fontFamily: 'inherit' }}>
+                          {['Pending', 'Contacted', 'Enrolled', 'Rejected'].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td style={{ maxWidth: 180, color: '#475569', fontSize: 12 }}>
+                        {a.note ? <span title={a.note}>{a.note.length > 40 ? a.note.slice(0, 40) + '…' : a.note}</span> : <span style={{ color: '#cbd5e1' }}>—</span>}
+                      </td>
+                      <td style={{ color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>
+                        {formatReceivedDate(a.createdAt)}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-sm" onClick={() => setNoteModal({ id: a._id, note: a.note || '' })}
+                            title="Add note" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>edit_note</span>
+                          </button>
+                          <button className="btn btn-sm btn-danger" onClick={() => del(a._id)}
+                            title="Delete" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="admissions-mobile-list">
                 {admissions.map((a, i) => (
-                  <tr key={a._id}>
-                    <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
-                    <td style={{ fontWeight: 700 }}>{a.name}</td>
-                    <td>
-                      <a href={`tel:${a.phone}`} style={{ color: '#1960a3', textDecoration: 'none', fontWeight: 600 }}>{a.phone}</a>
-                    </td>
-                    <td style={{ color: '#64748b' }}>{a.email || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                    <td>
+                  <div key={a._id} className="admissions-mobile-card">
+                    <div className="admissions-mobile-head">
+                      <div>
+                        <div className="admissions-mobile-index">Enquiry #{i + 1}</div>
+                        <div className="admissions-mobile-name">{a.name}</div>
+                      </div>
                       <select value={a.status} onChange={e => updateStatus(a._id, e.target.value)}
-                        style={{ padding: '4px 10px', borderRadius: 20, border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', background: STATUS_BG[a.status], color: STATUS_COLORS[a.status], fontFamily: 'inherit' }}>
+                        style={{ padding: '6px 10px', borderRadius: 20, border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', background: STATUS_BG[a.status], color: STATUS_COLORS[a.status], fontFamily: 'inherit' }}>
                         {['Pending', 'Contacted', 'Enrolled', 'Rejected'].map(s => <option key={s}>{s}</option>)}
                       </select>
-                    </td>
-                    <td style={{ maxWidth: 180, color: '#475569', fontSize: 12 }}>
-                      {a.note ? <span title={a.note}>{a.note.length > 40 ? a.note.slice(0, 40) + '…' : a.note}</span> : <span style={{ color: '#cbd5e1' }}>—</span>}
-                    </td>
-                    <td style={{ color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>
-                      {new Date(a.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-sm" onClick={() => setNoteModal({ id: a._id, note: a.note || '' })}
-                          title="Add note" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>edit_note</span>
-                        </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => del(a._id)}
-                          title="Delete" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>delete</span>
-                        </button>
+                    </div>
+
+                    <div className="admissions-mobile-meta">
+                      <div className="admissions-mobile-row">
+                        <span className="material-symbols-outlined">call</span>
+                        <a href={`tel:${a.phone}`}>{a.phone}</a>
                       </div>
-                    </td>
-                  </tr>
+                      <div className="admissions-mobile-row">
+                        <span className="material-symbols-outlined">mail</span>
+                        <span>{a.email || 'No email provided'}</span>
+                      </div>
+                      <div className="admissions-mobile-row">
+                        <span className="material-symbols-outlined">calendar_month</span>
+                        <span>{formatReceivedDate(a.createdAt)}</span>
+                      </div>
+                      <div className="admissions-mobile-note">
+                        <span className="admissions-mobile-note-label">Note</span>
+                        <p>{a.note || 'No note added yet.'}</p>
+                      </div>
+                    </div>
+
+                    <div className="admissions-mobile-actions">
+                      <button className="btn" onClick={() => setNoteModal({ id: a._id, note: a.note || '' })} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit_note</span>
+                        Add note
+                      </button>
+                      <button className="btn btn-danger" onClick={() => del(a._id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -2823,7 +2745,7 @@ function NoticeBoard() {
   return (
     <div>
       {/* Summary */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
+      <div className="notices-summary-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
         {[
           { label:'Total Notices', value:notices.length, color:'#1960a3', icon:'campaign' },
           { label:'Active (Visible)', value:active, color:'#059669', icon:'visibility' },
@@ -2859,7 +2781,8 @@ function NoticeBoard() {
           ) : notices.length === 0 ? (
             <div className="no-data"><span className="material-symbols-outlined no-data-icon">campaign</span>No notices yet. Create one!</div>
           ) : (
-            <table>
+            <>
+            <table className="notices-desktop-table">
               <thead>
                 <tr>
                   <th>Title</th><th>Tag</th><th>Body</th><th>Pinned</th><th>Status</th><th>Date</th><th>Actions</th>
@@ -2910,6 +2833,45 @@ function NoticeBoard() {
                 ))}
               </tbody>
             </table>
+            <div className="notices-mobile-list">
+              {notices.map(n => (
+                <div key={n._id} className="notices-mobile-card">
+                  <div className="notices-mobile-head">
+                    <div>
+                      <div className="notices-mobile-title">
+                        {n.pinned && <span className="material-symbols-outlined" style={{ fontSize:14, color:'#f59e0b' }}>push_pin</span>}
+                        {n.title}
+                      </div>
+                      <div className="notices-mobile-meta">
+                        <span style={{ display:'inline-block', padding:'2px 8px', borderRadius:20, background:TAG_BG[n.tag]||'#f1f5f9', color:TAG_COLORS[n.tag]||'#475569', fontSize:10, fontWeight:700 }}>{n.tag}</span>
+                        <span style={{ padding:'2px 8px', borderRadius:20, background:n.active?'#d1fae5':'#f1f5f9', color:n.active?'#059669':'#94a3b8', fontSize:10, fontWeight:700 }}>{n.active ? 'Active' : 'Hidden'}</span>
+                      </div>
+                    </div>
+                    <div className="notices-mobile-date">{new Date(n.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+                  </div>
+                  <div className="notices-mobile-body">{n.body || 'No description added.'}</div>
+                  <div className="notices-mobile-actions">
+                    <button className="btn" onClick={() => openEdit(n)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize:14 }}>edit</span>
+                      Edit
+                    </button>
+                    <button className="btn" onClick={() => { fetch(`${API}/${n._id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token()},body:JSON.stringify({pinned:!n.pinned})}).then(r=>r.json()).then(u=>setNotices(p=>p.map(x=>x._id===n._id?u:x))); }} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize:14 }}>push_pin</span>
+                      {n.pinned ? 'Unpin' : 'Pin'}
+                    </button>
+                    <button className="btn" onClick={() => toggleActive(n)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize:14 }}>{n.active?'visibility_off':'visibility'}</span>
+                      {n.active ? 'Hide' : 'Show'}
+                    </button>
+                    <button className="btn btn-danger" onClick={() => del(n._id)} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize:14 }}>delete</span>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </div>
@@ -2928,7 +2890,7 @@ function NoticeBoard() {
                 <label>Body / Description</label>
                 <textarea className="form-control" placeholder="Optional details…" rows={3} value={form.body} onChange={e => setForm(f=>({...f,body:e.target.value}))} style={{ resize:'vertical' }} />
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div className="notices-modal-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
                 <div className="form-group">
                   <label>Tag</label>
                   <select className="form-control" value={form.tag} onChange={e => setForm(f=>({...f,tag:e.target.value}))}>
@@ -3176,7 +3138,7 @@ function Students({ db, save, setPage }) {
         </div>
       ) : (
       <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
-        <TblWrap>
+        <TblWrap className="student-directory-desktop-table">
           <table>
             <thead>
               <tr className="bg-surface-container-low/50">
@@ -3263,8 +3225,80 @@ function Students({ db, save, setPage }) {
             </tbody>
           </table>
         </TblWrap>
+        <div className="student-directory-mobile-list">
+          {filtered.map((s, i) => {
+            const photo = db.photos[s.id];
+            const paid = paidTotal(db.pays, s.id);
+            const fst = paid >= s.fee && s.fee > 0 ? 'Paid' : s.fst;
+            return (
+              <div key={s.id} className="student-directory-mobile-card">
+                <div className="student-directory-mobile-head">
+                  <div className="student-directory-mobile-id">
+                    <span>#{s.roll || s.admno || (i + 1)}</span>
+                    <small>{s.admno ? `ADM: ${s.admno}` : s.id}</small>
+                  </div>
+                  <span className={`student-directory-mobile-fee ${feeStatusCls(fst)}`}>
+                    {fst}
+                  </span>
+                </div>
+
+                <div className="student-directory-mobile-student">
+                  <div className="student-directory-mobile-avatar">
+                    {photo
+                      ? <img src={photo} alt={s.fn} className="w-full h-full object-cover" />
+                      : <Avatar name={s.fn+' '+s.ln} idx={i} />
+                    }
+                  </div>
+                  <div>
+                    <div className="student-directory-mobile-name">{s.fn} {s.ln}</div>
+                    <div className="student-directory-mobile-class">{s.cls || 'Class not assigned'}</div>
+                  </div>
+                </div>
+
+                <div className="student-directory-mobile-meta">
+                  <div className="student-directory-mobile-row">
+                    <span className="material-symbols-outlined">family_restroom</span>
+                    <span>{s.father || 'Parent name not added'}</span>
+                  </div>
+                  <div className="student-directory-mobile-row">
+                    <span className="material-symbols-outlined">call</span>
+                    <span>{s.fphone || s.ph || 'No contact added'}</span>
+                  </div>
+                  <div className="student-directory-mobile-row">
+                    <span className="material-symbols-outlined">payments</span>
+                    <span>{s.fee > 0 ? `₹${paid.toLocaleString('en-IN')} / ₹${s.fee.toLocaleString('en-IN')}` : 'Fee not set'}</span>
+                  </div>
+                </div>
+
+                <div className="student-directory-mobile-actions">
+                  <button onClick={() => openEdit(s)} className="btn">
+                    <span className="material-symbols-outlined text-sm">edit</span>
+                    Edit
+                  </button>
+                  <button onClick={() => setPage && setPage('docs')} className="btn">
+                    <span className="material-symbols-outlined text-sm">badge</span>
+                    ID Card
+                  </button>
+                  <button onClick={() => delStu(s.id)} className="btn btn-danger">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {!filtered.length && (
+            <div className="student-directory-mobile-empty">
+              <div className="student-directory-mobile-empty-icon">
+                <span className="material-symbols-outlined">person_search</span>
+              </div>
+              <div className="student-directory-mobile-empty-title">No students found</div>
+              <div className="student-directory-mobile-empty-text">Try adjusting your search or filters</div>
+            </div>
+          )}
+        </div>
         {/* Footer */}
-        <div className="px-6 py-4 bg-surface-container-low/20 flex items-center justify-between border-t border-surface-container-low">
+        <div className="directory-desktop-footer px-6 py-4 bg-surface-container-low/20 flex items-center justify-between border-t border-surface-container-low">
           <p className="text-xs text-on-surface-variant font-medium">
             Showing <span className="text-primary font-bold">{filtered.length}</span> of {db.students.length} records
           </p>
@@ -5694,7 +5728,7 @@ function Fees({ db, save }) {
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="finance-page p-6 space-y-8">
       {/* Page Header */}
       <div>
         <h2 className="text-4xl font-extrabold text-primary tracking-tight" style={{fontFamily:'Manrope,sans-serif'}}>Fees Management Portal</h2>
@@ -5702,10 +5736,10 @@ function Fees({ db, save }) {
       </div>
 
       {/* Financial Summary Card — full width */}
-      <div className="bg-surface-container-lowest rounded-2xl p-8 relative overflow-hidden group border border-surface-container-high">
+      <div className="finance-summary-card bg-surface-container-lowest rounded-2xl p-8 relative overflow-hidden group border border-surface-container-high">
         <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"/>
         <div className="relative z-10 space-y-6">
-          <div className="flex justify-between items-start">
+          <div className="finance-summary-top flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.1em] mb-1">Total Academic Collection</p>
               <h3 className="text-5xl font-extrabold text-primary tracking-tighter" style={{fontFamily:'Manrope,sans-serif'}}>₹{totalCollected.toLocaleString('en-IN')}</h3>
@@ -5733,13 +5767,13 @@ function Fees({ db, save }) {
       </div>
 
       {/* Collect Fee Panel — full width below summary */}
-      <div className="bg-primary-container rounded-2xl p-8 shadow-xl">
+      <div className="finance-collect-panel bg-primary-container rounded-2xl p-8 shadow-xl">
         <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white" style={{fontFamily:'Manrope,sans-serif'}}>
           💳 Collect Fee
         </h3>
-        <div className="grid grid-cols-12 gap-6">
+        <div className="finance-collect-grid grid grid-cols-12 gap-6">
           {/* Left col: Class + Student selectors + Student card */}
-          <div className="col-span-4 space-y-4">
+          <div className="finance-collect-col col-span-4 space-y-4">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Step 1 — Select Class</label>
               <select value={selClass} onChange={e=>{setSelClass(e.target.value);setSelStu('');}}
@@ -5801,7 +5835,7 @@ function Fees({ db, save }) {
           </div>
 
           {/* Middle col: Month + Other Charges */}
-          <div className="col-span-4 space-y-4">
+          <div className="finance-collect-col col-span-4 space-y-4">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Step 3 — Fee Month</label>
               <select value={pyMn} onChange={e=>{
@@ -5866,7 +5900,7 @@ function Fees({ db, save }) {
               ) : piStu ? (
                 <p className="text-[11px] text-on-primary-container mb-2">No charges defined. Add one below.</p>
               ) : null}
-              <div className="flex gap-2">
+              <div className="finance-charge-create flex gap-2">
                 <input value={pyNewExLabel} onChange={e=>setPyNewExLabel(e.target.value)} placeholder="Charge name"
                   className="flex-1 bg-white/10 border-none rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:ring-2 focus:ring-white/30"/>
                 <input type="number" value={pyNewExAmt} onChange={e=>setPyNewExAmt(e.target.value)} placeholder="₹"
@@ -5891,8 +5925,8 @@ function Fees({ db, save }) {
           </div>
 
           {/* Right col: Payment details + total + submit */}
-          <div className="col-span-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="finance-collect-col col-span-4 space-y-4">
+            <div className="finance-payment-grid grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Payment Mode</label>
                 <select value={pyMd} onChange={e=>setPyMd(e.target.value)}
@@ -5950,7 +5984,7 @@ function Fees({ db, save }) {
 
       {/* Tabs: Overdue / History / Ledger */}
       <div>
-        <div className="flex gap-1 mb-4 bg-surface-container-low rounded-xl p-1 w-fit">
+        <div className="finance-tabs flex gap-1 mb-4 bg-surface-container-low rounded-xl p-1 w-fit">
           {['Overdue Accounts','Payment History','Student Ledger'].map((t,i)=>(
             <button key={t} onClick={()=>setTab(i)}
               className={'px-4 py-2 rounded-lg text-xs font-bold transition-all '+(tab===i?'bg-white text-primary shadow-sm':'text-on-surface-variant hover:text-primary')}>
@@ -5970,7 +6004,7 @@ function Fees({ db, save }) {
                 </div>
                 <span className="text-xs font-bold text-on-surface-variant">{overdueRows.length} student{overdueRows.length!==1?'s':''} overdue</span>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto finance-overdue-table">
                 <table className="w-full text-left">
                   <thead className="bg-surface-container-low/30">
                     <tr>
@@ -6017,6 +6051,39 @@ function Fees({ db, save }) {
                   </tbody>
                 </table>
               </div>
+              <div className="finance-overdue-mobile-list">
+                {overdueRows.map(s=>(
+                  <div key={s.id} className="finance-mobile-card">
+                    <div className="finance-mobile-card-head">
+                      <div>
+                        <div className="finance-mobile-title">{s.fn} {s.ln}</div>
+                        <div className="finance-mobile-sub">{s.cls} · {s.admno||s.roll||'—'}</div>
+                      </div>
+                      <span className="finance-mobile-badge finance-mobile-badge-error">Overdue</span>
+                    </div>
+                    <div className="finance-mobile-metrics">
+                      <div>
+                        <span>Months overdue</span>
+                        <strong>{s._overdueMonths} mo.</strong>
+                      </div>
+                      <div>
+                        <span>Amount due</span>
+                        <strong>₹{s._overdueAmt.toLocaleString('en-IN')}</strong>
+                      </div>
+                    </div>
+                    <button onClick={()=>{setSelClass(s.cls);setSelStu(s.id); window.scrollTo({ top: 0, behavior: 'smooth' });}}
+                      className="finance-mobile-action">
+                      Collect Fee
+                    </button>
+                  </div>
+                ))}
+                {!overdueRows.length && (
+                  <div className="finance-mobile-empty">
+                    <div className="finance-mobile-empty-icon">✅</div>
+                    <div>No overdue accounts — all students are up to date.</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -6031,7 +6098,7 @@ function Fees({ db, save }) {
           return (
             <div>
               {/* Student filter bar */}
-              <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="finance-history-filter flex items-center gap-3 mb-4 flex-wrap">
                 <div className="flex items-center gap-2 bg-surface-container-low rounded-xl p-1">
                   <button onClick={()=>setHistStu('')}
                     className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-all '+(histStu===''?'bg-white text-primary shadow-sm':'text-on-surface-variant hover:text-primary')}>
@@ -6056,7 +6123,7 @@ function Fees({ db, save }) {
                   <span className="text-xs text-on-surface-variant">{filteredPays.length} transaction{filteredPays.length!==1?'s':''} · ₹{histTotal.toLocaleString('en-IN')} total</span>
                 )}
               </div>
-              <TblWrap>
+              <TblWrap className="finance-history-table">
                 <table>
                   <thead><tr>
                     <th>Date</th><th>Receipt</th><th>Student</th><th>Class</th><th>Month</th><th>Type</th><th>Amount</th><th>Method</th><th>Balance After</th><th></th>
@@ -6080,6 +6147,34 @@ function Fees({ db, save }) {
                   </tbody>
                 </table>
               </TblWrap>
+              <div className="finance-history-mobile-list">
+                {filteredPays.map(p=>(
+                  <div key={p.id} className="finance-mobile-card">
+                    <div className="finance-mobile-card-head">
+                      <div>
+                        <div className="finance-mobile-title">{p.nm}</div>
+                        <div className="finance-mobile-sub">{p.cls} · {p.dt}</div>
+                      </div>
+                      <span className="finance-mobile-badge finance-mobile-badge-success">₹{(p.totalAmt||p.amt||0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="finance-mobile-meta-list">
+                      <div><span>Receipt</span><strong>{p.rc}</strong></div>
+                      <div><span>Month</span><strong>{p.mn||'—'}</strong></div>
+                      <div><span>Method</span><strong>{p.md}</strong></div>
+                      <div><span>Balance after</span><strong>₹{(p.ba||0).toLocaleString('en-IN')}</strong></div>
+                    </div>
+                    <button className="finance-mobile-action finance-mobile-action-secondary" onClick={()=>{const s=db.students.find(x=>x.id===p.sid);if(s){setReceipt({pay:p,s});setShowRec(true);}}}>
+                      View Receipt
+                    </button>
+                  </div>
+                ))}
+                {!filteredPays.length && (
+                  <div className="finance-mobile-empty">
+                    <div className="finance-mobile-empty-icon">🧾</div>
+                    <div>{histStu ? 'No payments for this student' : 'No payments recorded'}</div>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })()}
@@ -6087,7 +6182,7 @@ function Fees({ db, save }) {
         {/* Student Ledger */}
         {tab===2 && (
           <div>
-            <div className="mb-4">
+            <div className="mb-4 finance-ledger-filter">
               <Select value={ledStu} onChange={setLedStu} style={{width:280}}>
                 <option value="">Select Student</option>
                 {db.students.map(s=><option key={s.id} value={s.id}>{s.fn} {s.ln} ({s.cls})</option>)}
@@ -6299,7 +6394,7 @@ function Documents({ db, save }) {
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="documents-page p-6 space-y-8">
       <img src={LOGO_SRC} alt="" className="hidden" onError={()=>setLogoErr(true)} onLoad={()=>setLogoErr(false)}/>
 
       {/* Page Header */}
@@ -6309,7 +6404,7 @@ function Documents({ db, save }) {
       </div>
 
       {/* Template Toggle */}
-      <div className="flex items-center gap-8 border-b border-surface-variant/30 pb-0">
+      <div className="documents-tabs flex items-center gap-8 border-b border-surface-variant/30 pb-0">
         {[['id','badge','ID Card'],['tc','workspace_premium','Transfer Certificate'],['cc','verified_user','Character Certificate'],['rc','description','Report Card']].map(([id,icon,label])=>(
           <button key={id} onClick={()=>setDocTab(id)}
             className={'flex items-center gap-2 pb-4 font-extrabold text-base transition-all border-0 bg-transparent cursor-pointer relative '+(docTab===id?'text-primary':'text-on-surface-variant/50 hover:text-on-surface-variant')}
@@ -6323,9 +6418,9 @@ function Documents({ db, save }) {
 
       {/* ID CARD TAB */}
       {docTab==='id' && (
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-5 flex flex-col gap-6">
-            <div className="bg-surface-container-low rounded-2xl p-6">
+        <div className="documents-grid grid grid-cols-12 gap-8">
+          <div className="documents-form-column col-span-5 flex flex-col gap-6">
+            <div className="documents-form-card bg-surface-container-low rounded-2xl p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant mb-5">Configuration</p>
               <div className="space-y-4">
                 <div>
@@ -6336,7 +6431,7 @@ function Documents({ db, save }) {
                     {classes.map(c=><option key={c}>{c}</option>)}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="documents-two-grid grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-on-surface-variant mb-1.5">School Phone</label>
                     <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Phone number"
@@ -6366,7 +6461,7 @@ function Documents({ db, save }) {
                 </div>
               </div>
             </div>
-            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high overflow-hidden flex-1">
+            <div className="documents-student-list bg-surface-container-lowest rounded-2xl border border-surface-container-high overflow-hidden flex-1">
               <div className="flex justify-between items-center px-5 py-4 border-b border-surface-container-low">
                 <span className="text-sm font-bold text-primary" style={{fontFamily:'Manrope,sans-serif'}}>Student List</span>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -6412,12 +6507,12 @@ function Documents({ db, save }) {
               </button>
             </div>
           </div>
-          <div className="col-span-7 flex flex-col gap-6">
+          <div className="documents-preview-column col-span-7 flex flex-col gap-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Live Preview</p>
-            <div className="flex gap-8 items-start">
+            <div className="documents-preview-wrap flex gap-8 items-start">
               <div className="flex flex-col gap-2 flex-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Front Face</span>
-                <div className="bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'320px'}}>
+                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'320px'}}>
                   <div dangerouslySetInnerHTML={{__html:previewHTML}}/>
                 </div>
               </div>
@@ -6428,8 +6523,8 @@ function Documents({ db, save }) {
 
       {/* TRANSFER CERTIFICATE TAB */}
       {docTab==='tc' && (
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-5 bg-surface-container-low rounded-2xl p-6 space-y-4">
+        <div className="documents-grid grid grid-cols-12 gap-8">
+          <div className="documents-form-column documents-form-card col-span-5 bg-surface-container-low rounded-2xl p-6 space-y-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Transfer Certificate</p>
 
             {/* Student selector */}
@@ -6467,7 +6562,7 @@ function Documents({ db, save }) {
 
             {/* Fields NOT in student directory — must ask */}
             <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant pt-1">Additional details required</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="documents-two-grid grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm text-on-surface-variant mb-1.5">TC Number</label>
                 <input value={tcNo} onChange={e=>setTcNo(e.target.value)} placeholder="TC-2025-001"
@@ -6518,7 +6613,7 @@ function Documents({ db, save }) {
               Generate Transfer Certificate
             </button>
           </div>
-          <div className="col-span-7 bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2">
+          <div className="documents-preview-column documents-preview-panel col-span-7 bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant px-1">Live Preview</p>
             {(()=>{
               const st = tcStu ? db.students.find(x=>x.id===tcStu) : null;
@@ -6541,8 +6636,8 @@ function Documents({ db, save }) {
 
       {/* CHARACTER CERTIFICATE TAB */}
       {docTab==='cc' && (
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-5 bg-surface-container-low rounded-2xl p-6 space-y-4">
+        <div className="documents-grid grid grid-cols-12 gap-8">
+          <div className="documents-form-column documents-form-card col-span-5 bg-surface-container-low rounded-2xl p-6 space-y-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Character Certificate</p>
             <div>
               <label className="block text-sm text-on-surface-variant mb-1.5">Student *</label>
@@ -6558,7 +6653,7 @@ function Documents({ db, save }) {
                 <div className="text-xs text-on-surface-variant mt-0.5">Class: {st.cls} · Roll: {st.roll}</div>
               </div>
             ):null;})()}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="documents-two-grid grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm text-on-surface-variant mb-1.5">CC Number</label>
                 <input value={ccNo} onChange={e=>setCcNo(e.target.value)} placeholder="CC-2025-001"
@@ -6596,7 +6691,7 @@ function Documents({ db, save }) {
               Generate Character Certificate
             </button>
           </div>
-          <div className="col-span-7 bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2">
+          <div className="documents-preview-column documents-preview-panel col-span-7 bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant px-1">Live Preview</p>
             {(()=>{
               const st = ccStu ? db.students.find(x=>x.id===ccStu) : null;
@@ -6897,7 +6992,7 @@ function Reports({ db, save, activeSessionId }) {
   };
 
   return (
-    <div style={{width:'100%'}}>
+    <div className="reports-page" style={{width:'100%'}}>
       {/* Header */}
       <div style={{marginBottom:28}}>
         <div style={{fontSize:11,fontWeight:700,color:'#1960a3',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Data Management</div>
@@ -6906,7 +7001,7 @@ function Reports({ db, save, activeSessionId }) {
       </div>
 
       {/* Summary strip */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:24}}>
+      <div className="reports-summary-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:24}}>
         {[
           {icon:'school',label:'Students',val:db.students.length,color:'#1960a3'},
           {icon:'record_voice_over',label:'Teachers',val:db.teachers.length,color:'#059669'},
@@ -6926,10 +7021,10 @@ function Reports({ db, save, activeSessionId }) {
       </div>
 
       {/* Config grid */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1.5fr',gap:20,marginBottom:20}}>
+      <div className="reports-config-grid" style={{display:'grid',gridTemplateColumns:'1fr 1.5fr',gap:20,marginBottom:20}}>
 
         {/* Left col */}
-        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+        <div className="reports-left-col" style={{display:'flex',flexDirection:'column',gap:16}}>
 
           {/* Data Selection */}
           <div style={S.card}>
@@ -6970,7 +7065,7 @@ function Reports({ db, save, activeSessionId }) {
               <div style={S.iconBox}><span className="material-symbols-outlined" style={{fontSize:20,color:'var(--bl)'}}>file_present</span></div>
               <span style={{fontSize:15,fontWeight:800,color:'var(--bl)',fontFamily:'Manrope,sans-serif'}}>Format Selection</span>
             </div>
-            <div style={{display:'flex',gap:10}}>
+            <div className="reports-format-grid" style={{display:'flex',gap:10}}>
               {fmtOptions.map(f=>(
                 <div key={f.id} style={S.fmtBtn(fmt===f.id)} onClick={()=>setFmt(f.id)}>
                   <span className="material-symbols-outlined" style={{fontSize:22,color:fmt===f.id?'var(--sc)':'var(--di)',marginBottom:6}}>{f.icon}</span>
@@ -7068,7 +7163,7 @@ function Reports({ db, save, activeSessionId }) {
                       <span className="material-symbols-outlined" style={{fontSize:14,color:'#1960a3',transition:'transform 200ms',transform:isOpen?'rotate(90deg)':'rotate(0deg)'}}>arrow_forward</span>
                     </button>
                     {isOpen&&(
-                      <div style={{display:'flex',gap:6,padding:'10px 14px',background:'var(--s2)',borderTop:'1px solid var(--br)'}}>
+                      <div className="reports-quick-format-row" style={{display:'flex',gap:6,padding:'10px 14px',background:'var(--s2)',borderTop:'1px solid var(--br)'}}>
                         <span style={{fontSize:10,fontWeight:700,color:'var(--di)',alignSelf:'center',marginRight:4,textTransform:'uppercase',letterSpacing:'0.06em'}}>Format:</span>
                         {q.fmts.map(f=>(
                           <button key={f} onClick={()=>runFmt(f)}
@@ -7089,7 +7184,7 @@ function Reports({ db, save, activeSessionId }) {
         </div>
 
         {/* Right col — Field Selection */}
-        <div style={{...S.card,display:'flex',flexDirection:'column'}}>
+        <div className="reports-field-card" style={{...S.card,display:'flex',flexDirection:'column'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
               <div style={S.iconBox}><span className="material-symbols-outlined" style={{fontSize:20,color:'var(--bl)'}}>checklist</span></div>
@@ -7103,7 +7198,7 @@ function Reports({ db, save, activeSessionId }) {
           {fieldGroups.map((grp,gi)=>(
             <div key={gi} style={{marginBottom:18,paddingBottom:gi<fieldGroups.length-1?18:0,borderBottom:gi<fieldGroups.length-1?'1px solid #f1f4f6':'none'}}>
               <div style={S.sectionTitle}>{grp.label}</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4}}>
+              <div className="reports-field-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4}}>
                 {grp.fields.map(f=>(
                   <label key={f.k} style={{...S.fieldRow,background:fields[f.k]?'#f0f4ff':'transparent'}}
                     onMouseEnter={e=>{if(!fields[f.k])e.currentTarget.style.background='var(--s2)';}}
@@ -7140,7 +7235,7 @@ function Reports({ db, save, activeSessionId }) {
         const allSessions = prevSessions;
         if (allSessions.length === 0) return null;
         return (
-          <div style={{background:'var(--s1)',borderRadius:16,padding:'24px 28px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)',marginBottom:20}}>
+          <div className="reports-session-card" style={{background:'var(--s1)',borderRadius:16,padding:'24px 28px',border:'1.5px solid var(--br)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)',marginBottom:20}}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:18}}>
               <div style={{width:40,height:40,borderRadius:12,background:'rgba(0,32,69,0.06)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <span className="material-symbols-outlined" style={{fontSize:20,color:'var(--bl)'}}>history</span>
@@ -7150,7 +7245,7 @@ function Reports({ db, save, activeSessionId }) {
                 <div style={{fontSize:11,color:'var(--di)',marginTop:1}}>Export data from other academic sessions</div>
               </div>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
+            <div className="reports-session-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
               {allSessions.map(s => {
                 const sdb = prevSessionsData[s.id];
                 const stuCount = sdb?.students?.length || 0;
@@ -7166,7 +7261,7 @@ function Reports({ db, save, activeSessionId }) {
                         <div style={{fontSize:10,color:'var(--di)'}}>{stuCount} students · ₹{col.toLocaleString('en-IN')}</div>
                       </div>
                     </div>
-                    <div style={{display:'flex',gap:6}}>
+                    <div className="reports-session-actions" style={{display:'flex',gap:6}}>
                       {[
                         {label:'Students CSV',fn:()=>{
                           if(!sdb?.students?.length){toast('No data','err');return;}
@@ -7199,8 +7294,8 @@ function Reports({ db, save, activeSessionId }) {
       })()}
 
       {/* Sticky action bar */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:12,background:'rgba(255,255,255,0.8)',backdropFilter:'blur(12px)',padding:'16px 24px',borderRadius:16,border:'1.5px solid var(--br)',position:'sticky',bottom:16}}>
-        <div style={{marginRight:'auto',fontSize:12,color:'var(--di)'}}>
+      <div className="reports-action-bar" style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:12,background:'rgba(255,255,255,0.8)',backdropFilter:'blur(12px)',padding:'16px 24px',borderRadius:16,border:'1.5px solid var(--br)',position:'sticky',bottom:16}}>
+        <div className="reports-action-summary" style={{marginRight:'auto',fontSize:12,color:'var(--di)'}}>
           <span style={{fontWeight:700,color:'var(--bl)'}}>{selCount} field{selCount!==1?'s':''} selected</span>
           {' · '}
           {scope==='class'&&filterCls ? `${db.students.filter(s=>s.cls===filterCls).length} students` : `${db.students.length} students`}
@@ -7295,8 +7390,8 @@ function Settings({ db, save, user, setUser }) {
   };
 
   return (
-    <div>
-      <Card className="p-5 mb-4">
+    <div className="settings-page">
+      <Card className="settings-card p-5 mb-4">
         <div className="text-sm font-semibold text-on-surface mb-4 pb-3" style={{borderBottom:'1px solid rgba(196,198,207,0.5)'}}>School Information</div>
         <Grid>
           <Field label="School Name"><Input value={form.school||''} onChange={sf('school')}/></Field>
@@ -7308,11 +7403,11 @@ function Settings({ db, save, user, setUser }) {
         </Grid>
       </Card>
 
-      <Card className="p-5 mb-4">
+      <Card className="settings-card p-5 mb-4">
         <div className="text-sm font-semibold text-on-surface mb-4 pb-3" style={{borderBottom:'1px solid rgba(196,198,207,0.5)'}}>Admin Accounts</div>
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+        <div className="settings-admin-list" style={{display:'flex',flexDirection:'column',gap:10}}>
           {db.admins.map((a,i)=>(
-            <div key={a.id} style={{display:'flex',alignItems:'center',gap:14,padding:'12px 14px',borderRadius:12,background:'#f8fafc',border:'1px solid #e8edf5'}}>
+            <div key={a._id || a.id || a.username || i} className="settings-admin-item" style={{display:'flex',alignItems:'center',gap:14,padding:'12px 14px',borderRadius:12,background:'#f8fafc',border:'1px solid #e8edf5'}}>
               {/* Avatar / pic */}
               <div style={{width:42,height:42,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'linear-gradient(135deg,#1960a3,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:15,color:'#fff',boxShadow:'0 2px 8px rgba(25,96,163,0.2)'}}>
                 {a.pic
@@ -7330,7 +7425,7 @@ function Settings({ db, save, user, setUser }) {
               {/* Main admin tag */}
               {a.username==='admin' && <span style={{fontSize:10,fontWeight:700,color:'#059669',background:'#d1fae5',padding:'3px 10px',borderRadius:20,flexShrink:0}}>Main</span>}
               {/* Edit button — all admins */}
-              <button onClick={()=>openEdit(a)}
+              <button className="settings-admin-btn" onClick={()=>openEdit(a)}
                 style={{display:'flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:8,border:'1.5px solid #e2e8f0',background:'#fff',color:'#475569',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 150ms',flexShrink:0}}
                 onMouseEnter={e=>{e.currentTarget.style.borderColor='#1960a3';e.currentTarget.style.color='#1960a3';}}
                 onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#475569';}}>
@@ -7338,7 +7433,7 @@ function Settings({ db, save, user, setUser }) {
               </button>
               {/* Remove — only main admin can remove, can't remove self */}
               {isMainAdmin && a.username!=='admin' && (
-                <button onClick={()=>delUser(a)}
+                <button className="settings-admin-btn" onClick={()=>delUser(a)}
                   style={{display:'flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:8,border:'1.5px solid #fee2e2',background:'#fff',color:'#ef4444',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 150ms',flexShrink:0}}
                   onMouseEnter={e=>{e.currentTarget.style.background='#fee2e2';}}
                   onMouseLeave={e=>{e.currentTarget.style.background='#fff';}}>
@@ -7351,7 +7446,7 @@ function Settings({ db, save, user, setUser }) {
         {isMainAdmin && <div className="mt-4"><Btn variant="primary" size="sm" onClick={()=>setAuOpen(true)}>+ Add User</Btn></div>}
       </Card>
 
-      <Card className="p-5">
+      <Card className="settings-card p-5">
         <div className="text-sm font-semibold text-on-surface mb-4 pb-3" style={{borderBottom:'1px solid rgba(196,198,207,0.5)'}}>Change Password</div>
         <Grid>
           <Field label="Current Password"><Input type="password" value={cpOld} onChange={setCpOld}/></Field>
@@ -7667,7 +7762,7 @@ function TeacherDash({ db, teacher, name, photo }) {
   });
 
   return (
-    <div>
+    <div className="teacher-dashboard-page">
       {/* Welcome */}
       <div style={{background:'linear-gradient(135deg,#1960a3 0%,#6366f1 100%)',borderRadius:20,padding:'28px 32px',marginBottom:28,display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'0 8px 32px rgba(25,96,163,0.2)'}}>
         <div>
@@ -7687,7 +7782,7 @@ function TeacherDash({ db, teacher, name, photo }) {
       </div>
 
       {/* Stats */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:28}}>
+      <div className="teacher-stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:28}}>
         {[
           {icon:'group',value:myStudents.length,label:'My Students',sub:myCls||'No class',accent:'#1960a3',bg:'#dbeafe'},
           {icon:'schedule',value:todayPers,label:'Periods Today',sub:todayName,accent:'#f59e0b',bg:'#fef3c7'},
@@ -7708,7 +7803,7 @@ function TeacherDash({ db, teacher, name, photo }) {
       </div>
 
       {/* Today's timetable + upcoming exams */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+      <div className="teacher-dashboard-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
         <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',boxShadow:'0 2px 12px rgba(0,32,69,0.06)',overflow:'hidden'}}>
           <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',gap:8}}>
             <span className="material-symbols-outlined" style={{fontSize:18,color:'#1960a3'}}>schedule</span>
@@ -7795,9 +7890,9 @@ function TeacherAttendance({ db, save }) {
   );
 
   return (
-    <div>
+    <div className="teacher-attendance-page">
       {pageHeader('Attendance', 'Mark and review student attendance')}
-      <div style={{display:'flex',gap:4,marginBottom:20,background:'#f1f5f9',borderRadius:10,padding:4,width:'fit-content'}}>
+      <div className="teacher-subtab-bar" style={{display:'flex',gap:4,marginBottom:20,background:'#f1f5f9',borderRadius:10,padding:4,width:'fit-content'}}>
         {['Mark Attendance','Attendance Report'].map((t,i)=>(
           <button key={t} onClick={()=>setSubTab(i)} style={{padding:'7px 18px',borderRadius:8,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',background:subTab===i?'#fff':'transparent',color:subTab===i?'#1960a3':'#64748b',boxShadow:subTab===i?'0 1px 4px rgba(0,0,0,0.1)':'none',transition:'all 150ms'}}>{t}</button>
         ))}
@@ -7824,6 +7919,7 @@ function TeacherAttendance({ db, save }) {
           ) : !attStu.length ? (
             <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>No students in this class</div>
           ) : (
+            <div className="teacher-table-wrap" style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse'}}>
               <thead><tr>
                 <th style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>Roll</th>
@@ -7843,6 +7939,7 @@ function TeacherAttendance({ db, save }) {
                 </tr>
               ))}</tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -7857,6 +7954,7 @@ function TeacherAttendance({ db, save }) {
           {!repCls ? (
             <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>Select a class to view report</div>
           ) : (
+            <div className="teacher-table-wrap" style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse'}}>
               <thead><tr>
                 {['Student','Present','Absent','Late','Total','%'].map(h=><th key={h} style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>{h}</th>)}
@@ -7877,6 +7975,7 @@ function TeacherAttendance({ db, save }) {
                 </tr>;
               })}</tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -7905,7 +8004,7 @@ function TeacherMarks({ db, save }) {
   const key = mkEx+'_'+mkCls;
 
   return (
-    <div>
+    <div className="teacher-marks-page">
       {pageHeader('Marks & Grades', 'Enter exam marks and view grade summary')}
       <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',boxShadow:'0 2px 12px rgba(0,32,69,0.06)',overflow:'hidden'}}>
         <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
@@ -7925,6 +8024,7 @@ function TeacherMarks({ db, save }) {
         ) : !stu.length ? (
           <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>No students in this class</div>
         ) : (
+          <div className="teacher-table-wrap" style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead><tr>
               {['Roll','Student','Marks /'+( ex?.max||100),'%','Grade'].map(h=><th key={h} style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>{h}</th>)}
@@ -7946,6 +8046,7 @@ function TeacherMarks({ db, save }) {
               </tr>;
             })}</tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
@@ -7961,7 +8062,7 @@ function TeacherTimetable({ db, teacher, name }) {
   pers.forEach(p => { if (p.su && !scm[p.su]) { scm[p.su] = TTCK[ci % TTCK.length]; ci++; } });
 
   return (
-    <div>
+    <div className="teacher-timetable-page">
       <div style={{marginBottom:24}}>
         <h1 style={{fontSize:26,fontWeight:800,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>Timetable</h1>
         <p style={{fontSize:13,color:'#64748b',marginTop:4}}>View class timetable</p>
@@ -8025,7 +8126,7 @@ function TeacherStudents({ db, teacher }) {
   ));
 
   return (
-    <div>
+    <div className="teacher-students-page">
       <div style={{marginBottom:24}}>
         <h1 style={{fontSize:26,fontWeight:800,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>My Students</h1>
         <p style={{fontSize:13,color:'#64748b',marginTop:4}}>{myCls?`Class ${myCls}`:'All students'} · {db.students.filter(s=>!myCls||s.cls===myCls).length} enrolled</p>
@@ -8044,6 +8145,7 @@ function TeacherStudents({ db, teacher }) {
             <div style={{fontSize:13}}>No students found</div>
           </div>
         ):(
+          <div className="teacher-table-wrap" style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead><tr>
               {['Roll','Name','Gender','Father','Phone'].map(h=><th key={h} style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>{h}</th>)}
@@ -8068,6 +8170,7 @@ function TeacherStudents({ db, teacher }) {
               </tr>
             ))}</tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

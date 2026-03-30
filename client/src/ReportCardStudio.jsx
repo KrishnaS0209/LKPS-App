@@ -1100,11 +1100,11 @@ setTimeout(run,${downloadOnly ? 900 : 700});
   const lbl = 'block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider';
 
   return (
-    <div className="flex gap-6">
+    <div className="report-card-studio flex gap-6">
       {/* ── LEFT: controls ── */}
-      <div className="flex-1 min-w-0 space-y-6">
+      <div className="report-card-controls flex-1 min-w-0 space-y-6">
       {/* Mode toggle */}
-      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+      <div className="report-card-mode-toggle flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
         {[['directory','group','From Student Directory'],['guest','person_add','Guest Student (Manual)']].map(([id,icon,label])=>(
           <button key={id} onClick={()=>setMode(id)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all border-0 cursor-pointer ${mode===id?'bg-white text-blue-700 shadow-sm':'text-slate-500 bg-transparent hover:text-slate-700'}`}>
@@ -1116,7 +1116,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       {/* ── DIRECTORY MODE ── */}
       {mode === 'directory' && (
         <>
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+            <div className="report-card-config bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
             <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4">Configuration</p>
             <div className="flex flex-wrap gap-4 items-end">
               <div>
@@ -1163,8 +1163,8 @@ setTimeout(run,${downloadOnly ? 900 : 700});
 
           {/* Per-student editor */}
           {rcCls && selStu!=='all' && editStu && (
-            <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-              <div className="flex border-b border-blue-100 bg-blue-50">
+            <div className="report-card-editor bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+              <div className="report-card-tabbar flex border-b border-blue-100 bg-blue-50">
                 {[['marks','edit_note','Marks Entry'],['info','person','Student Info'],['co','star','Co-Scholastic'],['disc','verified','Discipline'],['att','calendar_today','Attendance']].map(([id,icon,label])=>(
                   <button key={id} onClick={()=>setActiveTab(id)}
                     className={`flex items-center gap-1.5 px-5 py-3 text-xs font-bold transition-all border-0 cursor-pointer ${activeTab===id?'bg-white text-blue-700 border-b-2 border-blue-500':'text-slate-500 hover:text-slate-700 bg-transparent'}`}>
@@ -1205,7 +1205,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   );
                 })()}
                 {activeTab==='info' && editStu && (
-                  <div className="info-nav-container grid grid-cols-2 gap-4">
+                  <div className="info-nav-container report-card-info-grid grid grid-cols-2 gap-4">
                     {[
                       ['First Name','fn'], ['Last Name','ln'],
                       ["Father's Name",'father'], ["Mother's Name",'mother'],
@@ -1254,7 +1254,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   </div>
                 )}
                 {activeTab==='co' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="report-card-grade-grid grid grid-cols-2 gap-3">
                     {CO_ACTIVITIES.map(act=>{
                       const g=(overrides[selStu]?.coGrades||{})[act]||'A2';
                       return <div key={act} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5 border border-blue-100">
@@ -1265,7 +1265,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   </div>
                 )}
                 {activeTab==='disc' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="report-card-grade-grid grid grid-cols-2 gap-3">
                     {DISCIPLINE_ITEMS.map(item=>{
                       const g=(overrides[selStu]?.discGrades||{})[item]||'A2';
                       return <div key={item} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5 border border-blue-100">
@@ -1285,7 +1285,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                     <div className="flex gap-6 items-center bg-blue-50 rounded-xl p-4 border border-blue-100">
                       <span className="text-sm text-slate-500">From records: <strong className="text-blue-700">{dbAtt.p} / {dbAtt.t}</strong></span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="report-card-info-grid grid grid-cols-2 gap-4">
                       <div><label className={lbl}>Days Present</label><input type="number" min="0" value={attP} onChange={e=>setOvr(selStu,{attP:parseInt(e.target.value)||0})} className={inp}/></div>
                       <div><label className={lbl}>Total Working Days</label><input type="number" min="0" value={attT} onChange={e=>setOvr(selStu,{attT:parseInt(e.target.value)||0})} className={inp}/></div>
                       <div><label className={lbl}>Rank</label><input type="number" min="1" value={ovr.rank||''} onChange={e=>setOvr(selStu,{rank:parseInt(e.target.value)||0})} className={inp} placeholder="e.g. 3"/></div>
@@ -1320,7 +1320,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
           )}
 
           {rcCls && (
-            <div className="flex flex-wrap gap-3">
+            <div className="report-card-actions flex flex-wrap gap-3">
               <button onClick={()=>genDirectory(selStu==='all'?clsStudents:[editStu].filter(Boolean))}
                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-colors border-0 cursor-pointer">
                 <span className="material-symbols-outlined text-lg">description</span>
@@ -1347,8 +1347,8 @@ setTimeout(run,${downloadOnly ? 900 : 700});
 
       {/* ── GUEST MODE ── */}
       {mode === 'guest' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-          <div className="flex border-b border-blue-100 bg-blue-50">
+        <div className="report-card-editor bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
+          <div className="report-card-tabbar flex border-b border-blue-100 bg-blue-50">
             {[['info','person','Student Info & Marks'],['co','star','Co-Scholastic'],['disc','verified','Discipline'],['att','calendar_today','Attendance']].map(([id,icon,label])=>(
               <button key={id} onClick={()=>setGuestTab(id)}
                 className={`flex items-center gap-1.5 px-5 py-3 text-xs font-bold transition-all border-0 cursor-pointer ${guestTab===id?'bg-white text-blue-700 border-b-2 border-blue-500':'text-slate-500 hover:text-slate-700 bg-transparent'}`}>
@@ -1359,7 +1359,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
           <div className="p-6">
             {guestTab==='info' && (
               <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-4 info-nav-container">
+                <div className="report-card-info-grid grid grid-cols-2 gap-4 info-nav-container">
                   <div><label className={lbl}>Class *</label>
                     <select value={guest.cls} onChange={e=>{
                       const v=e.target.value;
@@ -1431,7 +1431,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
             {guestTab==='co' && (
               <div>
                 <p className="text-xs text-slate-400 italic mb-4">Set grades for co-scholastic activities.</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="report-card-grade-grid grid grid-cols-2 gap-3">
                   {CO_ACTIVITIES.map(act=>{
                     const g=guestCoGrades[act]||'A2';
                     return <div key={act} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5 border border-blue-100">
@@ -1443,7 +1443,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
               </div>
             )}
             {guestTab==='disc' && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="report-card-grade-grid grid grid-cols-2 gap-3">
                 {DISCIPLINE_ITEMS.map(item=>{
                   const g=guestDiscGrades[item]||'A2';
                   return <div key={item} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5 border border-blue-100">
@@ -1454,14 +1454,14 @@ setTimeout(run,${downloadOnly ? 900 : 700});
               </div>
             )}
             {guestTab==='att' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="report-card-info-grid grid grid-cols-2 gap-4">
                 <div><label className={lbl}>Days Present</label><input type="number" min="0" value={guestAttP} onChange={e=>setGuestAttP(e.target.value)} className={inp} placeholder="0"/></div>
                 <div><label className={lbl}>Total Working Days</label><input type="number" min="0" value={guestAttT} onChange={e=>setGuestAttT(e.target.value)} className={inp} placeholder="0"/></div>
                 <div><label className={lbl}>Rank</label><input type="number" min="1" value={guestRank} onChange={e=>setGuestRank(e.target.value)} className={inp} placeholder="e.g. 3"/></div>
               </div>
             )}
           </div>
-          <div className="px-6 pb-6 flex flex-wrap gap-3">
+          <div className="report-card-actions px-6 pb-6 flex flex-wrap gap-3">
             <button onClick={genGuest}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-colors border-0 cursor-pointer">
               <span className="material-symbols-outlined text-lg">description</span>
@@ -1494,7 +1494,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       </div>{/* end left controls */}
 
       {/* ── RIGHT: live preview ── */}
-      <div className="w-[380px] flex-shrink-0">
+      <div className="report-card-preview w-[380px] flex-shrink-0">
         <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden sticky top-4">
           <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100 bg-blue-50">
             <span className="text-xs font-bold uppercase tracking-widest text-blue-500">Live Preview</span>
