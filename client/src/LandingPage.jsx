@@ -304,7 +304,7 @@ export default function LandingPage() {
         .nav-link{position:relative;color:rgba(255,255,255,0.85);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.02em;padding:4px 0;transition:color 0.2s;}
         .nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#fbbf24;border-radius:2px;transition:width 0.28s ease;}
         .nav-link:hover{color:#fff;}.nav-link:hover::after{width:100%;}
-        .nav-link-dark{color:#334155;}.nav-link-dark:hover{color:#1960a3;}.nav-link-dark::after{background:#1960a3;}
+        .nav-link-dark{color:rgba(255,255,255,0.86);}.nav-link-dark:hover{color:#fff;}.nav-link-dark::after{background:#fbbf24;}
 
         /* ── Cards ── */
         .card-hover{transition:transform 0.35s cubic-bezier(0.16,1,0.3,1),box-shadow 0.35s ease;}
@@ -416,8 +416,8 @@ export default function LandingPage() {
             <img src={process.env.PUBLIC_URL + '/logo.png'} alt="Lord Krishna Public School"
               style={{ width: 48, height: 48, objectFit: 'contain', filter: scrolled ? 'none' : 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }} />
             <div>
-              <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 900, fontSize: 17, color: scrolled ? '#002045' : '#fff', lineHeight: 1.1, letterSpacing: '-0.01em' }}>LORD KRISHNA</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: scrolled ? '#1960a3' : 'rgba(255,255,255,0.7)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 2 }}>PUBLIC SCHOOL · MATHURA</div>
+              <div style={{ fontFamily: 'Manrope,sans-serif', fontWeight: 900, fontSize: 17, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.01em' }}>LORD KRISHNA</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: scrolled ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.7)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 2 }}>PUBLIC SCHOOL · MATHURA</div>
             </div>
           </div>
 
