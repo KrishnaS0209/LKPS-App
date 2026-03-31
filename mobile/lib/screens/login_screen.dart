@@ -16,10 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String _selectedRole = 'teacher';
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _selectedSession;
   List<dynamic> _sessions = [];
   bool _isLoading = false;
-  bool _loadingSessions = false;
   bool _obscurePassword = true;
   String? _error;
 
@@ -30,19 +28,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loadSessions() async {
-    setState(() => _loadingSessions = true);
     try {
       final sessions = await AuthService.fetchSessions();
       setState(() {
         _sessions = sessions;
-        if (sessions.isNotEmpty) {
-          _selectedSession = sessions.last['sid'];
-        }
       });
     } catch (e) {
       debugPrint('Error loading sessions: $e');
-    } finally {
-      setState(() => _loadingSessions = false);
     }
   }
 
@@ -52,22 +44,23 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (_selectedRole == 'teacher' && _selectedSession == null) {
-      setState(() => _error = 'Please select a session');
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
+      // For teachers, automatically use the latest session
+      String? sessionId;
+      if (_selectedRole == 'teacher' && _sessions.isNotEmpty) {
+        sessionId = _sessions.last['sid'];
+      }
+      
       await context.read<AuthProvider>().signIn(
             role: _selectedRole,
             username: _usernameController.text,
             password: _passwordController.text,
-            sessionId: _selectedSession,
+            sessionId: sessionId,
           );
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception: ', ''));
@@ -93,28 +86,28 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 16),
                 // School Logo
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(26),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     child: Image.asset(
                       'assets/logo.png',
                       fit: BoxFit.cover,
@@ -124,11 +117,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             gradient: const LinearGradient(
                               colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                             ),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
                             Iconsax.book,
-                            size: 50,
+                            size: 35,
                             color: Colors.white,
                           ),
                         );
@@ -139,31 +132,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     .animate()
                     .fadeIn(duration: 600.ms)
                     .scale(delay: 200.ms, duration: 400.ms),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 // School Name
                 Text(
                   'LORD KRISHNA PUBLIC SCHOOL',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF0F172A),
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.3,
+                        fontSize: 18,
                       ),
                 )
                     .animate()
                     .fadeIn(delay: 300.ms, duration: 600.ms)
                     .slideY(begin: 0.2, end: 0),
-                const SizedBox(height: 50),
+                const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(13),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -180,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: () => setState(() => _selectedRole = 'teacher'),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: _RoleButton(
                               label: 'Parent',
@@ -191,14 +185,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _InputField(
                         label: 'Username',
                         controller: _usernameController,
                         hint: 'Enter your username',
                         icon: Iconsax.user,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
                       _InputField(
                         label: 'Password',
                         controller: _passwordController,
@@ -210,45 +204,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           setState(() => _obscurePassword = !_obscurePassword);
                         },
                       ),
-                      if (_selectedRole == 'teacher') ...[
-                        const SizedBox(height: 20),
-                        Text(
-                          'ACADEMIC SESSION',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF64748B),
-                                letterSpacing: 1.2,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (_loadingSessions)
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        else
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: _sessions.map((session) {
-                              final isSelected = _selectedSession == session['sid'];
-                              return _SessionChip(
-                                label: session['name'] ?? session['sid'],
-                                isSelected: isSelected,
-                                onTap: () => setState(() => _selectedSession = session['sid']),
-                              );
-                            }).toList(),
-                          ),
-                      ],
                       if (_error != null) ...[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFFFECACA)),
                           ),
                           child: Row(
@@ -256,15 +218,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               const Icon(
                                 Iconsax.warning_2,
                                 color: Color(0xFFDC2626),
-                                size: 20,
+                                size: 18,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   _error!,
                                   style: const TextStyle(
                                     color: Color(0xFFDC2626),
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
@@ -272,10 +235,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ).animate().shake(duration: 400.ms),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
@@ -285,13 +248,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             elevation: 0,
                             shadowColor: const Color(0xFFFBBF24).withAlpha(102),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: _isLoading
                               ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
+                                  height: 22,
+                                  width: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
                                     valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
@@ -303,40 +266,41 @@ class _LoginScreenState extends State<LoginScreen> {
                                     const Text(
                                       'Sign In',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.5,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Icon(Iconsax.arrow_right_3, size: 20),
+                                    const Icon(Iconsax.arrow_right_3, size: 18),
                                   ],
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Iconsax.info_circle,
-                              size: 18,
+                              size: 16,
                               color: const Color(0xFF64748B),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 _selectedRole == 'teacher'
-                                    ? 'Sign in with your teacher credentials and select the academic session.'
+                                    ? 'Sign in with your teacher credentials. You will be logged into the current academic session.'
                                     : 'Sign in with your parent credentials to view your child\'s information.',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: const Color(0xFF64748B),
-                                      height: 1.5,
+                                      height: 1.4,
+                                      fontSize: 11,
                                     ),
                               ),
                             ),
@@ -378,7 +342,7 @@ class _RoleButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
@@ -386,7 +350,7 @@ class _RoleButton extends StatelessWidget {
                 )
               : null,
           color: isSelected ? null : const Color(0xFFF8FBFF),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
             width: isSelected ? 2 : 1,
@@ -395,8 +359,8 @@ class _RoleButton extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: const Color(0xFF0F172A).withAlpha(51),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ]
               : null,
@@ -406,14 +370,14 @@ class _RoleButton extends StatelessWidget {
             Icon(
               icon,
               color: isSelected ? Colors.white : const Color(0xFF64748B),
-              size: 28,
+              size: 24,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFF334155),
               ),
@@ -454,15 +418,16 @@ class _InputField extends StatelessWidget {
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF64748B),
-                letterSpacing: 1.2,
+                letterSpacing: 1.0,
+                fontSize: 10,
               ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: isPassword && obscureText,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
@@ -470,14 +435,15 @@ class _InputField extends StatelessWidget {
             hintStyle: TextStyle(
               color: const Color(0xFF94A3B8),
               fontWeight: FontWeight.w400,
+              fontSize: 14,
             ),
-            prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 22),
+            prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
                       obscureText ? Iconsax.eye_slash : Iconsax.eye,
                       color: const Color(0xFF64748B),
-                      size: 22,
+                      size: 20,
                     ),
                     onPressed: onToggleVisibility,
                   )
@@ -485,60 +451,21 @@ class _InputField extends StatelessWidget {
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           ),
         ),
       ],
     );
-  }
-}
-
-class _SessionChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _SessionChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFF334155),
-          ),
-        ),
-      ),
-    ).animate(target: isSelected ? 1 : 0).scale(duration: 200.ms);
   }
 }
