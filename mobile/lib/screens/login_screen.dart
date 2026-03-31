@@ -76,12 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFFEFF6FF),
-              const Color(0xFFF8FAFC),
-              const Color(0xFFFEF3C7).withAlpha(50),
+              const Color(0xFF1E3A8A), // Deep blue
+              const Color(0xFF3B82F6), // Bright blue
+              const Color(0xFF60A5FA), // Light blue
             ],
           ),
         ),
@@ -94,21 +94,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 // School Logo
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(20),
-                        blurRadius: 15,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withAlpha(40),
+                        blurRadius: 25,
+                        offset: const Offset(0, 10),
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     child: Image.asset(
                       'assets/logo.png',
                       fit: BoxFit.cover,
@@ -116,13 +117,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         return Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                              colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)],
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Icon(
                             Iconsax.book,
-                            size: 35,
+                            size: 40,
                             color: Colors.white,
                           ),
                         );
@@ -133,32 +134,53 @@ class _LoginScreenState extends State<LoginScreen> {
                     .animate()
                     .fadeIn(duration: 600.ms)
                     .scale(delay: 200.ms, duration: 400.ms),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 // School Name
                 Text(
                   'LORD KRISHNA PUBLIC SCHOOL',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
-                        letterSpacing: 0.3,
-                        fontSize: 18,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        fontSize: 19,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withAlpha(51),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
                 )
                     .animate()
                     .fadeIn(delay: 300.ms, duration: 600.ms)
                     .slideY(begin: 0.2, end: 0),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Text(
+                  'Mobile Portal',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withAlpha(230),
+                    letterSpacing: 1.5,
+                  ),
+                )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 600.ms),
+                const SizedBox(height: 28),
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(10),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: Colors.black.withAlpha(30),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
+                        spreadRadius: 0,
                       ),
                     ],
                   ),
@@ -175,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: () => setState(() => _selectedRole = 'teacher'),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: _RoleButton(
                               label: 'Parent',
@@ -186,14 +208,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       _InputField(
                         label: 'Username',
                         controller: _usernameController,
                         hint: 'Enter your username',
                         icon: Iconsax.user,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
                       _InputField(
                         label: 'Password',
                         controller: _passwordController,
@@ -206,13 +228,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       if (_error != null) ...[
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFFECACA)),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFFCA5A5), width: 1.5),
                           ),
                           child: Row(
                             children: [
@@ -236,10 +258,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ).animate().shake(duration: 400.ms),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: 54,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
@@ -249,7 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             elevation: 0,
                             shadowColor: const Color(0xFFFBBF24).withAlpha(102),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           child: _isLoading
@@ -278,12 +300,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
                           children: [
@@ -314,31 +337,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     .animate()
                     .fadeIn(delay: 500.ms, duration: 600.ms)
                     .slideY(begin: 0.3, end: 0),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 // Footer Links
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _FooterLink(
-                      label: 'About',
-                      icon: Iconsax.info_circle,
-                      onTap: () => _launchURL('https://lkps-app.vercel.app/#about'),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 16,
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      color: const Color(0xFFE2E8F0),
-                    ),
-                    _FooterLink(
-                      label: 'LKPS Website',
-                      icon: Iconsax.global,
-                      onTap: () => _launchURL('https://lkps-app.vercel.app'),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(26),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withAlpha(51)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _FooterLink(
+                        label: 'About',
+                        icon: Iconsax.info_circle,
+                        onTap: () => _launchURL('https://lkps-app.vercel.app/#about'),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 18,
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.white.withAlpha(102),
+                      ),
+                      _FooterLink(
+                        label: 'LKPS Website',
+                        icon: Iconsax.global,
+                        onTap: () => _launchURL('https://lkps-app.vercel.app'),
+                      ),
+                    ],
+                  ),
                 )
                     .animate()
-                    .fadeIn(delay: 600.ms, duration: 600.ms),
+                    .fadeIn(delay: 600.ms, duration: 600.ms)
+                    .slideY(begin: 0.2, end: 0),
                 const SizedBox(height: 16),
               ],
             ),
@@ -376,25 +408,25 @@ class _RoleButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF334155)],
+                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
                 )
               : null,
-          color: isSelected ? null : const Color(0xFFF8FBFF),
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? null : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1,
+            color: isSelected ? const Color(0xFF1E3A8A) : const Color(0xFFE2E8F0),
+            width: isSelected ? 2 : 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF0F172A).withAlpha(51),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    color: const Color(0xFF3B82F6).withAlpha(76),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : null,
@@ -404,14 +436,14 @@ class _RoleButton extends StatelessWidget {
             Icon(
               icon,
               color: isSelected ? Colors.white : const Color(0xFF64748B),
-              size: 24,
+              size: 26,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 7),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFF334155),
               ),
@@ -452,16 +484,16 @@ class _InputField extends StatelessWidget {
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF64748B),
-                letterSpacing: 1.0,
-                fontSize: 10,
+                letterSpacing: 1.2,
+                fontSize: 11,
               ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         TextField(
           controller: controller,
           obscureText: isPassword && obscureText,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
@@ -469,15 +501,15 @@ class _InputField extends StatelessWidget {
             hintStyle: TextStyle(
               color: const Color(0xFF94A3B8),
               fontWeight: FontWeight.w400,
-              fontSize: 14,
+              fontSize: 15,
             ),
-            prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
+            prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 21),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
                       obscureText ? Iconsax.eye_slash : Iconsax.eye,
                       color: const Color(0xFF64748B),
-                      size: 20,
+                      size: 21,
                     ),
                     onPressed: onToggleVisibility,
                   )
@@ -485,18 +517,18 @@ class _InputField extends StatelessWidget {
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
         ),
       ],
@@ -524,16 +556,16 @@ class _FooterLink extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 16,
-            color: const Color(0xFF64748B),
+            size: 17,
+            color: Colors.white,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 7),
           Text(
             label,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
+              color: Colors.white,
             ),
           ),
         ],
