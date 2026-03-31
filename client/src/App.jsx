@@ -3333,28 +3333,28 @@ function Students({ db, save, setPage }) {
         </div>
         <Grid cols={2}>
           <SecLabel>Personal</SecLabel>
-          <Field label="First Name *"><Input value={form.fn||''} onChange={v=>setForm(f=>({...f,fn:v}))} placeholder="Aryan"/></Field>
-          <Field label="Last Name *"><Input value={form.ln||''} onChange={v=>setForm(f=>({...f,ln:v}))} placeholder="Sharma"/></Field>
+          <Field label="First Name *"><Input value={form.fn||''} onChange={v=>setForm(f=>({...f,fn:v}))} placeholder="Enter first name"/></Field>
+          <Field label="Last Name *"><Input value={form.ln||''} onChange={v=>setForm(f=>({...f,ln:v}))} placeholder="Enter last name"/></Field>
           <Field label="Date of Birth"><Input type="date" value={form.dob||''} onChange={v=>setForm(f=>({...f,dob:v}))}/></Field>
           <Field label="Gender"><Select value={form.gn||'Male'} onChange={v=>setForm(f=>({...f,gn:v}))}><option>Male</option><option>Female</option><option>Other</option></Select></Field>
           <Field label="Blood Group"><Select value={form.bl||''} onChange={v=>setForm(f=>({...f,bl:v,blood:v}))}><option value="">—</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}</Select></Field>
           <Field label="Caste"><Select value={form.ca||''} onChange={v=>setForm(f=>({...f,ca:v}))}><option value="">—</option>{['General','OBC','SC','ST','EWS'].map(c=><option key={c}>{c}</option>)}</Select></Field>
-          <Field label="Aadhaar"><Input value={form.aa||''} onChange={v=>setForm(f=>({...f,aa:v}))} placeholder="XXXX XXXX XXXX"/></Field>
+          <Field label="Aadhaar"><Input value={form.aa||''} onChange={v=>setForm(f=>({...f,aa:v}))} placeholder="12-digit Aadhaar number"/></Field>
           <Field label="Religion"><Input value={form.re||''} onChange={v=>setForm(f=>({...f,re:v}))}/></Field>
           <SecLabel>Academic</SecLabel>
           <Field label="Class *"><Select value={form.cls||''} onChange={v=>setForm(f=>({...f,cls:v}))}><option value="">—</option>{classes.map(c=><option key={c}>{c}</option>)}</Select></Field>
-          <Field label="Roll No."><Input value={form.ro||''} onChange={v=>setForm(f=>({...f,ro:v}))} placeholder="2401"/></Field>
-          <Field label="Admission No."><Input value={form.an||''} onChange={v=>setForm(f=>({...f,an:v,admno:v}))} placeholder="ADM-001"/></Field>
+          <Field label="Roll No."><Input value={form.ro||''} onChange={v=>setForm(f=>({...f,ro:v}))} placeholder="Enter roll number"/></Field>
+          <Field label="Admission No."><Input value={form.an||''} onChange={v=>setForm(f=>({...f,an:v,admno:v}))} placeholder="Enter admission number"/></Field>
           <Field label="Admission Date"><Input type="date" value={form.ad||''} onChange={v=>setForm(f=>({...f,ad:v}))}/></Field>
           <Field label="Previous School"><Input value={form.ps||''} onChange={v=>setForm(f=>({...f,ps:v}))}/></Field>
           <Field label="Email"><Input type="email" value={form.em||''} onChange={v=>setForm(f=>({...f,em:v}))}/></Field>
           <SecLabel>Father</SecLabel>
-          <Field label="Father Name"><Input value={form.fa||''} onChange={v=>setForm(f=>({...f,fa:v,father:v}))} placeholder="Ramesh Sharma"/></Field>
+          <Field label="Father Name"><Input value={form.fa||''} onChange={v=>setForm(f=>({...f,fa:v,father:v}))} placeholder="Enter father's full name"/></Field>
           <Field label="Occupation"><Input value={form.fo||''} onChange={v=>setForm(f=>({...f,fo:v}))}/></Field>
-          <Field label="Father Phone"><Input value={form.fp||''} onChange={v=>setForm(f=>({...f,fp:v,fphone:v}))} placeholder="98100-XXXXX"/></Field>
+          <Field label="Father Phone"><Input value={form.fp||''} onChange={v=>setForm(f=>({...f,fp:v,fphone:v}))} placeholder="10-digit mobile number"/></Field>
           <Field label="Father Aadhaar"><Input value={form.faa||''} onChange={v=>setForm(f=>({...f,faa:v}))}/></Field>
           <SecLabel>Mother</SecLabel>
-          <Field label="Mother Name"><Input value={form.ma||''} onChange={v=>setForm(f=>({...f,ma:v,mother:v}))} placeholder="Sunita Sharma"/></Field>
+          <Field label="Mother Name"><Input value={form.ma||''} onChange={v=>setForm(f=>({...f,ma:v,mother:v}))} placeholder="Enter mother's full name"/></Field>
           <Field label="Occupation"><Input value={form.mo||''} onChange={v=>setForm(f=>({...f,mo:v}))}/></Field>
           <Field label="Mother Phone"><Input value={form.mp||''} onChange={v=>setForm(f=>({...f,mp:v}))}/></Field>
           <Field label="Mother Aadhaar"><Input value={form.maa||''} onChange={v=>setForm(f=>({...f,maa:v}))}/></Field>
@@ -3369,7 +3369,7 @@ function Students({ db, save, setPage }) {
               const mf=parseFloat(v)||0;
               const extrasSum=(form.fextras||[]).reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
               setForm(f=>({...f,mf:v,fee:mf*12+extrasSum}));
-            }} placeholder="500"/>
+            }} placeholder="Monthly fee amount"/>
           </Field>
           <Field label="Annual Fee ₹ (auto)">
             <div className="px-3 py-2 bg-surface-container rounded-lg text-sm font-bold text-primary">
@@ -3790,21 +3790,21 @@ function Teachers({ db, save }) {
           <PhotoZone photo={tphoto} onUpload={setTphoto} onClear={()=>setTphoto(null)} />
         </div>
         <Grid><SecLabel>Details</SecLabel>
-          <Field label="First Name *"><Input value={form.fn||''} onChange={sf('fn')}/></Field>
-          <Field label="Last Name *"><Input value={form.ln||''} onChange={sf('ln')}/></Field>
-          <Field label="Emp ID"><Input value={form.empId||''} onChange={sf('empId')} placeholder="T001"/></Field>
-          <Field label="Subject"><Input value={form.su||''} onChange={sf('su')} placeholder="Mathematics"/></Field>
+          <Field label="First Name *"><Input value={form.fn||''} onChange={sf('fn')} placeholder="Enter first name"/></Field>
+          <Field label="Last Name *"><Input value={form.ln||''} onChange={sf('ln')} placeholder="Enter last name"/></Field>
+          <Field label="Emp ID"><Input value={form.empId||''} onChange={sf('empId')} placeholder="Enter employee ID"/></Field>
+          <Field label="Subject"><Input value={form.su||''} onChange={sf('su')} placeholder="Subject taught"/></Field>
           <Field label="Class Teacher"><Select value={form.cls||''} onChange={sf('cls')}><option value="">—</option>{classes.map(c=><option key={c}>{c}</option>)}</Select></Field>
-          <Field label="Qualification"><Input value={form.qual||''} onChange={sf('qual')} placeholder="M.Sc, B.Ed"/></Field>
-          <Field label="Phone"><Input value={form.ph||''} onChange={sf('ph')}/></Field>
-          <Field label="Email"><Input type="email" value={form.em||''} onChange={sf('em')}/></Field>
-          <Field label="Salary ₹/mo"><Input type="number" value={form.sal||''} onChange={sf('sal')}/></Field>
+          <Field label="Qualification"><Input value={form.qual||''} onChange={sf('qual')} placeholder="Highest qualification"/></Field>
+          <Field label="Phone"><Input value={form.ph||''} onChange={sf('ph')} placeholder="10-digit mobile number"/></Field>
+          <Field label="Email"><Input type="email" value={form.em||''} onChange={sf('em')} placeholder="Teacher email address"/></Field>
+          <Field label="Salary ₹/mo"><Input type="number" value={form.sal||''} onChange={sf('sal')} placeholder="Monthly salary amount"/></Field>
           <Field label="Joining Date"><Input type="date" value={form.doj||''} onChange={sf('doj')}/></Field>
           <Field label="Status"><Select value={form.status||'Active'} onChange={sf('status')}><option>Active</option><option>On Leave</option><option>Resigned</option></Select></Field>
           <Field label="Blood Group"><Select value={form.blood||''} onChange={sf('blood')}><option value="">—</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}</Select></Field>
           <SecLabel>Portal Access</SecLabel>
-          <Field label="Username"><Input value={form.puser||''} onChange={sf('puser')} placeholder="Leave blank = no access"/></Field>
-          <Field label="Password"><Input type="password" value={form.ppass||''} onChange={sf('ppass')} placeholder="Min 6 chars"/></Field>
+          <Field label="Username"><Input value={form.puser||''} onChange={sf('puser')} placeholder="Leave blank for no access"/></Field>
+          <Field label="Password"><Input type="password" value={form.ppass||''} onChange={sf('ppass')} placeholder="Minimum 6 characters"/></Field>
         </Grid>
         <ModalFooter><Btn onClick={()=>setOpen(false)}>Cancel</Btn><Btn variant="primary" onClick={saveTea}>Save</Btn></ModalFooter>
       </Modal>
