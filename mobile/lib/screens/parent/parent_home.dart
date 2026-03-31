@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'parent_dashboard.dart';
+import 'attendance_screen.dart';
 import 'fees_screen.dart';
-import '../teacher/settings_screen.dart';
+import 'alerts_screen.dart';
+import 'result_screen.dart';
+import 'profile_screen.dart';
 
 class ParentHome extends StatefulWidget {
   const ParentHome({super.key});
@@ -12,114 +16,98 @@ class ParentHome extends StatefulWidget {
 }
 
 class _ParentHomeState extends State<ParentHome> {
-  int _currentIndex = 0;
+  int _currentIndex = 2;
 
-  final List<Widget> _screens = [
-    const ParentDashboard(),
+  void _navigate(int index) => setState(() => _currentIndex = index);
+
+  List<Widget> get _screens => [
+    const AlertsScreen(),
+    const AttendanceScreen(),
+    ParentDashboard(onNavigate: _navigate),
+    const ResultScreen(),
     const FeesScreen(),
-    const SettingsScreen(),
+    const ProfileScreen(),
+  ];
+
+  static const _navItems = [
+    {'icon': Iconsax.notification, 'label': 'Alerts'},
+    {'icon': Iconsax.calendar_1,   'label': 'Attendance'},
+    {'icon': Iconsax.home,         'label': 'Dashboard'},
+    {'icon': Iconsax.document_text1, 'label': 'Result'},
+    {'icon': Iconsax.wallet,       'label': 'Fees'},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF111827),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         child: _screens[_currentIndex],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF1F2937),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(13),
+              color: Colors.black.withOpacity(0.4),
               blurRadius: 20,
-              offset: const Offset(0, -5),
+              offset: const Offset(0, -4),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Iconsax.home,
-                  activeIcon: Iconsax.home_15,
-                  label: 'Dashboard',
-                  isActive: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
-                ),
-                _NavItem(
-                  icon: Iconsax.wallet,
-                  activeIcon: Iconsax.wallet5,
-                  label: 'Fees',
-                  isActive: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
-                ),
-                _NavItem(
-                  icon: Iconsax.setting_2,
-                  activeIcon: Iconsax.setting_25,
-                  label: 'Settings',
-                  isActive: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
-                ),
-              ],
+              children: List.generate(_navItems.length, (i) {
+                final isActive = _currentIndex == i;
+                final icon = _navItems[i]['icon'] as IconData;
+                final label = _navItems[i]['label'] as String;
+                return GestureDetector(
+                  onTap: () => setState(() => _currentIndex = i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isActive ? 14 : 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? const Color(0xFF14B8A6).withOpacity(0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          color: isActive
+                              ? const Color(0xFF14B8A6)
+                              : Colors.white38,
+                          size: 24,
+                        ),
+                        if (isActive) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            label,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF14B8A6),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF8B5CF6).withAlpha(26) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              color: isActive ? const Color(0xFF8B5CF6) : const Color(0xFF94A3B8),
-              size: 24,
-            ),
-            if (isActive) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF8B5CF6),
-                ),
-              ),
-            ],
-          ],
         ),
       ),
     );

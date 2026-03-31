@@ -1,8 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import '../config/api_config.dart';
 
 class ApiService {
+  static http.Client _getClient() {
+    final ioClient = HttpClient()
+      ..badCertificateCallback = (_, __, ___) => true;
+    return IOClient(ioClient);
+  }
+
   static Future<Map<String, dynamic>> request(
     String path, {
     String method = 'GET',
@@ -11,65 +19,63 @@ class ApiService {
     String? token,
   }) async {
     final url = Uri.parse('${ApiConfig.apiBase}$path');
-    final defaultHeaders = {
+    final h = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
       ...?headers,
     };
 
+    final client = _getClient();
     http.Response response;
 
-    switch (method.toUpperCase()) {
-      case 'POST':
-        response = await http.post(
-          url,
-          headers: defaultHeaders,
-          body: body != null ? jsonEncode(body) : null,
-        );
-        break;
-      case 'PATCH':
-        response = await http.patch(
-          url,
-          headers: defaultHeaders,
-          body: body != null ? jsonEncode(body) : null,
-        );
-        break;
-      case 'DELETE':
-        response = await http.delete(url, headers: defaultHeaders);
-        break;
-      default:
-        response = await http.get(url, headers: defaultHeaders);
+    try {
+      switch (method.toUpperCase()) {
+        case 'POST':
+          response = await client.post(url, headers: h, body: body != null ? jsonEncode(body) : null);
+          break;
+        case 'PATCH':
+          response = await client.patch(url, headers: h, body: body != null ? jsonEncode(body) : null);
+          break;
+        case 'DELETE':
+          response = await client.delete(url, headers: h);
+          break;
+        default:
+          response = await client.get(url, headers: h);
+      }
+    } finally {
+      client.close();
     }
 
     final data = jsonDecode(response.body);
-
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return data is Map<String, dynamic> ? data : {'data': data};
-    } else {
-      throw Exception(data['error'] ?? 'Request failed');
     }
+    throw Exception(data['error'] ?? 'Request failed');
   }
 
-  static Future<List<dynamic>> requestList(
-    String path, {
-    String? token,
-  }) async {
+  static Future<List<dynamic>> requestList(String path, {String? token}) async {
     final url = Uri.parse('${ApiConfig.apiBase}$path');
-    final headers = {
+    final h = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
-    final response = await http.get(url, headers: headers);
-    
+    final client = _getClient();
+    http.Response response;
+
+    try {
+      response = await client.get(url, headers: h);
+    } finally {
+      client.close();
+    }
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body);
       return data is List ? data : [];
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Request failed');
     }
+    final error = jsonDecode(response.body);
+    throw Exception(error['error'] ?? 'Request failed');
   }
 }

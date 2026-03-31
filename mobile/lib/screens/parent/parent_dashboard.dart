@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/parent_service.dart';
-import '../../widgets/info_card.dart';
+
+// Teal accent color matching reference
+const _teal = Color(0xFF14B8A6);
+const _cyan = Color(0xFF06B6D4);
+const _green = Color(0xFF22C55E);
+const _bg = Color(0xFF111827);
+const _card = Color(0xFF1F2937);
+const _card2 = Color(0xFF374151);
 
 class ParentDashboard extends StatefulWidget {
-  const ParentDashboard({super.key});
-
+  final void Function(int index)? onNavigate;
+  const ParentDashboard({super.key, this.onNavigate});
   @override
   State<ParentDashboard> createState() => _ParentDashboardState();
 }
@@ -26,9 +36,21 @@ class _ParentDashboardState extends State<ParentDashboard> {
     _loadData();
   }
 
-  String _formatCurrency(dynamic amount) {
-    final value = double.tryParse(amount?.toString() ?? '0') ?? 0;
-    return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(value);
+  ImageProvider? _getPhoto(dynamic photo) {
+    if (photo == null || photo.toString().isEmpty) return null;
+    final str = photo.toString();
+    try {
+      // base64 data URI like data:image/jpeg;base64,...
+      if (str.startsWith('data:')) {
+        final base64Str = str.split(',').last;
+        return MemoryImage(base64Decode(base64Str));
+      }
+      // plain base64
+      return MemoryImage(base64Decode(str));
+    } catch (_) {
+      // fallback to network URL
+      return NetworkImage(str);
+    }
   }
 
   Future<void> _loadData() async {
@@ -37,14 +59,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
     final sessionId = auth.sessionId;
     final cls = auth.user?.cls;
     final token = auth.token;
-
     if (sid == null || sessionId == null || token == null) {
       setState(() => _isLoading = false);
       return;
     }
-
     setState(() => _isLoading = true);
-
     try {
       final results = await Future.wait([
         ParentService.fetchStudentRecord(token: token, sessionId: sessionId, sid: sid),
@@ -55,7 +74,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
           Future.value(<Map<String, dynamic>>[]),
         ParentService.fetchPublicNotices(),
       ]);
-
+      debugPrint('Student sid: $sid, cls: $cls');
+      debugPrint('Attendance count: ${(results[2] as List).length}');
       setState(() {
         _student = results[0] as Map<String, dynamic>?;
         _payments = results[1] as List<dynamic>;
@@ -63,7 +83,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         _notices = results[3] as List<dynamic>;
       });
     } catch (e) {
-      debugPrint('Error loading data: $e');
+      debugPrint('Error: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -73,295 +93,197 @@ class _ParentDashboardState extends State<ParentDashboard> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: _bg,
+        body: Center(child: CircularProgressIndicator(color: _teal)),
       );
     }
 
+    final auth = context.watch<AuthProvider>();
+    final studentName = [_student?['fn'], _student?['ln']]
+        .where((e) => e != null && e.toString().isNotEmpty)
+        .join(' ') ?? 'Student';
+    final presentCount = _attendance.where((i) => i['status'] == 'P').length;
+    final attendanceRate = _attendance.isNotEmpty
+        ? ((presentCount / _attendance.length) * 100).toStringAsFixed(2)
+        : '0.00';
     final paymentTotal = _payments.fold<double>(
-      0,
-      (sum, item) => sum + (double.tryParse(item['amt']?.toString() ?? '0') ?? 0),
-    );
-
-    final presentCount = _attendance.where((item) => item['status'] == 'P').length;
-    final attendanceRate = _attendance.isNotEmpty ? ((presentCount / _attendance.length) * 100).round() : 0;
+      0, (s, i) => s + (double.tryParse(i['amt']?.toString() ?? '0') ?? 0));
+    final totalFee = double.tryParse(_student?['fee']?.toString() ?? '0') ?? 0;
+    final remaining = totalFee - paymentTotal;
 
     return Scaffold(
+      backgroundColor: _bg,
+      drawer: _buildDrawer(context, auth, studentName),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadData,
+          color: _teal,
+          backgroundColor: _card,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'PARENT PORTAL',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF8B5CF6),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  [_student?['fn'], _student?['ln']].where((e) => e != null && e.toString().isNotEmpty).join(' ') ?? 'Student',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Track your child\'s attendance, fees, and stay updated with school announcements.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    InfoCard(
-                      icon: Iconsax.book,
-                      title: 'Class',
-                      value: _student?['cls'] ?? 'N/A',
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                    InfoCard(
-                      icon: Iconsax.chart,
-                      title: 'Attendance',
-                      value: '$attendanceRate%',
-                      color: const Color(0xFF10B981),
-                    ),
-                    InfoCard(
-                      icon: Iconsax.wallet,
-                      title: 'Fees Paid',
-                      value: _formatCurrency(paymentTotal),
-                      color: const Color(0xFFF59E0B),
-                    ),
-                    InfoCard(
-                      icon: Iconsax.notification,
-                      title: 'Notices',
-                      value: _notices.length.toString(),
-                      color: const Color(0xFFEF4444),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFDBE7F5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // ── Header ──────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
                     children: [
-                      const Text(
-                        'Student Information',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
+                      Builder(builder: (ctx) => GestureDetector(
+                        onTap: () => Scaffold.of(ctx).openDrawer(),
+                        child: const Icon(Icons.menu, color: Colors.white, size: 26),
+                      )),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text('LORD KRISHNA PUBLIC SCHOOL',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14, fontWeight: FontWeight.w700,
+                            color: Colors.white, letterSpacing: 0.3)),
                       ),
-                      const SizedBox(height: 14),
-                      _InfoRow(label: 'Class', value: _student?['cls'] ?? 'N/A'),
-                      _InfoRow(label: 'Roll Number', value: _student?['roll'] ?? 'N/A'),
-                      _InfoRow(label: 'Father\'s Name', value: _student?['father'] ?? 'N/A'),
-                      _InfoRow(
-                        label: 'Contact',
-                        value: _student?['fphone'] ?? _student?['mphone'] ?? _student?['ph'] ?? 'N/A',
-                        isLast: true,
+                      GestureDetector(
+                        onTap: _loadData,
+                        child: const Icon(Icons.refresh, color: Colors.white, size: 24),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFDBE7F5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Recent Attendance',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      if (_attendance.isEmpty)
-                        const Text(
-                          'No attendance records available.',
-                          style: TextStyle(color: Color(0xFF64748B)),
-                        )
-                      else
-                        ..._attendance.take(7).map((item) {
-                          final status = item['status'];
-                          final bgColor = status == 'P'
-                              ? const Color(0xFFF0FDF4)
-                              : status == 'A'
-                                  ? const Color(0xFFFEF2F2)
-                                  : const Color(0xFFFFFBEB);
-                          final borderColor = status == 'P'
-                              ? const Color(0xFFBBF7D0)
-                              : status == 'A'
-                                  ? const Color(0xFFFECACA)
-                                  : const Color(0xFFFDE68A);
-                          final statusColor = status == 'P'
-                              ? const Color(0xFF10B981)
-                              : status == 'A'
-                                  ? const Color(0xFFEF4444)
-                                  : const Color(0xFFF59E0B);
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: bgColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  DateFormat('MMM d, y').format(DateTime.parse(item['date'])),
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    status == 'P' ? 'Present' : status == 'A' ? 'Absent' : 'Leave',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+                // ── Student Card ─────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFDBE7F5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                    color: _card,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: _teal.withOpacity(0.2),
+                        backgroundImage: _getPhoto(_student?['photo']),
+                        child: _student?['photo'] == null || (_student!['photo'] as String).isEmpty
+                            ? Text(
+                                studentName.isNotEmpty ? studentName[0].toUpperCase() : 'S',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22, fontWeight: FontWeight.w700, color: _teal),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              studentName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Class ${_student?['cls'] ?? 'N/A'}  •  Roll No. ${_student?['roll'] ?? 'N/A'}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13, color: _green, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
                       ),
                     ],
                   ),
+                ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+
+                const SizedBox(height: 16),
+
+                // ── Stat Cards ───────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(child: _StatCard(
+                        icon: Iconsax.calendar_1,
+                        label: 'Attendance',
+                        value: '$attendanceRate%',
+                        valueColor: double.parse(attendanceRate) < 75
+                            ? const Color(0xFFEF4444) : _green,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(child: _StatCard(
+                        icon: Iconsax.document_text1,
+                        label: 'Result',
+                        value: 'View',
+                        valueColor: _green,
+                      )),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ── Quick Action ─────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'School Notices',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
+                      Text('Quick Action',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                      const Divider(color: Color(0xFF374151), height: 20),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: 0.9,
+                        children: [
+                          _ActionTile(icon: Iconsax.calendar_1, label: 'Attendance', color: _teal, onTap: () => widget.onNavigate?.call(1)),
+                          _ActionTile(icon: Iconsax.wallet, label: 'Fee Details', color: _cyan, onTap: () => widget.onNavigate?.call(4)),
+                          _ActionTile(icon: Iconsax.notification, label: 'Notices', color: _teal, onTap: () => widget.onNavigate?.call(0)),
+                          _ActionTile(icon: Iconsax.document_text1, label: 'Result', color: _cyan, onTap: () => widget.onNavigate?.call(3)),
+                          _ActionTile(icon: Iconsax.clock, label: 'Timetable', color: _teal, onTap: () {}),
+                          _ActionTile(icon: Iconsax.profile_2user, label: 'Profile', color: _cyan, onTap: () => widget.onNavigate?.call(5)),
+                        ],
                       ),
-                      const SizedBox(height: 14),
-                      if (_notices.isEmpty)
-                        const Text(
-                          'No active notices.',
-                          style: TextStyle(color: Color(0xFF64748B)),
-                        )
-                      else
-                        ..._notices.take(3).map((notice) {
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFFDE68A)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  notice['title'] ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF92400E),
-                                  ),
-                                ),
-                                if (notice['body'] != null) ...[
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    notice['body'],
-                                    style: const TextStyle(
-                                      color: Color(0xFF78350F),
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 6),
-                                Text(
-                                  notice['tag'] ?? 'General',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFFA16207),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
                     ],
                   ),
                 ),
+
+                const SizedBox(height: 24),
+
+                // ── Fee Alert ────────────────────────────────────────
+                if (remaining > 0)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF7C3AED).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF7C3AED).withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Iconsax.wallet, color: Color(0xFFA78BFA), size: 28),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Fee Pending',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15, fontWeight: FontWeight.w700,
+                                  color: Colors.white)),
+                              Text('₹${remaining.toStringAsFixed(0)} outstanding',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13, color: const Color(0xFFA78BFA))),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 400.ms),
+
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -369,50 +291,163 @@ class _ParentDashboardState extends State<ParentDashboard> {
       ),
     );
   }
+
+  Widget _buildDrawer(BuildContext context, AuthProvider auth, String studentName) {
+    // index map: 0=Alerts, 1=Attendance, 2=Dashboard, 3=Result, 4=Fees
+    void nav(int index) {
+      Navigator.pop(context);
+      widget.onNavigate?.call(index);
+    }
+
+    return Drawer(
+      backgroundColor: _card,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              color: _bg,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 36,
+                    backgroundColor: _teal.withOpacity(0.2),
+                    backgroundImage: _getPhoto(_student?['photo']),
+                    child: _student?['photo'] == null || (_student!['photo'] as String).isEmpty
+                        ? Text(
+                            studentName.isNotEmpty ? studentName[0].toUpperCase() : 'S',
+                            style: GoogleFonts.poppins(
+                              fontSize: 28, fontWeight: FontWeight.w700, color: _teal),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(studentName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text('Class ${_student?['cls'] ?? ''} • Roll ${_student?['roll'] ?? ''}',
+                    style: GoogleFonts.poppins(fontSize: 13, color: Colors.white60)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                children: [
+                  _DrawerItem(icon: Iconsax.home, label: 'Dashboard', color: _teal, onTap: () => nav(2)),
+                  _DrawerItem(icon: Iconsax.calendar_1, label: 'Attendance', color: _teal, onTap: () => nav(1)),
+                  _DrawerItem(icon: Iconsax.document_text1, label: 'Result', color: _cyan, onTap: () => nav(3)),
+                  _DrawerItem(icon: Iconsax.wallet, label: 'Fee Details', color: _cyan, onTap: () => nav(4)),
+                  _DrawerItem(icon: Iconsax.notification, label: 'Alerts & Notices', color: _teal, onTap: () => nav(0)),
+                  _DrawerItem(icon: Iconsax.profile_2user, label: 'Profile', color: _teal, onTap: () => nav(5)),
+                ],
+              ),
+            ),
+            const Divider(color: Color(0xFF374151), height: 1),
+            _DrawerItem(
+              icon: Iconsax.logout,
+              label: 'Log out',
+              color: const Color(0xFFEF4444),
+              onTap: () {
+                auth.signOut();
+                Navigator.of(context).pushReplacementNamed('/login');
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _InfoRow extends StatelessWidget {
+class _StatCard extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
-  final bool isLast;
+  final Color valueColor;
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-    this.isLast = false,
+  const _StatCard({
+    required this.icon, required this.label,
+    required this.value, required this.valueColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : const Border(
-                bottom: BorderSide(color: Color(0xFFF1F5F9)),
-              ),
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
-            ),
-          ),
+          Icon(icon, color: _teal, size: 28),
+          const SizedBox(height: 12),
+          Text(label,
+            style: GoogleFonts.poppins(
+              fontSize: 13, color: Colors.white70, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text(value,
+            style: GoogleFonts.poppins(
+              fontSize: 22, fontWeight: FontWeight.w700, color: valueColor)),
         ],
       ),
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, delay: 200.ms);
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionTile({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w500)),
+        ],
+      ).animate().fadeIn(duration: 500.ms).scale(delay: 300.ms),
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DrawerItem({
+    required this.icon, required this.label,
+    required this.color, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: color, size: 22),
+      title: Text(label,
+        style: GoogleFonts.poppins(
+          fontSize: 15, color: Colors.white, fontWeight: FontWeight.w500)),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
     );
   }
 }

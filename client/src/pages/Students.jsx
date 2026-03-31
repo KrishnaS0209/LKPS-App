@@ -120,28 +120,28 @@ export default function Students() {
 
         {tab === 0 && (
           <div className="tab-content form-grid">
-            <FG label="First Name *"><Input value={form.fn} onChange={fe('fn')} placeholder="Aryan" /></FG>
-            <FG label="Last Name *"><Input value={form.ln} onChange={fe('ln')} placeholder="Sharma" /></FG>
+            <FG label="First Name *"><Input value={form.fn} onChange={fe('fn')} placeholder="Enter first name" /></FG>
+            <FG label="Last Name *"><Input value={form.ln} onChange={fe('ln')} placeholder="Enter last name" /></FG>
             <FG label="Date of Birth"><Input type="date" value={form.dob} onChange={fe('dob')} /></FG>
             <FG label="Gender"><Select value={form.gn} onChange={fe('gn')}><option>Male</option><option>Female</option><option>Other</option></Select></FG>
             <FG label="Blood Group"><Select value={form.bl} onChange={fe('bl')}><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></Select></FG>
             <FG label="Caste"><Select value={form.ca} onChange={fe('ca')}><option value="">—</option><option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option></Select></FG>
-            <FG label="Aadhaar"><Input value={form.aa} onChange={fe('aa')} placeholder="XXXX XXXX XXXX" /></FG>
-            <FG label="Religion"><Input value={form.re} onChange={fe('re')} /></FG>
-            <FG label="Medical Condition"><Input value={form.mc} onChange={fe('mc')} placeholder="None" /></FG>
-            <FG label="Allergies"><Input value={form.al} onChange={fe('al')} placeholder="None" /></FG>
+            <FG label="Aadhaar"><Input value={form.aa} onChange={fe('aa')} placeholder="12-digit Aadhaar number" /></FG>
+            <FG label="Religion"><Input value={form.re} onChange={fe('re')} placeholder="e.g. Hindu, Muslim, Christian" /></FG>
+            <FG label="Medical Condition"><Input value={form.mc} onChange={fe('mc')} placeholder="Any known condition or None" /></FG>
+            <FG label="Allergies"><Input value={form.al} onChange={fe('al')} placeholder="Any allergies or None" /></FG>
           </div>
         )}
         {tab === 1 && (
           <div className="tab-content form-grid">
             <FG label="Class *"><Select value={form.cl} onChange={fe('cl')}><option value="">—</option>{db.classes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</Select></FG>
-            <FG label="Roll No."><Input value={form.ro} onChange={fe('ro')} placeholder="2401" /></FG>
-            <FG label="Admission No."><Input value={form.an} onChange={fe('an')} placeholder="ADM-001" /></FG>
+            <FG label="Roll No."><Input value={form.ro} onChange={fe('ro')} placeholder="Enter roll number" /></FG>
+            <FG label="Admission No."><Input value={form.an} onChange={fe('an')} placeholder="Enter admission number" /></FG>
             <FG label="Admission Date"><Input type="date" value={form.ad} onChange={fe('ad')} /></FG>
-            <FG label="Previous School"><Input value={form.ps} onChange={fe('ps')} /></FG>
-            <FG label="Email"><Input type="email" value={form.em} onChange={fe('em')} /></FG>
-            <FG label="Annual Fee ₹"><Input type="number" value={form.fe} onChange={fe('fe')} placeholder="45000" /></FG>
-            <FG label="Monthly Fee ₹"><Input type="number" value={form.mf} onChange={fe('mf')} placeholder="3500" /></FG>
+            <FG label="Previous School"><Input value={form.ps} onChange={fe('ps')} placeholder="Previous school name" /></FG>
+            <FG label="Email"><Input type="email" value={form.em} onChange={fe('em')} placeholder="Student email address" /></FG>
+            <FG label="Annual Fee ₹"><Input type="number" value={form.fe} onChange={fe('fe')} placeholder="Total annual fee amount" /></FG>
+            <FG label="Monthly Fee ₹"><Input type="number" value={form.mf} onChange={fe('mf')} placeholder="Monthly fee amount" /></FG>
             <FG label="Fee Status"><Select value={form.fst} onChange={fe('fst')}><option>Pending</option><option>Paid</option><option>Overdue</option></Select></FG>
             <FG label="Concession %"><Input type="number" value={form.co} onChange={fe('co')} placeholder="0" /></FG>
           </div>
@@ -149,23 +149,23 @@ export default function Students() {
         {tab === 2 && (
           <div className="tab-content form-grid">
             <div className="form-section">Father</div>
-            <FG label="Father's Name"><Input value={form.fa} onChange={fe('fa')} placeholder="Ramesh Sharma" /></FG>
-            <FG label="Occupation"><Input value={form.fo} onChange={fe('fo')} /></FG>
-            <FG label="Father's Phone"><Input value={form.fp} onChange={fe('fp')} placeholder="98100-XXXXX" /></FG>
-            <FG label="Father's Aadhaar"><Input value={form.faa} onChange={fe('faa')} /></FG>
+            <FG label="Father's Name"><Input value={form.fa} onChange={fe('fa')} placeholder="Enter father's full name" /></FG>
+            <FG label="Occupation"><Input value={form.fo} onChange={fe('fo')} placeholder="Father's occupation" /></FG>
+            <FG label="Father's Phone"><Input value={form.fp} onChange={fe('fp')} placeholder="10-digit mobile number" /></FG>
+            <FG label="Father's Aadhaar"><Input value={form.faa} onChange={fe('faa')} placeholder="12-digit Aadhaar number" /></FG>
             <div className="form-section">Mother</div>
-            <FG label="Mother's Name"><Input value={form.ma} onChange={fe('ma')} placeholder="Sunita Sharma" /></FG>
-            <FG label="Occupation"><Input value={form.mo} onChange={fe('mo')} /></FG>
-            <FG label="Mother's Phone"><Input value={form.mp} onChange={fe('mp')} /></FG>
-            <FG label="Mother's Aadhaar"><Input value={form.maa} onChange={fe('maa')} /></FG>
+            <FG label="Mother's Name"><Input value={form.ma} onChange={fe('ma')} placeholder="Enter mother's full name" /></FG>
+            <FG label="Occupation"><Input value={form.mo} onChange={fe('mo')} placeholder="Mother's occupation" /></FG>
+            <FG label="Mother's Phone"><Input value={form.mp} onChange={fe('mp')} placeholder="10-digit mobile number" /></FG>
+            <FG label="Mother's Aadhaar"><Input value={form.maa} onChange={fe('maa')} placeholder="12-digit Aadhaar number" /></FG>
           </div>
         )}
         {tab === 3 && (
           <div className="tab-content form-grid">
-            <FG label="Phone / WhatsApp"><Input value={form.ph} onChange={fe('ph')} /></FG>
-            <FG label="City"><Input value={form.cy} onChange={fe('cy')} /></FG>
-            <FG label="Address" span><Input value={form.addr} onChange={fe('addr')} placeholder="Full address" /></FG>
-            <FG label="PIN Code"><Input value={form.pin} onChange={fe('pin')} /></FG>
+            <FG label="Phone / WhatsApp"><Input value={form.ph} onChange={fe('ph')} placeholder="10-digit mobile number" /></FG>
+            <FG label="City"><Input value={form.cy} onChange={fe('cy')} placeholder="Enter city name" /></FG>
+            <FG label="Address" span><Input value={form.addr} onChange={fe('addr')} placeholder="House no., street, locality" /></FG>
+            <FG label="PIN Code"><Input value={form.pin} onChange={fe('pin')} placeholder="6-digit PIN code" /></FG>
           </div>
         )}
 

@@ -40,21 +40,21 @@ export default function Teachers(){
     </div>
     <Modal open={open} onClose={close} title={<>👩‍🏫 {editId?'Edit':'Add'} Teacher</>}>
       <div className="form-grid">
-        <FG label="First Name *"><Input value={form.fn} onChange={fe('fn')}/></FG>
-        <FG label="Last Name *"><Input value={form.ln} onChange={fe('ln')}/></FG>
-        <FG label="Emp ID"><Input value={form.empId} onChange={fe('empId')} placeholder="T001"/></FG>
-        <FG label="Subject"><Input value={form.su} onChange={fe('su')} placeholder="Mathematics"/></FG>
+        <FG label="First Name *"><Input value={form.fn} onChange={fe('fn')} placeholder="Enter first name"/></FG>
+        <FG label="Last Name *"><Input value={form.ln} onChange={fe('ln')} placeholder="Enter last name"/></FG>
+        <FG label="Emp ID"><Input value={form.empId} onChange={fe('empId')} placeholder="Enter employee ID"/></FG>
+        <FG label="Subject"><Input value={form.su} onChange={fe('su')} placeholder="Subject taught"/></FG>
         <FG label="Class Teacher Of"><Select value={form.cls} onChange={fe('cls')}><option value="">— None —</option>{db.classes.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}</Select></FG>
-        <FG label="Qualification"><Input value={form.qual} onChange={fe('qual')} placeholder="M.Sc, B.Ed"/></FG>
-        <FG label="Phone"><Input value={form.ph} onChange={fe('ph')}/></FG>
-        <FG label="Email"><Input type="email" value={form.em} onChange={fe('em')}/></FG>
-        <FG label="Salary ₹/mo"><Input type="number" value={form.sal} onChange={fe('sal')}/></FG>
+        <FG label="Qualification"><Input value={form.qual} onChange={fe('qual')} placeholder="Highest qualification"/></FG>
+        <FG label="Phone"><Input value={form.ph} onChange={fe('ph')} placeholder="10-digit mobile number"/></FG>
+        <FG label="Email"><Input type="email" value={form.em} onChange={fe('em')} placeholder="Teacher email address"/></FG>
+        <FG label="Salary ₹/mo"><Input type="number" value={form.sal} onChange={fe('sal')} placeholder="Monthly salary amount"/></FG>
         <FG label="Joining Date"><Input type="date" value={form.doj} onChange={fe('doj')}/></FG>
         <FG label="Status"><Select value={form.status} onChange={fe('status')}><option>Active</option><option>On Leave</option><option>Resigned</option></Select></FG>
         <FG label="Blood"><Select value={form.blood} onChange={fe('blood')}><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></Select></FG>
         <div className="form-section">Portal Access</div>
-        <FG label="Username"><Input value={form.puser} onChange={fe('puser')} placeholder="Leave blank = no access"/></FG>
-        <FG label="Password"><Input type="password" value={form.ppass} onChange={fe('ppass')} placeholder="Min 6 chars"/></FG>
+        <FG label="Username"><Input value={form.puser} onChange={fe('puser')} placeholder="Leave blank for no access"/></FG>
+        <FG label="Password"><Input type="password" value={form.ppass} onChange={fe('ppass')} placeholder="Minimum 6 characters"/></FG>
       </div>
       <div className="modal-footer"><button className="btn" onClick={close}>Cancel</button><button className="btn btn-primary" onClick={save}>Save</button></div>
     </Modal>
