@@ -1214,7 +1214,7 @@ function AcademicCalendar({ db, save }) {
       {/* Add Event Modal */}
       <Modal open={showAddEvent} onClose={() => setShowAddEvent(false)} title="Add Academic Event">
         <Grid>
-          <Span><Field label="Event Title *"><Input value={evForm.title} onChange={ef('title')} placeholder="Annual Sports Day"/></Field></Span>
+          <Span><Field label="Event Title *"><Input value={evForm.title} onChange={ef('title')} placeholder="Enter event title"/></Field></Span>
           <Field label="Date *"><Input type="date" value={evForm.dt} onChange={ef('dt')}/></Field>
           <Field label="Type">
             <Select value={evForm.type} onChange={ef('type')}>
@@ -3423,11 +3423,11 @@ function Students({ db, save, setPage }) {
           <Field label="Fee Status"><Select value={form.fst||'Pending'} onChange={v=>setForm(f=>({...f,fst:v}))}><option>Pending</option><option>Paid</option><option>Overdue</option></Select></Field>
           <Field label="Concession %"><Input type="number" value={form.co||''} onChange={v=>setForm(f=>({...f,co:v}))} placeholder="0"/></Field>
           <SecLabel>Medical</SecLabel>
-          <Field label="Condition"><Input value={form.mc||''} onChange={v=>setForm(f=>({...f,mc:v}))} placeholder="None"/></Field>
-          <Field label="Allergies"><Input value={form.al||''} onChange={v=>setForm(f=>({...f,al:v}))} placeholder="None"/></Field>
+          <Field label="Condition"><Input value={form.mc||''} onChange={v=>setForm(f=>({...f,mc:v}))} placeholder="Any known condition or None"/></Field>
+          <Field label="Allergies"><Input value={form.al||''} onChange={v=>setForm(f=>({...f,al:v}))} placeholder="Any allergies or None"/></Field>
           <SecLabel>Parent Portal Access</SecLabel>
-          <Field label="Username"><Input value={form.puser||''} onChange={v=>setForm(f=>({...f,puser:v}))} placeholder="Leave blank = no access"/></Field>
-          <Field label="Password"><Input type="password" value={form.ppass||''} onChange={v=>setForm(f=>({...f,ppass:v}))} placeholder="Min 6 chars"/></Field>
+          <Field label="Username"><Input value={form.puser||''} onChange={v=>setForm(f=>({...f,puser:v}))} placeholder="Leave blank for no access"/></Field>
+          <Field label="Password"><Input type="password" value={form.ppass||''} onChange={v=>setForm(f=>({...f,ppass:v}))} placeholder="Minimum 6 characters"/></Field>
         </Grid>
         <ModalFooter><Btn onClick={()=>setOpen(false)}>Cancel</Btn><Btn variant="primary" onClick={saveStu}>Save Student</Btn></ModalFooter>
       </Modal>
@@ -4150,11 +4150,11 @@ function Classes({ db, save }) {
               const auto = autoSubjects(v);
               if (auto) setForm(f => ({...f, name: v, subs: auto}));
             }
-          }} placeholder="e.g. L.K.G. or 5th"/></Field>
-          <Field label="Stream"><Input value={form.stream||''} onChange={sf('stream')} placeholder="Science"/></Field>
-          <Field label="Room"><Input value={form.room||''} onChange={sf('room')} placeholder="104"/></Field>
-          <Field label="Strength"><Input type="number" value={form.str||''} onChange={sf('str')} placeholder="45"/></Field>
-          <Span><Field label="Subjects (comma separated)"><Input value={form.subs||''} onChange={sf('subs')} placeholder="Maths, Science, English, Hindi, SST"/></Field></Span>
+          }} placeholder="e.g. Nursery, 1st, 5th"/></Field>
+          <Field label="Stream"><Input value={form.stream||''} onChange={sf('stream')} placeholder="e.g. General, Science"/></Field>
+          <Field label="Room"><Input value={form.room||''} onChange={sf('room')} placeholder="Enter room number"/></Field>
+          <Field label="Strength"><Input type="number" value={form.str||''} onChange={sf('str')} placeholder="Max students in class"/></Field>
+          <Span><Field label="Subjects (comma separated)"><Input value={form.subs||''} onChange={sf('subs')} placeholder="e.g. English, Hindi, Mathematics, Science"/></Field></Span>
         </Grid>
         <ModalFooter><Btn onClick={() => setOpen(false)}>Cancel</Btn><Btn variant="primary" onClick={saveCls}>Save</Btn></ModalFooter>
       </Modal>
@@ -4415,10 +4415,10 @@ function Timetable({ db, save }) {
           <Field label="Time Slot *"><Select value={form.sid||''} onChange={sf('sid')}><option value="">—</option>{db.slots.map(sl=><option key={sl.id} value={sl.id}>{sl.l} ({sl.s}–{sl.e})</option>)}</Select></Field>
           <Field label="Type"><Select value={form.ty||'subject'} onChange={sf('ty')}><option value="subject">Subject</option><option value="break">Break</option><option value="assembly">Assembly</option><option value="free">Free Period</option></Select></Field>
           {(form.ty==='subject'||!form.ty)&&<>
-            <Field label="Subject *"><Input value={form.su||''} onChange={sf('su')} placeholder="Mathematics"/></Field>
+            <Field label="Subject *"><Input value={form.su||''} onChange={sf('su')} placeholder="Enter subject name"/></Field>
             <Field label="Teacher"><Select value={form.tea||''} onChange={sf('tea')}><option value="">—</option>{db.teachers.map(t=><option key={t.id} value={t.fn+' '+t.ln}>{t.fn} {t.ln}{t.su?' ('+t.su+')':''}</option>)}</Select></Field>
           </>}
-          <Field label="Room"><Input value={form.rm||''} onChange={sf('rm')} placeholder="Room 101"/></Field>
+          <Field label="Room"><Input value={form.rm||''} onChange={sf('rm')} placeholder="Enter room number"/></Field>
         </div>
         <ModalFooter>
           {editId&&<Btn variant="danger" onClick={delPer}>Delete</Btn>}
@@ -5614,7 +5614,7 @@ function Exams({ db, save }) {
       {/* Add Exam Modal */}
       <Modal open={open} onClose={() => { setOpen(false); setEditId(null); }} title={editId ? 'Edit Exam' : 'Schedule New Exam'}>
         <Grid>
-          <Span><Field label="Name *"><Input value={form.name||''} onChange={sf('name')} placeholder="Unit Test 1"/></Field></Span>
+          <Span><Field label="Name *"><Input value={form.name||''} onChange={sf('name')} placeholder="Enter exam name"/></Field></Span>
           <Field label="Class"><Select value={form.cls||''} onChange={sf('cls')}><option value="">All</option>{classes.map(c=><option key={c}>{c}</option>)}</Select></Field>
           <Field label="Subject"><Select value={form.su||''} onChange={sf('su')}><option value="">— Select Subject —</option>{subjects.map(s=><option key={s} value={s}>{s}</option>)}</Select></Field>
           <Field label="Date"><Input type="date" value={form.dt||''} onChange={sf('dt')}/></Field>
