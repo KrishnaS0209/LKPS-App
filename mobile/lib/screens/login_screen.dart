@@ -322,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _FooterLink(
                       label: 'About',
                       icon: Iconsax.info_circle,
-                      onTap: () => _showAboutDialog(context),
+                      onTap: () => _launchURL('https://lkps-app.vercel.app/#about'),
                     ),
                     Container(
                       width: 1,
@@ -333,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _FooterLink(
                       label: 'LKPS Website',
                       icon: Iconsax.global,
-                      onTap: () => _launchURL('https://lkps.in'),
+                      onTap: () => _launchURL('https://lkps-app.vercel.app'),
                     ),
                   ],
                 )
@@ -344,119 +344,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Iconsax.book, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'About LKPS Mobile',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'LORD KRISHNA PUBLIC SCHOOL',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Mobile App for Teachers and Parents',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Version 2.0.0',
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF94A3B8),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Stay connected with real-time updates on attendance, fees, and school announcements.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Iconsax.global,
-                    size: 16,
-                    color: Color(0xFF3B82F6),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _launchURL('https://lkps.in'),
-                      child: const Text(
-                        'lkps.in',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF3B82F6),
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF3B82F6),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Close',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
       ),
     );
   }
