@@ -3039,7 +3039,42 @@ function Students({ db, save, setPage }) {
       {/* Class Summary View */}
       {view === 'summary' && (
         <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,32,69,0.05)',marginBottom:28}}>
-          <table style={{width:'100%',borderCollapse:'collapse'}}>
+          {/* Mobile: card list */}
+          <div style={{display:'none'}} className="summary-mobile">
+            {db.classes.length === 0 ? (
+              <div style={{padding:40,textAlign:'center',color:'#94a3b8',fontSize:14}}>No classes added yet</div>
+            ) : db.classes.map((cls, i) => {
+              const students = db.students.filter(s => s.cls === cls.name);
+              const boys = students.filter(s => (s.gn||'Male') === 'Male').length;
+              const girls = students.filter(s => s.gn === 'Female').length;
+              return (
+                <div key={cls.id} style={{padding:'14px 16px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                  <div>
+                    <div style={{fontWeight:700,color:'#1e293b',fontSize:15}}>{cls.name}</div>
+                    <div style={{fontSize:12,color:'#64748b',marginTop:2}}>
+                      <span style={{color:'#1960a3',fontWeight:700}}>{boys}B</span>
+                      {' · '}
+                      <span style={{color:'#7c3aed',fontWeight:700}}>{girls}G</span>
+                      {' · '}
+                      <span style={{fontWeight:800,color:'#0f172a'}}>{students.length} total</span>
+                    </div>
+                  </div>
+                  <button onClick={()=>{setFilterCls(cls.name);setView('directory');}}
+                    style={{fontSize:11,fontWeight:700,padding:'6px 14px',borderRadius:8,border:'none',background:'#eef4ff',color:'#1960a3',cursor:'pointer'}}>
+                    View
+                  </button>
+                </div>
+              );
+            })}
+            {db.classes.length > 0 && (
+              <div style={{padding:'12px 16px',background:'#1960a3',display:'flex',justifyContent:'space-between'}}>
+                <span style={{fontWeight:800,color:'#fff',fontSize:13}}>TOTAL</span>
+                <span style={{fontWeight:800,color:'#fff'}}>{db.students.length} students</span>
+              </div>
+            )}
+          </div>
+          {/* Desktop: table */}
+          <table style={{width:'100%',borderCollapse:'collapse'}} className="summary-table">
             <thead>
               <tr style={{background:'#1960a3'}}>
                 {['Class/Grade','Boys','Girls','Total Students','Actions'].map(h=>(
@@ -3056,8 +3091,8 @@ function Students({ db, save, setPage }) {
                 const girls = students.filter(s => s.gn === 'Female').length;
                 const isExpanded = expandedCls === cls.id;
                 return (
-                  <>
-                    <tr key={cls.id} style={{borderBottom:'1px solid #f1f5f9',background: i%2===0 ? '#fff' : '#fafbfc',cursor:'pointer'}}
+                  <React.Fragment key={cls.id}>
+                    <tr style={{borderBottom:'1px solid #f1f5f9',background: i%2===0 ? '#fff' : '#fafbfc',cursor:'pointer'}}
                       onClick={()=>setExpandedCls(isExpanded ? null : cls.id)}>
                       <td style={{padding:'14px 20px',fontWeight:600,color:'#1e293b',fontSize:14}}>{cls.name}</td>
                       <td style={{padding:'14px 20px',color:'#1960a3',fontWeight:700}}>{boys}</td>
@@ -3088,10 +3123,9 @@ function Students({ db, save, setPage }) {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
-              {/* Total row */}
               {db.classes.length > 0 && (
                 <tr style={{background:'#1960a3',borderTop:'2px solid #1960a3'}}>
                   <td style={{padding:'12px 20px',fontWeight:800,color:'#fff',fontSize:13}}>TOTAL</td>
@@ -3103,6 +3137,12 @@ function Students({ db, save, setPage }) {
               )}
             </tbody>
           </table>
+          <style>{`
+            @media (max-width: 640px) {
+              .summary-table { display: none !important; }
+              .summary-mobile { display: block !important; }
+            }
+          `}</style>
         </div>
       )}
 
@@ -4289,7 +4329,17 @@ function Timetable({ db, save }) {
     if (form.ty==='subject' && !form.su?.trim()) { toast('Subject required','err'); return; }
     if (!form.sid) { toast('Select slot','err'); return; }
     const id = editId || 'P'+uid();
-    const newTT = db.tt.filter(p=>!(p.cls===form.cls&&p.day===form.day&&p.sid===form.sid&&(!editId||p.id!==editId)));
+    // When editing: remove by id. When adding: remove any existing period in same slot/day/class
+    let newTT;
+    if (editId) {
+      // Remove old entry by id, then add updated one
+      newTT = db.tt.filter(p => p.id !== editId);
+      // Also remove any conflicting period in the new slot (different id)
+      newTT = newTT.filter(p => !(p.cls===form.cls && p.day===form.day && p.sid===form.sid));
+    } else {
+      // Remove any existing period in same slot
+      newTT = db.tt.filter(p => !(p.cls===form.cls && p.day===form.day && p.sid===form.sid));
+    }
     newTT.push({ id, cls:form.cls, day:form.day, sid:form.sid, ty:form.ty, su:form.ty==='subject'?form.su:form.ty, tea:form.tea||'', rm:form.rm||'' });
     save({ ...db, tt:newTT });
     if(form.cls!==cls) setCls(form.cls);
@@ -4411,7 +4461,9 @@ function Timetable({ db, save }) {
           <button onClick={resetSlots} className="mt-4 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm border-0 cursor-pointer">Load Default Slots</button>
         </div>
       ) : (
-        <div className="rounded-3xl overflow-hidden shadow-sm border border-outline-variant/10 bg-surface-container-low mb-10">
+        <>
+        {/* Desktop Grid */}
+        <div className="hidden md:block rounded-3xl overflow-hidden shadow-sm border border-outline-variant/10 bg-surface-container-low mb-10">
           <div style={{display:'grid', gridTemplateColumns:'100px repeat(6,1fr)'}}>
             <div className="h-20 flex items-center justify-center bg-surface-container text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border-b border-outline-variant/20">
               Periods
@@ -4470,6 +4522,60 @@ function Timetable({ db, save }) {
             </div>
           )}
         </div>
+
+        {/* Mobile: Day-by-day cards */}
+        <div className="md:hidden space-y-4 mb-10">
+          {DAYS.map(day => {
+            const dayPers = db.slots.map(sl => ({sl, p: pers.find(x=>x.day===day&&x.sid===sl.id)}));
+            return (
+              <div key={day} className="bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant/10">
+                <div className="bg-primary px-4 py-3 flex items-center justify-between">
+                  <span className="font-bold text-on-primary text-sm">{day}</span>
+                  <button onClick={()=>{setForm({ty:'subject',day,cls});setEditId(null);setOpen(true);}}
+                    className="text-on-primary/70 hover:text-on-primary border-0 bg-transparent cursor-pointer p-1">
+                    <span className="material-symbols-outlined text-sm">add</span>
+                  </button>
+                </div>
+                <div className="divide-y divide-outline-variant/10">
+                  {dayPers.map(({sl, p}) => {
+                    const isBreak = isBreakSlot(sl);
+                    if (isBreak && !p) return (
+                      <div key={sl.id} className="px-4 py-2 bg-tertiary-fixed/5 flex items-center gap-3">
+                        <span className="text-[10px] font-bold uppercase text-on-tertiary-fixed-variant tracking-widest w-20 shrink-0">{sl.s}</span>
+                        <span className="text-xs text-on-tertiary-fixed-variant italic">{sl.l}</span>
+                      </div>
+                    );
+                    if (p) {
+                      const isSpecial=p.ty==='break'||p.ty==='assembly'||p.ty==='free';
+                      const col=isSpecial?null:TTC_COLORS[scm[p.su]??0];
+                      const lb=p.ty==='break'?'Break':p.ty==='assembly'?'Assembly':p.ty==='free'?'Free Period':p.su||'—';
+                      return (
+                        <div key={sl.id} onClick={()=>editPer(p)} className="px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-surface-container-low"
+                          style={col?{borderLeft:`3px solid ${col.fg}`}:{borderLeft:'3px solid #94a3b8'}}>
+                          <span className="text-[10px] text-on-surface-variant w-20 shrink-0">{sl.s}–{sl.e}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold truncate" style={col?{color:col.fg}:{}}>{lb}</p>
+                            {p.tea&&<p className="text-[10px] text-on-surface-variant truncate">{p.tea}</p>}
+                          </div>
+                          {p.rm&&<span className="text-[10px] text-on-surface-variant shrink-0">Rm {p.rm}</span>}
+                          <span className="material-symbols-outlined text-outline-variant text-sm shrink-0">edit</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={sl.id} onClick={()=>qper(day,sl.id)} className="px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-surface-container-low">
+                        <span className="text-[10px] text-on-surface-variant w-20 shrink-0">{sl.s}–{sl.e}</span>
+                        <span className="text-xs text-outline-variant">{sl.l}</span>
+                        <span className="material-symbols-outlined text-outline-variant/50 text-sm ml-auto">add</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        </>
       )}
 
       {/* Footer Stats */}
