@@ -318,6 +318,7 @@ export default function ReportCardStudio({ db, save, logo }) {
   const [overrides, setOverrides] = useState({});
   const [activeTab, setActiveTab] = useState('marks');
   const [previewHtml, setPreviewHtml] = useState('');
+  const [rcDate, setRcDate] = useState('31/03/2026');
 
   // Guest mode state
   const [guest, setGuest] = useState(BLANK_GUEST);
@@ -442,6 +443,7 @@ export default function ReportCardStudio({ db, save, logo }) {
     const prin   = db.settings.prin   || '';
     const phone  = db.settings.phone  || '';
     const cls    = opts.cls || rcCls;
+    const date   = opts.date || rcDate;
 
     const sampleSubs = students[0]?.subjects?.length || 4;
     const scale = sampleSubs <= 4 ? 1 : sampleSubs <= 6 ? 0.93 : 0.86;
@@ -643,7 +645,7 @@ export default function ReportCardStudio({ db, save, logo }) {
           </div>
           <div class="ft-promo">Congratulations! Promoted to Class ${promotedCls}.</div>
           <div class="sr">
-            <div class="si"><div class="sl" style="border-top:none">Date : 31/03/2026</div></div>
+            <div class="si"><div class="sl" style="border-top:none">Date : ${date}</div></div>
             <div class="si"><div class="sl">Class Teacher</div></div>
             <div class="si"><div class="sl">Principal${prin?' ('+prin+')':''}</div></div>
           </div>
@@ -774,7 +776,7 @@ export default function ReportCardStudio({ db, save, logo }) {
           </div>
           <div class="ft-promo">Congratulations! Promoted to Class ${promotedCls}.</div>
           <div class="sr">
-            <div class="si"><div class="sl" style="border-top:none">Date : 31/03/2026</div></div>
+            <div class="si"><div class="sl" style="border-top:none">Date : ${date}</div></div>
             <div class="si"><div class="sl">Class Teacher</div></div>
             <div class="si"><div class="sl">Principal${prin?' ('+prin+')':''}</div></div>
           </div>
@@ -915,7 +917,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
   const genDirectory = async (studentsToGen) => {
     if (!rcCls) { toast('Select a class first','err'); return; }
     if (!studentsToGen?.length) { toast('No students to generate','err'); return; }
-    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls });
+    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls, date: rcDate });
   };
 
   const downloadDirectoryPdf = async (studentsToGen) => {
@@ -938,13 +940,13 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       };
     });
     save({ ...db, students: updatedStudents });
-    await buildRC(entries, { cls: rcCls, output: 'download' });
+    await buildRC(entries, { cls: rcCls, output: 'download', date: rcDate });
   };
 
   const genDirectorySilent = async (studentsToGen) => {
     if (!rcCls) return;
     if (!studentsToGen?.length) return;
-    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls }, false, true);
+    await buildRC(buildDirectoryEntries(studentsToGen), { cls: rcCls, date: rcDate }, false, true);
   };
 
   // Auto-update preview whenever inputs change
@@ -955,7 +957,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
         if (!rcCls) { setPreviewHtml(''); return; }
         const stuList = selStu !== 'all' && editStu ? [editStu] : clsStudents.slice(0, 1);
         if (!stuList.length) { setPreviewHtml(''); return; }
-        const html = await buildRC(buildDirectoryEntries(stuList), { cls: rcCls }, true);
+        const html = await buildRC(buildDirectoryEntries(stuList), { cls: rcCls, date: rcDate }, true);
         if (!cancelled && html) setPreviewHtml(html);
       } else {
         if (!guest.fn.trim() || !guest.cls.trim()) { setPreviewHtml(''); return; }
@@ -968,13 +970,13 @@ setTimeout(run,${downloadOnly ? 900 : 700});
           coGrades: guestCoGrades, discGrades: guestDiscGrades,
           rank: parseInt(guestRank)||0,
         };
-        const html = await buildRC([entry], { cls: guest.cls }, true);
+        const html = await buildRC([entry], { cls: guest.cls, date: rcDate }, true);
         if (!cancelled && html) setPreviewHtml(html);
       }
     };
     run();
     return () => { cancelled = true; };
-  }, [mode, rcCls, selStu, overrides, guest, guestSubjects, guestMarks, guestCoGrades, guestDiscGrades, guestAttP, guestAttT, guestRank]); // eslint-disable-line
+  }, [mode, rcCls, selStu, overrides, guest, guestSubjects, guestMarks, guestCoGrades, guestDiscGrades, guestAttP, guestAttT, guestRank, rcDate]); // eslint-disable-line
 
   const genGuest = async () => {
     if (!guest.fn.trim()) { toast('Enter student first name','err'); return; }
@@ -1030,7 +1032,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       discGrades: guestDiscGrades,
       rank: parseInt(guestRank)||0,
     };
-    await buildRC([entry], { cls: guest.cls });
+    await buildRC([entry], { cls: guest.cls, date: rcDate });
   };
 
   const previewGuest = async () => {
@@ -1047,7 +1049,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       discGrades: guestDiscGrades,
       rank: parseInt(guestRank)||0,
     };
-    const html = await buildRC([entry], { cls: guest.cls }, true);
+    const html = await buildRC([entry], { cls: guest.cls, date: rcDate }, true);
     if (html) setPreviewHtml(html);
   };
 
@@ -1093,7 +1095,7 @@ setTimeout(run,${downloadOnly ? 900 : 700});
       coGrades: guestCoGrades, discGrades: guestDiscGrades,
       rank: parseInt(guestRank)||0,
     };
-    await buildRC([entry], { cls: guest.cls, output: 'download' });
+    await buildRC([entry], { cls: guest.cls, output: 'download', date: rcDate });
   };
 
   const inp = 'w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-blue-300 outline-none';
@@ -1126,6 +1128,16 @@ setTimeout(run,${downloadOnly ? 900 : 700});
                   <option value="">Select Class</option>
                   {classes.map(c=><option key={c}>{c}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className={lbl}>Report Card Date</label>
+                <input
+                  type="text"
+                  value={rcDate}
+                  onChange={e => setRcDate(e.target.value)}
+                  placeholder="dd/mm/yyyy"
+                  className={inp + ' min-w-[140px]'}
+                />
               </div>
               {rcCls && (
                 <div>
@@ -1359,6 +1371,16 @@ setTimeout(run,${downloadOnly ? 900 : 700});
           <div className="p-6">
             {guestTab==='info' && (
               <div className="space-y-5">
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-4">
+                  <label className={lbl}>Report Card Date</label>
+                  <input
+                    type="text"
+                    value={rcDate}
+                    onChange={e => setRcDate(e.target.value)}
+                    placeholder="dd/mm/yyyy"
+                    className={inp}
+                  />
+                </div>
                 <div className="report-card-info-grid grid grid-cols-2 gap-4 info-nav-container">
                   <div><label className={lbl}>Class *</label>
                     <select value={guest.cls} onChange={e=>{
