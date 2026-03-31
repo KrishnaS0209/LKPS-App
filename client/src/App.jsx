@@ -3345,6 +3345,7 @@ function Students({ db, save, setPage }) {
           <Field label="Class *"><Select value={form.cls||''} onChange={v=>setForm(f=>({...f,cls:v}))}><option value="">—</option>{classes.map(c=><option key={c}>{c}</option>)}</Select></Field>
           <Field label="Roll No."><Input value={form.ro||''} onChange={v=>setForm(f=>({...f,ro:v}))} placeholder="Enter roll number"/></Field>
           <Field label="Admission No."><Input value={form.an||''} onChange={v=>setForm(f=>({...f,an:v,admno:v}))} placeholder="Enter admission number"/></Field>
+          <Field label="PEN No."><Input value={form.pen||''} onChange={v=>setForm(f=>({...f,pen:v}))} placeholder="11-digit PEN number"/></Field>
           <Field label="Admission Date"><Input type="date" value={form.ad||''} onChange={v=>setForm(f=>({...f,ad:v}))}/></Field>
           <Field label="Previous School"><Input value={form.ps||''} onChange={v=>setForm(f=>({...f,ps:v}))}/></Field>
           <Field label="Email"><Input type="email" value={form.em||''} onChange={v=>setForm(f=>({...f,em:v}))}/></Field>

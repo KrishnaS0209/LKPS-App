@@ -120,6 +120,23 @@ export function Field({ label, children }) {
 const inputCls = 'w-full px-3 py-2 bg-surface-container-low border-0 rounded-xl text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all';
 
 export function Input({ value, onChange, placeholder, type = 'text', style: sx, ...rest }) {
+  // For date inputs, show placeholder text when empty using a wrapper trick
+  if (type === 'date') {
+    return (
+      <div style={{ position: 'relative' }}>
+        <input className={inputCls} style={{ ...sx, color: value ? undefined : 'transparent' }} value={value}
+          onChange={e => onChange(e.target.value)} placeholder={placeholder} type="date" {...rest} />
+        {!value && (
+          <span style={{
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+            fontSize: 14, color: '#94a3b8', pointerEvents: 'none', userSelect: 'none'
+          }}>
+            {placeholder || 'DD/MM/YYYY'}
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <input className={inputCls} style={sx} value={value}
       onChange={e => onChange(e.target.value)} placeholder={placeholder} type={type} {...rest} />
