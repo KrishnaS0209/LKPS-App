@@ -2933,6 +2933,13 @@ function Students({ db, save, setPage }) {
   const [form, setForm] = useState({});
   const [photo, setPhoto] = useState(null);
   const [editId, setEditId] = useState(null);
+
+  // Default to first class on mount
+  useEffect(() => {
+    if (!filterCls && db.classes.length > 0) {
+      setFilterCls(db.classes[0].name);
+    }
+  }, []); // eslint-disable-line
   const classes = db.classes.map(c => c.name);
 
   // close dropdown on outside click
