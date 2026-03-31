@@ -1,3 +1,4 @@
+.DS_Store
 node_modules/
 dist/
 electron/
@@ -7,4 +8,6 @@ electron/
 *.AppImage
 client/node_modules/
 server/node_modules/
+mobile/node_modules/
+mobile/.expo/
 client/build/

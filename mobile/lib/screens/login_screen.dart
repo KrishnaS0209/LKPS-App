@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
@@ -79,18 +80,21 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF1E3A8A), // Deep blue
-              const Color(0xFF3B82F6), // Bright blue
-              const Color(0xFF60A5FA), // Light blue
+              const Color(0xFFE0F2FE), // Very light blue
+              const Color(0xFFF0F9FF), // Almost white
+              const Color(0xFFFFFFFF), // White
             ],
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                 const SizedBox(height: 16),
                 // School Logo
                 Container(
@@ -139,19 +143,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'LORD KRISHNA PUBLIC SCHOOL',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                        fontSize: 19,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withAlpha(51),
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E3A8A),
+                    letterSpacing: 0.3,
+                    fontSize: 18,
+                  ),
                 )
                     .animate()
                     .fadeIn(delay: 300.ms, duration: 600.ms)
@@ -161,12 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(30),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
+                        color: const Color(0xFF3B82F6).withAlpha(20),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                         spreadRadius: 0,
                       ),
                     ],
@@ -174,14 +171,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Role Selection Buttons
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Expanded(
                             child: _RoleButton(
                               label: 'Parent',
                               icon: Iconsax.profile_2user,
                               isSelected: _selectedRole == 'parent',
-                              onTap: () => setState(() => _selectedRole = 'parent'),
+                              onTap: () {
+                                debugPrint('Parent button tapped');
+                                setState(() => _selectedRole = 'parent');
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -190,7 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               label: 'Teacher',
                               icon: Iconsax.teacher,
                               isSelected: _selectedRole == 'teacher',
-                              onTap: () => setState(() => _selectedRole = 'teacher'),
+                              onTap: () {
+                                debugPrint('Teacher button tapped');
+                                setState(() => _selectedRole = 'teacher');
+                              },
                             ),
                           ),
                         ],
@@ -234,9 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               Expanded(
                                 child: Text(
                                   _error!,
-                                  style: const TextStyle(
-                                    color: Color(0xFFDC2626),
-                                    fontWeight: FontWeight.w600,
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFFDC2626),
+                                    fontWeight: FontWeight.w500,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -273,12 +278,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Sign In',
-                                      style: TextStyle(
+                                      style: GoogleFonts.poppins(
                                         fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.5,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -293,15 +298,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     .animate()
                     .fadeIn(delay: 500.ms, duration: 600.ms)
                     .slideY(begin: 0.3, end: 0),
-                const SizedBox(height: 28),
-                // Footer Links
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(26),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withAlpha(51)),
+                    ],
                   ),
+                ),
+              ),
+              // Footer Links - Always at bottom
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(200),
+                  border: Border(
+                    top: BorderSide(color: const Color(0xFF3B82F6).withAlpha(30), width: 1),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -314,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 1,
                         height: 18,
                         margin: const EdgeInsets.symmetric(horizontal: 20),
-                        color: Colors.white.withAlpha(102),
+                        color: const Color(0xFF3B82F6).withAlpha(128),
                       ),
                       _FooterLink(
                         label: 'LKPS Website',
@@ -323,13 +334,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 600.ms, duration: 600.ms)
-                    .slideY(begin: 0.2, end: 0),
-                const SizedBox(height: 16),
-              ],
-            ),
+                ),
+              )
+                  .animate()
+                  .fadeIn(delay: 600.ms, duration: 600.ms)
+                  .slideY(begin: 0.2, end: 0),
+            ],
           ),
         ),
       ),
@@ -359,6 +369,7 @@ class _RoleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('Building _RoleButton: $label, isSelected: $isSelected');
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -368,14 +379,14 @@ class _RoleButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                  colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
                 )
               : null,
-          color: isSelected ? null : const Color(0xFFF8FAFC),
+          color: isSelected ? null : const Color(0xFFE0F2FE),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1E3A8A) : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1.5,
+            color: isSelected ? const Color(0xFF1E3A8A) : const Color(0xFF3B82F6),
+            width: isSelected ? 2 : 2,
           ),
           boxShadow: isSelected
               ? [
@@ -391,23 +402,23 @@ class _RoleButton extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : const Color(0xFF64748B),
+              color: isSelected ? Colors.white : const Color(0xFF3B82F6),
               size: 26,
             ),
             const SizedBox(height: 7),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isSelected ? Colors.white : const Color(0xFF334155),
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : const Color(0xFF1E3A8A),
               ),
             ),
           ],
         ),
       ),
-    ).animate(target: isSelected ? 1 : 0).scale(duration: 200.ms);
+    );
   }
 }
 
@@ -437,27 +448,27 @@ class _InputField extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF64748B),
-                letterSpacing: 1.2,
-                fontSize: 11,
-              ),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64748B),
+            letterSpacing: 1.0,
+            fontSize: 11,
+          ),
         ),
         const SizedBox(height: 10),
         TextField(
           controller: controller,
           obscureText: isPassword && obscureText,
-          style: const TextStyle(
+          style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
+            hintStyle: GoogleFonts.poppins(
               color: const Color(0xFF94A3B8),
               fontWeight: FontWeight.w400,
-              fontSize: 15,
+              fontSize: 14,
             ),
             prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 21),
             suffixIcon: isPassword
@@ -513,15 +524,15 @@ class _FooterLink extends StatelessWidget {
           Icon(
             icon,
             size: 17,
-            color: Colors.white,
+            color: const Color(0xFF1E3A8A),
           ),
           const SizedBox(width: 7),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: const Color(0xFF1E3A8A),
             ),
           ),
         ],
