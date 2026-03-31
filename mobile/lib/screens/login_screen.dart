@@ -156,19 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     .animate()
                     .fadeIn(delay: 300.ms, duration: 600.ms)
                     .slideY(begin: 0.2, end: 0),
-                const SizedBox(height: 8),
-                Text(
-                  'Mobile Portal',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withAlpha(230),
-                    letterSpacing: 1.5,
-                  ),
-                )
-                    .animate()
-                    .fadeIn(delay: 400.ms, duration: 600.ms),
                 const SizedBox(height: 28),
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -191,19 +178,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Expanded(
                             child: _RoleButton(
-                              label: 'Teacher',
-                              icon: Iconsax.teacher,
-                              isSelected: _selectedRole == 'teacher',
-                              onTap: () => setState(() => _selectedRole = 'teacher'),
+                              label: 'Parent',
+                              icon: Iconsax.profile_2user,
+                              isSelected: _selectedRole == 'parent',
+                              onTap: () => setState(() => _selectedRole = 'parent'),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: _RoleButton(
-                              label: 'Parent',
-                              icon: Iconsax.profile_2user,
-                              isSelected: _selectedRole == 'parent',
-                              onTap: () => setState(() => _selectedRole = 'parent'),
+                              label: 'Teacher',
+                              icon: Iconsax.teacher,
+                              isSelected: _selectedRole == 'teacher',
+                              onTap: () => setState(() => _selectedRole = 'teacher'),
                             ),
                           ),
                         ],
@@ -298,37 +285,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     const Icon(Iconsax.arrow_right_3, size: 18),
                                   ],
                                 ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Iconsax.info_circle,
-                              size: 16,
-                              color: const Color(0xFF64748B),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _selectedRole == 'teacher'
-                                    ? 'Sign in with your teacher credentials. You will be logged into the current academic session.'
-                                    : 'Sign in with your parent credentials to view your child\'s information.',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: const Color(0xFF64748B),
-                                      height: 1.4,
-                                      fontSize: 11,
-                                    ),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
