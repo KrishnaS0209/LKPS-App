@@ -2933,6 +2933,8 @@ function Students({ db, save, setPage }) {
   const [form, setForm] = useState({});
   const [photo, setPhoto] = useState(null);
   const [editId, setEditId] = useState(null);
+  const [view, setView] = useState('summary'); // 'summary' | 'directory'
+  const [expandedCls, setExpandedCls] = useState(null);
 
   // Default to first class on mount
   useEffect(() => {
@@ -3020,6 +3022,92 @@ function Students({ db, save, setPage }) {
           </button>
         </div>
       </div>
+
+      {/* View Toggle */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {[{id:'summary',icon:'table_rows',label:'Class Summary'},{id:'directory',icon:'person_search',label:'Directory'}].map(v=>(
+          <button key={v.id} onClick={()=>setView(v.id)}
+            style={{display:'flex',alignItems:'center',gap:6,padding:'8px 18px',borderRadius:10,border:'none',cursor:'pointer',fontSize:13,fontWeight:700,transition:'all 150ms',
+              background: view===v.id ? '#1960a3' : '#f1f5f9',
+              color: view===v.id ? '#fff' : '#64748b'}}>
+            <span className="material-symbols-outlined" style={{fontSize:16}}>{v.icon}</span>
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Class Summary View */}
+      {view === 'summary' && (
+        <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,32,69,0.05)',marginBottom:28}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{background:'#1960a3'}}>
+                {['Class/Grade','Boys','Girls','Total Students','Actions'].map(h=>(
+                  <th key={h} style={{padding:'14px 20px',textAlign:'left',fontSize:12,fontWeight:700,color:'#fff',letterSpacing:'0.04em'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {db.classes.length === 0 ? (
+                <tr><td colSpan={5} style={{padding:40,textAlign:'center',color:'#94a3b8',fontSize:14}}>No classes added yet</td></tr>
+              ) : db.classes.map((cls, i) => {
+                const students = db.students.filter(s => s.cls === cls.name);
+                const boys = students.filter(s => (s.gn||'Male') === 'Male').length;
+                const girls = students.filter(s => s.gn === 'Female').length;
+                const isExpanded = expandedCls === cls.id;
+                return (
+                  <>
+                    <tr key={cls.id} style={{borderBottom:'1px solid #f1f5f9',background: i%2===0 ? '#fff' : '#fafbfc',cursor:'pointer'}}
+                      onClick={()=>setExpandedCls(isExpanded ? null : cls.id)}>
+                      <td style={{padding:'14px 20px',fontWeight:600,color:'#1e293b',fontSize:14}}>{cls.name}</td>
+                      <td style={{padding:'14px 20px',color:'#1960a3',fontWeight:700}}>{boys}</td>
+                      <td style={{padding:'14px 20px',color:'#7c3aed',fontWeight:700}}>{girls}</td>
+                      <td style={{padding:'14px 20px',fontWeight:800,color:'#0f172a',fontSize:15}}>{students.length}</td>
+                      <td style={{padding:'14px 20px'}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                          <button onClick={e=>{e.stopPropagation();setFilterCls(cls.name);setView('directory');}}
+                            style={{fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:8,border:'none',background:'#eef4ff',color:'#1960a3',cursor:'pointer'}}>
+                            View Students
+                          </button>
+                          <span className="material-symbols-outlined" style={{fontSize:18,color:'#94a3b8',transition:'transform 200ms',transform:isExpanded?'rotate(180deg)':'rotate(0deg)'}}>expand_more</span>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && students.length > 0 && (
+                      <tr key={cls.id+'_exp'}>
+                        <td colSpan={5} style={{padding:'0 20px 16px',background:'#f8fafc'}}>
+                          <div style={{display:'flex',flexWrap:'wrap',gap:8,paddingTop:12}}>
+                            {students.map(s=>(
+                              <div key={s.id} style={{display:'flex',alignItems:'center',gap:8,background:'#fff',border:'1px solid #e2e8f0',borderRadius:10,padding:'6px 12px',fontSize:12}}>
+                                <span style={{fontWeight:700,color:'#1e293b'}}>{s.fn} {s.ln}</span>
+                                <span style={{color:'#94a3b8'}}>Roll {s.roll||'—'}</span>
+                                <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:s.gn==='Female'?'#ede9fe':'#dbeafe',color:s.gn==='Female'?'#7c3aed':'#1960a3',fontWeight:700}}>{s.gn||'Male'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+              {/* Total row */}
+              {db.classes.length > 0 && (
+                <tr style={{background:'#1960a3',borderTop:'2px solid #1960a3'}}>
+                  <td style={{padding:'12px 20px',fontWeight:800,color:'#fff',fontSize:13}}>TOTAL</td>
+                  <td style={{padding:'12px 20px',fontWeight:800,color:'#fff'}}>{db.students.filter(s=>(s.gn||'Male')==='Male').length}</td>
+                  <td style={{padding:'12px 20px',fontWeight:800,color:'#fff'}}>{db.students.filter(s=>s.gn==='Female').length}</td>
+                  <td style={{padding:'12px 20px',fontWeight:800,color:'#fff',fontSize:15}}>{db.students.length}</td>
+                  <td></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Directory View */}
+      {view === 'directory' && <>
 
       {/* Filter Bar + Outstanding Bento */}
       <div className="directory-filter-grid" style={{display:'grid',gridTemplateColumns:'1fr auto',gap:20,marginBottom:28}}>
@@ -3315,6 +3403,7 @@ function Students({ db, save, setPage }) {
         </div>
       </div>
       )}
+      </> }
 
       {/* Insight Footer */}
       <div className="directory-desktop-only mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
