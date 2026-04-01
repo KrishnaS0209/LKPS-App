@@ -5901,6 +5901,7 @@ function Fees({ db, save }) {
   const [showRec, setShowRec] = useState(false);
   const [tab, setTab] = useState(0);
   const [ledStu, setLedStu] = useState('');
+  const [ledCls, setLedCls] = useState('');
   const [histStu, setHistStu] = useState('');
 
   // ── Class Fee Structure ──────────────────────────────────────────
@@ -6467,50 +6468,155 @@ function Fees({ db, save }) {
         {/* Student Ledger */}
         {tab===2 && (
           <div>
-            <div className="mb-4 finance-ledger-filter">
-              <Select value={ledStu} onChange={setLedStu} style={{width:280}}>
-                <option value="">Select Student</option>
-                {db.students.map(s=><option key={s.id} value={s.id}>{s.fn} {s.ln} ({s.cls})</option>)}
-              </Select>
+            {/* Class + Student filter */}
+            <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',alignItems:'flex-end'}}>
+              <div>
+                <div style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Filter by Class</div>
+                <select value={ledCls||''} onChange={e=>{setLedCls(e.target.value);setLedStu('');}}
+                  style={{padding:'9px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',minWidth:140,cursor:'pointer'}}>
+                  <option value="">All Classes</option>
+                  {[...new Set(db.students.map(s=>s.cls))].sort().map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{flex:1,minWidth:200}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Select Student</div>
+                <select value={ledStu} onChange={setLedStu}
+                  style={{width:'100%',padding:'9px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',cursor:'pointer'}}>
+                  <option value="">— Select Student —</option>
+                  {db.students.filter(s=>!ledCls||s.cls===ledCls).map(s=><option key={s.id} value={s.id}>{s.fn} {s.ln} ({s.cls})</option>)}
+                </select>
+              </div>
             </div>
+
             {ledStu ? (() => {
               const s = db.students.find(x=>x.id===ledStu); if(!s) return null;
+              const cf = classFeeMap[s.cls] || {};
+              const monthly = parseFloat(cf.monthly) || 0;
+              const bookFee = parseFloat(cf.book) || 0;
+              const annualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
               const pays = db.pays.filter(p=>p.sid===ledStu).sort((a,b)=>new Date(a.dt)-new Date(b.dt));
-              const tp = pays.reduce((s,p)=>s+p.amt,0), bal = s.fee - tp, full = bal <= 0; let run = s.fee;
+              const tp = pays.reduce((sum,p)=>sum+p.amt,0);
+              const bal = Math.max(0, annualFee - tp);
+              const full = annualFee > 0 && bal <= 0;
+              const pct = annualFee > 0 ? Math.min(100, Math.round(tp/annualFee*100)) : 0;
+              let run = annualFee;
               return (
-                <>
-                  <div className="flex justify-between flex-wrap gap-3 mb-4">
-                    <div>
-                      <div className="text-lg font-bold text-on-surface">{s.fn} {s.ln}</div>
-                      <div className="text-xs text-on-surface-variant">Class {s.cls} · Roll: {s.roll}</div>
-                    </div>
-                    <div className="flex gap-3 flex-wrap">
-                      {[['Annual','bg-surface-container-low','text-on-surface',s.fee],['Paid','bg-emerald-50','text-emerald-700',tp],['Balance',full?'bg-emerald-50':'bg-error-container',full?'text-emerald-700':'text-error',Math.max(0,bal)]].map(([l,bg,c,v])=>(
-                        <div key={l} className={'text-center '+bg+' px-4 py-2 rounded-xl'}>
-                          <div className={'text-[10px] '+c}>{l}</div>
-                          <div className={'text-sm font-bold '+c}>₹{v.toLocaleString('en-IN')}</div>
+                <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden'}}>
+                  {/* Student Header */}
+                  <div style={{padding:'20px 24px',background:'linear-gradient(135deg,#1960a3,#2563eb)',color:'#fff'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:12}}>
+                      <div style={{display:'flex',alignItems:'center',gap:14}}>
+                        <div style={{width:52,height:52,borderRadius:14,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:18,flexShrink:0}}>
+                          {(s.fn||'')[0]}{(s.ln||'')[0]}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="h-2 rounded-full bg-surface-container-high overflow-hidden mb-4">
-                    <div className="h-full rounded-full bg-emerald-500" style={{width:Math.min(100,s.fee>0?Math.round(tp/s.fee*100):0)+'%'}}/>
-                  </div>
-                  <div className="text-sm font-semibold text-on-surface mb-3">Payment Timeline</div>
-                  {pays.length ? pays.map(p=>{run-=p.amt;return(
-                    <div key={p.id} className="flex gap-3 mb-3 pl-4" style={{borderLeft:'2px solid #e0e3e5'}}>
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1 flex-shrink-0" style={{marginLeft:-13,border:'2px solid white'}}/>
-                      <div>
-                        <div className="text-xs text-on-surface-variant">{p.dt} · {p.md}{p.mn?' · '+p.mn:''}</div>
-                        <div className="text-sm font-semibold text-on-surface">₹{p.amt.toLocaleString('en-IN')} <Badge color="blue">{p.rc}</Badge></div>
-                        <div className="text-xs text-on-surface-variant">Bal: ₹{Math.max(0,run).toLocaleString('en-IN')}{p.note?' · '+p.note:''}</div>
+                        <div>
+                          <div style={{fontSize:18,fontWeight:800,fontFamily:'Manrope,sans-serif'}}>{s.fn} {s.ln}</div>
+                          <div style={{fontSize:12,opacity:0.8,marginTop:2}}>Class {s.cls} · Roll {s.roll||'—'} · Adm: {s.admno||'—'}</div>
+                          <div style={{fontSize:12,opacity:0.7,marginTop:1}}>Father: {s.father||'—'} · {s.fphone||s.ph||'—'}</div>
+                        </div>
+                      </div>
+                      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                        {[
+                          {l:'Annual Fee',v:`₹${annualFee.toLocaleString('en-IN')}`,c:'rgba(255,255,255,0.2)',tc:'#fff'},
+                          {l:'Paid',v:`₹${tp.toLocaleString('en-IN')}`,c:'rgba(16,185,129,0.3)',tc:'#6ee7b7'},
+                          {l:'Balance',v:`₹${bal.toLocaleString('en-IN')}`,c:full?'rgba(16,185,129,0.3)':'rgba(239,68,68,0.3)',tc:full?'#6ee7b7':'#fca5a5'},
+                        ].map(({l,v,c,tc})=>(
+                          <div key={l} style={{textAlign:'center',background:c,borderRadius:10,padding:'8px 16px',minWidth:90}}>
+                            <div style={{fontSize:10,opacity:0.8,marginBottom:2}}>{l}</div>
+                            <div style={{fontSize:15,fontWeight:800,color:tc}}>{v}</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  );}) : <NoData text="No payments"/>}
-                  <div className="mt-3"><Btn variant="primary" size="sm" onClick={()=>{setSelClass(s.cls);setSelStu(s.id);setTab(-1);setTimeout(()=>setTab(0),0);}}>+ Record Payment</Btn></div>
-                </>
+                    {/* Progress bar */}
+                    <div style={{marginTop:16}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:11,opacity:0.8,marginBottom:6}}>
+                        <span>Fee collected</span><span style={{fontWeight:700}}>{pct}%</span>
+                      </div>
+                      <div style={{height:6,borderRadius:999,background:'rgba(255,255,255,0.2)',overflow:'hidden'}}>
+                        <div style={{height:'100%',borderRadius:999,background:full?'#6ee7b7':'#fbbf24',width:pct+'%',transition:'width 0.5s'}}/>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fee Breakdown */}
+                  {annualFee > 0 && (
+                    <div style={{padding:'16px 24px',borderBottom:'1px solid #f1f5f9',background:'#fafbfc'}}>
+                      <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Fee Breakdown</div>
+                      <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+                        <div style={{fontSize:13,color:'#475569'}}>Monthly: <strong style={{color:'#1960a3'}}>₹{monthly.toLocaleString('en-IN')}</strong></div>
+                        {bookFee > 0 && <div style={{fontSize:13,color:'#475569'}}>Book Fee: <strong style={{color:'#7c3aed'}}>₹{bookFee.toLocaleString('en-IN')}</strong></div>}
+                        <div style={{fontSize:13,color:'#475569'}}>Annual Total: <strong style={{color:'#1e293b'}}>₹{annualFee.toLocaleString('en-IN')}</strong></div>
+                        <div style={{fontSize:13,color:'#475569'}}>Status: <strong style={{color:full?'#059669':bal>0?'#ef4444':'#f59e0b'}}>{full?'Fully Paid':bal>0?'Balance Due':'Pending'}</strong></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment History */}
+                  <div style={{padding:'16px 24px'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                      <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>Payment History</div>
+                      <button onClick={()=>{setSelClass(s.cls);setSelStu(s.id);setTab(-1);setTimeout(()=>setTab(0),0);}}
+                        style={{fontSize:12,fontWeight:700,padding:'6px 14px',borderRadius:8,border:'none',background:'#1960a3',color:'#fff',cursor:'pointer'}}>
+                        + Record Payment
+                      </button>
+                    </div>
+                    {pays.length === 0 ? (
+                      <div style={{textAlign:'center',padding:40,color:'#94a3b8'}}>
+                        <div style={{fontSize:32,marginBottom:8}}>🧾</div>
+                        <div style={{fontSize:13,fontWeight:600}}>No payments recorded yet</div>
+                      </div>
+                    ) : (
+                      <div style={{position:'relative'}}>
+                        <div style={{position:'absolute',left:7,top:0,bottom:0,width:2,background:'#e2e8f0'}}/>
+                        {pays.map(p=>{
+                          run -= p.amt;
+                          return (
+                            <div key={p.id} style={{display:'flex',gap:16,marginBottom:16,paddingLeft:24,position:'relative'}}>
+                              <div style={{position:'absolute',left:0,top:4,width:16,height:16,borderRadius:'50%',background:'#10b981',border:'3px solid #fff',boxShadow:'0 0 0 2px #10b981',flexShrink:0}}/>
+                              <div style={{flex:1,background:'#f8fafc',borderRadius:12,padding:'12px 16px',border:'1px solid #e8edf5'}}>
+                                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
+                                  <div>
+                                    <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>₹{p.amt.toLocaleString('en-IN')}</div>
+                                    <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{p.dt} · {p.md}{p.mn?' · '+p.mn:''}</div>
+                                  </div>
+                                  <div style={{textAlign:'right'}}>
+                                    <div style={{fontSize:11,fontWeight:700,color:'#1960a3',background:'#dbeafe',padding:'2px 10px',borderRadius:20}}>{p.rc}</div>
+                                    <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Bal: ₹{Math.max(0,run).toLocaleString('en-IN')}</div>
+                                  </div>
+                                </div>
+                                {(p.extras||[]).length > 0 && (
+                                  <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid #e2e8f0'}}>
+                                    <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>Charges included:</div>
+                                    <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                                      {(p.extras||[]).map((ex,i)=>(
+                                        <span key={i} style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#ede9fe',color:'#7c3aed'}}>
+                                          {ex.label}: ₹{(parseFloat(ex.amt)||0).toLocaleString('en-IN')}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {p.note && <div style={{fontSize:11,color:'#94a3b8',marginTop:6}}>Note: {p.note}</div>}
+                                <button onClick={()=>{setReceipt({pay:p,s});setShowRec(true);}}
+                                  style={{marginTop:8,fontSize:11,fontWeight:600,padding:'4px 12px',borderRadius:8,border:'1px solid #e2e8f0',background:'#fff',color:'#1960a3',cursor:'pointer'}}>
+                                  View Receipt
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
-            })() : <NoData text="Select a student"/>}
+            })() : (
+              <div style={{textAlign:'center',padding:60,color:'#94a3b8',background:'#fff',borderRadius:16,border:'1px solid #e8edf5'}}>
+                <span className="material-symbols-outlined" style={{fontSize:48,display:'block',marginBottom:12}}>account_balance_wallet</span>
+                <div style={{fontSize:14,fontWeight:600}}>Select a class and student to view their fee details</div>
+              </div>
+            )}
           </div>
         )}
       </div>
