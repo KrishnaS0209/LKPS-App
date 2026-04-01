@@ -6549,18 +6549,18 @@ function Fees({ db, save }) {
                       <tr key={cls.id} style={{borderBottom:'1px solid #f1f5f9',background:i%2===0?'#fff':'#fafbfc'}}>
                         <td style={{padding:'14px 20px',fontWeight:700,color:'#1e293b',fontSize:14}}>{cls.name}</td>
                         <td style={{padding:'10px 20px'}}>
-                          <input type="number" value={cf.monthly||''} onChange={e=>saveClassFee(cls.name,'monthly',e.target.value)}
+                          <input type="number" defaultValue={cf.monthly||''} onBlur={e=>saveClassFee(cls.name,'monthly',e.target.value)}
                             placeholder="0"
                             style={{width:120,padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',fontWeight:600}}
                             onFocus={e=>e.target.style.borderColor='#1960a3'}
-                            onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                            onBlur={e=>{e.target.style.borderColor='#e2e8f0';saveClassFee(cls.name,'monthly',e.target.value);}}/>
                         </td>
                         <td style={{padding:'10px 20px'}}>
-                          <input type="number" value={cf.book||''} onChange={e=>saveClassFee(cls.name,'book',e.target.value)}
+                          <input type="number" defaultValue={cf.book||''} onBlur={e=>saveClassFee(cls.name,'book',e.target.value)}
                             placeholder="0"
                             style={{width:120,padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',fontWeight:600}}
                             onFocus={e=>e.target.style.borderColor='#1960a3'}
-                            onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                            onBlur={e=>{e.target.style.borderColor='#e2e8f0';saveClassFee(cls.name,'book',e.target.value);}}/>
                         </td>
                         <td style={{padding:'14px 20px',fontWeight:700,color:'#1960a3',fontSize:14}}>
                           {annual > 0 ? `₹${annual.toLocaleString('en-IN')}` : '—'}
