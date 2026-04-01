@@ -136,7 +136,7 @@ body{font-family:'Inter',sans-serif;background:#fff;padding:20px}
 .foot-left strong{color:#1a1a2e;font-weight:600}
 .sign-block{text-align:center}
 .sign-line{border-top:1.5px solid #1a2e5a;width:180px;margin-top:44px;padding-top:5px;font-weight:600;font-size:12.5px;color:#1a2e5a;font-family:'Inter',sans-serif;letter-spacing:0.5px}
-@media print{body{padding:0}.cert{border:1.5px solid #c8a96e;max-width:100%}@page{margin:8mm;size:A4}}
+@media print{body{padding:0}.cert{border:1.5px solid #c8a96e;max-width:100%}@page{margin:10mm;size:A4 portrait}}
 `;
 
 function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus, attP, attT }) {
@@ -179,9 +179,11 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${row('Roll No.', s.roll)}
       ${row('Admission No.', s.admno)}
       ${s.pen ? row('PEN No.', s.pen) : ''}
+      ${s.apaar ? row('APAAR ID', s.apaar) : ''}
       ${row('Date of Birth (as per register)', dob)}
       ${s.blood ? row('Blood Group', s.blood) : ''}
       ${s.aadhar ? row('Aadhaar No.', s.aadhar) : ''}
+      ${s.ps ? row('Previous School', s.ps) : ''}
       ${row('Character &amp; Conduct', conduct)}
       ${row('Attendance', `${attPct}%  (${attP} days present out of ${attT} working days)`)}
       ${row('Fee Status', feeStatus)}

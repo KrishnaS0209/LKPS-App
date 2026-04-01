@@ -3482,6 +3482,7 @@ function Students({ db, save, setPage }) {
           <Field label="Roll No."><Input value={form.ro||''} onChange={v=>setForm(f=>({...f,ro:v}))} placeholder="Enter roll number"/></Field>
           <Field label="Admission No."><Input value={form.an||''} onChange={v=>setForm(f=>({...f,an:v,admno:v}))} placeholder="Enter admission number"/></Field>
           <Field label="PEN No."><Input value={form.pen||''} onChange={v=>setForm(f=>({...f,pen:v}))} placeholder="11-digit PEN number"/></Field>
+          <Field label="APAAR ID"><Input value={form.apaar||''} onChange={v=>setForm(f=>({...f,apaar:v}))} placeholder="12-digit APAAR ID"/></Field>
           <Field label="Admission Date"><Input type="date" value={form.ad||''} onChange={v=>setForm(f=>({...f,ad:v}))}/></Field>
           <Field label="Previous School"><Input value={form.ps||''} onChange={v=>setForm(f=>({...f,ps:v}))}/></Field>
           <Field label="Email"><Input type="email" value={form.em||''} onChange={v=>setForm(f=>({...f,em:v}))}/></Field>
@@ -6586,7 +6587,7 @@ function Documents({ db, save }) {
     if(!tcStu){toast('Select student','err');return;}
     const st=db.students.find(x=>x.id===tcStu);if(!st)return;
     const{p,t}=getAtt(tcStu);
-    printTC(st,logo,db.settings,{tcNo:tcNo||'TC-'+uid(),dt:new Date(tcDt).toLocaleDateString('en-IN'),admDt:tcAdmDt?new Date(tcAdmDt).toLocaleDateString('en-IN'):'',ld:tcLd?new Date(tcLd).toLocaleDateString('en-IN'):'',reason:tcRs,conduct:tcCo,feeStatus:tcFe,attP:p,attT:t});
+    printTC(st,logo,db.settings,{tcNo:tcNo||'TC-'+uid(),dt:new Date(tcDt).toLocaleDateString('en-IN'),admDt:tcAdmDt?new Date(tcAdmDt).toLocaleDateString('en-IN'):st.ad?new Date(st.ad).toLocaleDateString('en-IN'):'',ld:tcLd?new Date(tcLd).toLocaleDateString('en-IN'):'',reason:tcRs,conduct:tcCo,feeStatus:tcFe,attP:p,attT:t});
     toast('TC Generated');
   };
   const doCC = () => {
@@ -6757,6 +6758,9 @@ function Documents({ db, save }) {
                   ['Mother', st.mother||'—'],
                   ['Class / Roll', (st.cls||'—')+' / '+(st.roll||'—')],
                   ['Adm. No.', st.admno||'—'],
+                  ['PEN No.', st.pen||'—'],
+                  ['APAAR ID', st.apaar||'—'],
+                  ['Previous School', st.ps||'—'],
                   ['DOB', st.dob?new Date(st.dob).toLocaleDateString('en-IN'):'—'],
                   ['Address', st.addr?(st.addr+(st.city?', '+st.city:'')):'—'],
                   ['Blood Group', st.blood||'—'],
@@ -6773,6 +6777,11 @@ function Documents({ db, save }) {
             {/* Fields NOT in student directory — must ask */}
             <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant pt-1">Additional details required</p>
             <div className="documents-two-grid grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-on-surface-variant mb-1.5">Academic Session</label>
+                <input value={db.settings.year||''} readOnly
+                  className="w-full p-3 bg-surface-container-low rounded-xl border-none text-sm text-primary font-semibold cursor-default"/>
+              </div>
               <div>
                 <label className="block text-sm text-on-surface-variant mb-1.5">TC Number</label>
                 <input value={tcNo} onChange={e=>setTcNo(e.target.value)} placeholder="TC-2025-001"
