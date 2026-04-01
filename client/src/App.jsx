@@ -5826,14 +5826,15 @@ function Fees({ db, save }) {
 
   const classFeeMap = db.settings?.classFees || {};
 
-  // Per-student computed rows — fee comes from class fee structure
+  // Per-student computed rows — fee comes ONLY from class fee structure
   const feeRows = db.students.map(s => {
     const cf = classFeeMap[s.cls] || {};
-    const monthly = cf.monthly || 0;
-    const bookFee = cf.book || 0;
+    const monthly = parseFloat(cf.monthly) || 0;
+    const bookFee = parseFloat(cf.book) || 0;
+    // Only use class fee structure — ignore old s.fee / s.mf
     const annualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
     const paid = paidTotal(db.pays, s.id);
-    const payMode = s.payMode || 'monthly'; // 'monthly' or 'annual'
+    const payMode = s.payMode || 'monthly';
 
     let expectedPaid = 0;
     let overdue = false;
