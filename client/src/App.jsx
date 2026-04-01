@@ -3541,7 +3541,6 @@ function Students({ db, save, setPage }) {
           <Field label="City"><Input value={form.cy||''} onChange={v=>setForm(f=>({...f,cy:v,city:v}))}/></Field>
           <Field label="PIN"><Input value={form.pin||''} onChange={v=>setForm(f=>({...f,pin:v}))}/></Field>
           <SecLabel>Fees</SecLabel>
-          <Field label="Fee Status"><Select value={form.fst||'Pending'} onChange={v=>setForm(f=>({...f,fst:v}))}><option>Pending</option><option>Paid</option><option>Overdue</option></Select></Field>
           <SecLabel>Medical</SecLabel>
           <Field label="Condition"><Input value={form.mc||''} onChange={v=>setForm(f=>({...f,mc:v}))} placeholder="Any known condition or None"/></Field>
           <Field label="Allergies"><Input value={form.al||''} onChange={v=>setForm(f=>({...f,al:v}))} placeholder="Any allergies or None"/></Field>
