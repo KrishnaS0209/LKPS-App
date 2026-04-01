@@ -51,6 +51,22 @@ export default function App() {
       const merged = raw ? { ...defaults, ...raw } : defaults;
       initShadow(activeSessionId, merged);
       setDB(merged);
+      // Sync admin profile photo from backend after load
+      setSession(prev => {
+        if (!prev || prev.role !== 'admin') return prev;
+        const adminRecord = (merged.admins || []).find(a =>
+          a.username === prev.user.username || a.id === prev.user.id || a._id === prev.user._id
+        );
+        if (adminRecord?.photo && adminRecord.photo !== prev.user.pic) {
+          const updatedUser = {...prev.user, pic: adminRecord.photo};
+          try {
+            localStorage.setItem('lkps_user_pic', adminRecord.photo);
+            localStorage.setItem('lkps_user', JSON.stringify({...updatedUser, pic: '__stored__'}));
+          } catch(e) {}
+          return {...prev, user: updatedUser};
+        }
+        return prev;
+      });
     }).catch(() => setDB(loadDB()));
   }, [activeSessionId]);
 
