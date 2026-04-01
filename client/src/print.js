@@ -206,10 +206,11 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${s.aadhar ? row('Aadhaar No.', s.aadhar) : ''}
       ${s.ps ? row('Previous School', s.ps) : ''}
       ${row('Character &amp; Conduct', conduct)}
-      ${row('Attendance', `${attPct}%  (${attP} days present out of ${attT} working days)`)}
-      ${row('Fee Status', feeStatus)}
       ${row('Reason for Leaving', reason, true)}
     </table>
+    <div style="margin:16px 0 20px;padding:12px 16px;border:1px solid #c8a96e;border-radius:4px;background:#fdfaf4;font-size:11.5px;color:#444;font-style:italic;line-height:1.7;font-family:'Inter',sans-serif;">
+      Certified that the above scholar's name has been struck off from the school register and all dues have been cleared. The entries made above are correct as per the school records and the register of admissions and withdrawals has been duly maintained in accordance with departmental rules.
+    </div>
     <div class="foot">
       <div class="foot-left">
         <p>Date : <strong>${dt || '—'}</strong></p>
