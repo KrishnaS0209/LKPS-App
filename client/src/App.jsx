@@ -6592,16 +6592,30 @@ function Documents({ db, save }) {
     if(!tcStu){toast('Select student','err');return;}
     const st=db.students.find(x=>x.id===tcStu);if(!st)return;
     const{p,t}=getAtt(tcStu);
-    printTC(st,logo,db.settings,{tcNo:tcNo||'TC-'+uid(),dt:new Date(tcDt).toLocaleDateString('en-IN'),admDt:tcAdmDt?new Date(tcAdmDt).toLocaleDateString('en-IN'):st.ad?new Date(st.ad).toLocaleDateString('en-IN'):'',ld:tcLd?new Date(tcLd).toLocaleDateString('en-IN'):'',reason:tcRs,conduct:tcCo,feeStatus:tcFe,attP:p,attT:t});
-    toast('TC Generated');
+    const no = tcNo||'TC-'+uid();
+    const record = {
+      id:'TC'+uid(), type:'tc', no, dt:new Date(tcDt).toLocaleDateString('en-IN'),
+      stuId:st.id, name:st.fn+(st.ln?' '+st.ln:''), cls:st.cls, roll:st.roll||'',
+      admno:st.admno||'', reason:tcRs, conduct:tcCo, generatedAt:new Date().toISOString(),
+    };
+    save({...db, certRegistry:[...(db.certRegistry||[]), record]});
+    printTC(st,logo,db.settings,{tcNo:no,dt:new Date(tcDt).toLocaleDateString('en-IN'),admDt:tcAdmDt?new Date(tcAdmDt).toLocaleDateString('en-IN'):st.ad?new Date(st.ad).toLocaleDateString('en-IN'):'',ld:tcLd?new Date(tcLd).toLocaleDateString('en-IN'):'',reason:tcRs,conduct:tcCo,feeStatus:tcFe,attP:p,attT:t});
+    toast('TC Generated & Saved');
   };
   const doCC = () => {
     if(!ccStu){toast('Select student','err');return;}
     const st=db.students.find(x=>x.id===ccStu);if(!st)return;
     const attP = ccAttP ? parseInt(ccAttP) : 0;
     const attT = ccAttT ? parseInt(ccAttT) : 0;
-    printCC(st,logo,db.settings,{ccNo:ccNo||'CC-'+uid(),dt:new Date(ccDt).toLocaleDateString('en-IN'),conduct:ccCo,purpose:ccPu,remarks:ccRm,attP,attT});
-    toast('CC Generated');
+    const no = ccNo||'CC-'+uid();
+    const record = {
+      id:'CC'+uid(), type:'cc', no, dt:new Date(ccDt).toLocaleDateString('en-IN'),
+      stuId:st.id, name:st.fn+(st.ln?' '+st.ln:''), cls:st.cls, roll:st.roll||'',
+      admno:st.admno||'', conduct:ccCo, purpose:ccPu, generatedAt:new Date().toISOString(),
+    };
+    save({...db, certRegistry:[...(db.certRegistry||[]), record]});
+    printCC(st,logo,db.settings,{ccNo:no,dt:new Date(ccDt).toLocaleDateString('en-IN'),conduct:ccCo,purpose:ccPu,remarks:ccRm,attP,attT});
+    toast('CC Generated & Saved');
   };
 
   return (
@@ -6616,7 +6630,7 @@ function Documents({ db, save }) {
 
       {/* Template Toggle */}
       <div className="documents-tabs flex items-center gap-8 border-b border-surface-variant/30 pb-0">
-        {[['id','badge','ID Card'],['tc','workspace_premium','Transfer Certificate'],['cc','verified_user','Character Certificate'],['rc','description','Report Card']].map(([id,icon,label])=>(
+        {[['id','badge','ID Card'],['tc','workspace_premium','Transfer Certificate'],['cc','verified_user','Character Certificate'],['rc','description','Report Card'],['reg','history','Registry']].map(([id,icon,label])=>(
           <button key={id} onClick={()=>setDocTab(id)}
             className={'flex items-center gap-2 pb-4 font-extrabold text-base transition-all border-0 bg-transparent cursor-pointer relative '+(docTab===id?'text-primary':'text-on-surface-variant/50 hover:text-on-surface-variant')}
             style={{fontFamily:'Manrope,sans-serif'}}>
@@ -6957,6 +6971,81 @@ function Documents({ db, save }) {
 
       {/* REPORT CARD TAB */}
       {docTab==='rc' && <ReportCardStudio db={db} save={save} logo={logo}/>}
+
+      {/* REGISTRY TAB */}
+      {docTab==='reg' && (() => {
+        const [regSearch, setRegSearch] = React.useState('');
+        const [regType, setRegType] = React.useState('');
+        const registry = db.certRegistry || [];
+        const filtered = registry.filter(r => {
+          const q = regSearch.toLowerCase();
+          const matchQ = !q || r.name?.toLowerCase().includes(q) || r.no?.toLowerCase().includes(q) || r.admno?.toLowerCase().includes(q) || r.cls?.toLowerCase().includes(q);
+          const matchT = !regType || r.type === regType;
+          return matchQ && matchT;
+        }).sort((a,b) => new Date(b.generatedAt) - new Date(a.generatedAt));
+
+        return (
+          <div>
+            <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+              <input value={regSearch} onChange={e=>setRegSearch(e.target.value)}
+                placeholder="Search by name, TC/CC number, admission no..."
+                style={{flex:1,minWidth:200,padding:'10px 16px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none'}}/>
+              <select value={regType} onChange={e=>setRegType(e.target.value)}
+                style={{padding:'10px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',cursor:'pointer'}}>
+                <option value="">All Types</option>
+                <option value="tc">Transfer Certificate</option>
+                <option value="cc">Character Certificate</option>
+              </select>
+              <span style={{fontSize:12,color:'#64748b'}}>{filtered.length} record{filtered.length!==1?'s':''}</span>
+            </div>
+            {filtered.length === 0 ? (
+              <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+                <span className="material-symbols-outlined" style={{fontSize:48,display:'block',marginBottom:12}}>history</span>
+                <div style={{fontSize:14,fontWeight:600}}>{registry.length===0?'No certificates generated yet':'No results found'}</div>
+              </div>
+            ) : (
+              <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr style={{background:'#1960a3'}}>
+                      {['Type','Number','Student Name','Class','Date','Conduct/Purpose',''].map(h=>(
+                        <th key={h} style={{padding:'12px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#fff',letterSpacing:'0.04em'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((r,i) => (
+                      <tr key={r.id} style={{borderBottom:'1px solid #f1f5f9',background:i%2===0?'#fff':'#fafbfc'}}>
+                        <td style={{padding:'12px 16px'}}>
+                          <span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:20,
+                            background:r.type==='tc'?'#dbeafe':'#ede9fe',
+                            color:r.type==='tc'?'#1d4ed8':'#7c3aed'}}>
+                            {r.type==='tc'?'TC':'CC'}
+                          </span>
+                        </td>
+                        <td style={{padding:'12px 16px',fontWeight:700,color:'#1960a3',fontSize:13}}>{r.no}</td>
+                        <td style={{padding:'12px 16px',fontWeight:600,color:'#1e293b',fontSize:13}}>{r.name}</td>
+                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:13}}>{r.cls||'—'}</td>
+                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:12}}>{r.dt}</td>
+                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:12}}>{r.type==='tc'?r.reason:r.purpose}</td>
+                        <td style={{padding:'12px 16px'}}>
+                          <button onClick={()=>{
+                            if(!window.confirm('Delete this record?'))return;
+                            save({...db,certRegistry:registry.filter(x=>x.id!==r.id)});
+                            toast('Record deleted','err');
+                          }} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',fontSize:12,fontWeight:600}}>
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
