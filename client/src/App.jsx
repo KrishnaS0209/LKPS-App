@@ -6548,6 +6548,81 @@ function DocPreview({ srcDoc, docW = 820, docH = 1100 }) {
   );
 }
 
+function CertRegistry({ db, save }) {
+  const [regSearch, setRegSearch] = useState('');
+  const [regType, setRegType] = useState('');
+  const registry = db.certRegistry || [];
+  const filtered = registry.filter(r => {
+    const q = regSearch.toLowerCase();
+    const matchQ = !q || r.name?.toLowerCase().includes(q) || r.no?.toLowerCase().includes(q) || r.admno?.toLowerCase().includes(q) || r.cls?.toLowerCase().includes(q);
+    const matchT = !regType || r.type === regType;
+    return matchQ && matchT;
+  }).sort((a,b) => new Date(b.generatedAt) - new Date(a.generatedAt));
+
+  return (
+    <div>
+      <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+        <input value={regSearch} onChange={e=>setRegSearch(e.target.value)}
+          placeholder="Search by name, TC/CC number, admission no, class..."
+          style={{flex:1,minWidth:200,padding:'10px 16px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none'}}/>
+        <select value={regType} onChange={e=>setRegType(e.target.value)}
+          style={{padding:'10px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',cursor:'pointer'}}>
+          <option value="">All Types</option>
+          <option value="tc">Transfer Certificate</option>
+          <option value="cc">Character Certificate</option>
+        </select>
+        <span style={{fontSize:12,color:'#64748b'}}>{filtered.length} record{filtered.length!==1?'s':''}</span>
+      </div>
+      {filtered.length === 0 ? (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8',background:'#fff',borderRadius:16,border:'1px solid #e8edf5'}}>
+          <span className="material-symbols-outlined" style={{fontSize:48,display:'block',marginBottom:12}}>history</span>
+          <div style={{fontSize:14,fontWeight:600}}>{registry.length===0?'No certificates generated yet':'No results found'}</div>
+          <div style={{fontSize:12,marginTop:6}}>{registry.length===0?'Generated TCs and CCs will appear here':'Try a different search'}</div>
+        </div>
+      ) : (
+        <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden'}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{background:'#1960a3'}}>
+                {['Type','Number','Student Name','Class','Date','Details','Action'].map(h=>(
+                  <th key={h} style={{padding:'12px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#fff',letterSpacing:'0.04em'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r,i) => (
+                <tr key={r.id} style={{borderBottom:'1px solid #f1f5f9',background:i%2===0?'#fff':'#fafbfc'}}>
+                  <td style={{padding:'12px 16px'}}>
+                    <span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:20,
+                      background:r.type==='tc'?'#dbeafe':'#ede9fe',
+                      color:r.type==='tc'?'#1d4ed8':'#7c3aed'}}>
+                      {r.type==='tc'?'TC':'CC'}
+                    </span>
+                  </td>
+                  <td style={{padding:'12px 16px',fontWeight:700,color:'#1960a3',fontSize:13}}>{r.no}</td>
+                  <td style={{padding:'12px 16px',fontWeight:600,color:'#1e293b',fontSize:13}}>{r.name}</td>
+                  <td style={{padding:'12px 16px',color:'#64748b',fontSize:13}}>{r.cls||'—'}</td>
+                  <td style={{padding:'12px 16px',color:'#64748b',fontSize:12,whiteSpace:'nowrap'}}>{r.dt}</td>
+                  <td style={{padding:'12px 16px',color:'#64748b',fontSize:12}}>{r.type==='tc'?r.reason:r.purpose}</td>
+                  <td style={{padding:'12px 16px'}}>
+                    <button onClick={()=>{
+                      if(!window.confirm('Delete this record?'))return;
+                      save({...db,certRegistry:registry.filter(x=>x.id!==r.id)});
+                      toast('Record deleted','err');
+                    }} style={{background:'#fee2e2',border:'none',cursor:'pointer',color:'#ef4444',fontSize:11,fontWeight:700,padding:'4px 10px',borderRadius:8}}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Documents({ db, save }) {
   // Shared
   const [docTab, setDocTab] = useState('id'); // 'id' | 'tc' | 'cc'
@@ -6973,79 +7048,7 @@ function Documents({ db, save }) {
       {docTab==='rc' && <ReportCardStudio db={db} save={save} logo={logo}/>}
 
       {/* REGISTRY TAB */}
-      {docTab==='reg' && (() => {
-        const [regSearch, setRegSearch] = React.useState('');
-        const [regType, setRegType] = React.useState('');
-        const registry = db.certRegistry || [];
-        const filtered = registry.filter(r => {
-          const q = regSearch.toLowerCase();
-          const matchQ = !q || r.name?.toLowerCase().includes(q) || r.no?.toLowerCase().includes(q) || r.admno?.toLowerCase().includes(q) || r.cls?.toLowerCase().includes(q);
-          const matchT = !regType || r.type === regType;
-          return matchQ && matchT;
-        }).sort((a,b) => new Date(b.generatedAt) - new Date(a.generatedAt));
-
-        return (
-          <div>
-            <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
-              <input value={regSearch} onChange={e=>setRegSearch(e.target.value)}
-                placeholder="Search by name, TC/CC number, admission no..."
-                style={{flex:1,minWidth:200,padding:'10px 16px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none'}}/>
-              <select value={regType} onChange={e=>setRegType(e.target.value)}
-                style={{padding:'10px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',cursor:'pointer'}}>
-                <option value="">All Types</option>
-                <option value="tc">Transfer Certificate</option>
-                <option value="cc">Character Certificate</option>
-              </select>
-              <span style={{fontSize:12,color:'#64748b'}}>{filtered.length} record{filtered.length!==1?'s':''}</span>
-            </div>
-            {filtered.length === 0 ? (
-              <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
-                <span className="material-symbols-outlined" style={{fontSize:48,display:'block',marginBottom:12}}>history</span>
-                <div style={{fontSize:14,fontWeight:600}}>{registry.length===0?'No certificates generated yet':'No results found'}</div>
-              </div>
-            ) : (
-              <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
-                  <thead>
-                    <tr style={{background:'#1960a3'}}>
-                      {['Type','Number','Student Name','Class','Date','Conduct/Purpose',''].map(h=>(
-                        <th key={h} style={{padding:'12px 16px',textAlign:'left',fontSize:11,fontWeight:700,color:'#fff',letterSpacing:'0.04em'}}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((r,i) => (
-                      <tr key={r.id} style={{borderBottom:'1px solid #f1f5f9',background:i%2===0?'#fff':'#fafbfc'}}>
-                        <td style={{padding:'12px 16px'}}>
-                          <span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:20,
-                            background:r.type==='tc'?'#dbeafe':'#ede9fe',
-                            color:r.type==='tc'?'#1d4ed8':'#7c3aed'}}>
-                            {r.type==='tc'?'TC':'CC'}
-                          </span>
-                        </td>
-                        <td style={{padding:'12px 16px',fontWeight:700,color:'#1960a3',fontSize:13}}>{r.no}</td>
-                        <td style={{padding:'12px 16px',fontWeight:600,color:'#1e293b',fontSize:13}}>{r.name}</td>
-                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:13}}>{r.cls||'—'}</td>
-                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:12}}>{r.dt}</td>
-                        <td style={{padding:'12px 16px',color:'#64748b',fontSize:12}}>{r.type==='tc'?r.reason:r.purpose}</td>
-                        <td style={{padding:'12px 16px'}}>
-                          <button onClick={()=>{
-                            if(!window.confirm('Delete this record?'))return;
-                            save({...db,certRegistry:registry.filter(x=>x.id!==r.id)});
-                            toast('Record deleted','err');
-                          }} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',fontSize:12,fontWeight:600}}>
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {docTab==='reg' && <CertRegistry db={db} save={save}/>}
     </div>
   );
 }
