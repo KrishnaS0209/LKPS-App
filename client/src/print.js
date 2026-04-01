@@ -245,15 +245,15 @@ body{padding:5mm}
 .cert{width:calc(210mm - 10mm);min-height:calc(297mm - 10mm);margin:0 auto;padding:10mm 12mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
 .cert::before{content:'';position:absolute;inset:10px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
 .inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
-.ttl{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1a2e5a;text-align:center;margin:14px 0 4px;letter-spacing:2px;text-transform:uppercase}
-.ttl-line{width:60px;height:2px;background:#b8960c;margin:0 auto 16px}
-.no{text-align:right;font-size:13px;color:#555;margin-bottom:20px;font-weight:400}
+.ttl{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#1a2e5a;text-align:center;margin:16px 0 4px;letter-spacing:2px;text-transform:uppercase}
+.ttl-line{width:60px;height:2px;background:#b8960c;margin:0 auto 18px}
+.no{text-align:right;font-size:14px;color:#555;margin-bottom:22px;font-weight:400}
 .no b{color:#1a2e5a;font-weight:700}
-.body{font-size:14.5px;line-height:2.1;color:#2a2a3a;text-align:justify;font-weight:400;flex:1}
+.body{font-size:15px;line-height:2.2;color:#2a2a3a;text-align:justify;font-weight:400;flex:1}
 .body b{color:#1a2e5a;font-weight:700}
-.seal{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:20px}
+.seal{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:24px}
 .slk{text-align:center;min-width:160px}
-.sll{font-size:13px;font-weight:700;color:#1a2e5a;margin-top:52px;border-top:1.5px solid #1a2e5a;padding-top:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px}
+.sll{font-size:14px;font-weight:700;color:#1a2e5a;margin-top:56px;border-top:1.5px solid #1a2e5a;padding-top:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px}
 .seal-circle{width:80px;height:80px;border:1.5px dashed #b8960c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#b8960c;font-weight:600;text-align:center;padding:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px;opacity:0.4}
 @media print{html,body{width:210mm;height:297mm}.cert{border:2px solid #b8960c;width:calc(210mm - 10mm);min-height:calc(297mm - 10mm);padding:10mm 12mm}@page{margin:5mm;size:A4 portrait}}
 `;

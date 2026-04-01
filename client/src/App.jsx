@@ -6584,6 +6584,7 @@ function Documents({ db, save }) {
   const [tcFe, setTcFe] = useState('All Dues Cleared');
   // CC state
   const [ccStu, setCcStu] = useState(''); const [ccNo, setCcNo] = useState(''); const [ccDt, setCcDt] = useState(new Date().toISOString().split('T')[0]); const [ccCo, setCcCo] = useState('Good'); const [ccPu, setCcPu] = useState('General Purpose'); const [ccRm, setCcRm] = useState('');
+  const [ccCls, setCcCls] = useState('');
   const [ccAttP, setCcAttP] = useState(''); const [ccAttT, setCcAttT] = useState('');
   const ccAttPct = ccAttT > 0 ? Math.round((parseInt(ccAttP)||0) / parseInt(ccAttT) * 100) : 0;
 
@@ -6859,11 +6860,17 @@ function Documents({ db, save }) {
           <div className="documents-form-column documents-form-card col-span-5 bg-surface-container-low rounded-2xl p-6 space-y-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Character Certificate</p>
             <div>
+              <label className="block text-sm text-on-surface-variant mb-1.5">Filter by Class</label>
+              <select value={ccCls||''} onChange={e=>{setCcCls(e.target.value);setCcStu('');}}
+                className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-on-surface text-sm mb-3">
+                <option value="">— All Classes —</option>
+                {db.classes.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
               <label className="block text-sm text-on-surface-variant mb-1.5">Student *</label>
               <select value={ccStu} onChange={e=>setCcStu(e.target.value)}
                 className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-on-surface text-sm">
                 <option value="">— Select Student —</option>
-                {db.students.map(st=><option key={st.id} value={st.id}>{st.fn} {st.ln} ({st.cls})</option>)}
+                {db.students.filter(st=>!ccCls||st.cls===ccCls).map(st=><option key={st.id} value={st.id}>{st.fn} {st.ln} ({st.cls})</option>)}
               </select>
             </div>
             {ccStu && (()=>{const st=db.students.find(x=>x.id===ccStu);return st?(
