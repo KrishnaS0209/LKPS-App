@@ -112,8 +112,8 @@ const tcCSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:210mm;min-height:297mm;background:#fff;font-family:'Inter',sans-serif}
-body{padding:0}
-.cert{width:210mm;min-height:297mm;margin:0 auto;padding:14mm 16mm 14mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
+body{padding:8mm}
+.cert{width:calc(210mm - 16mm);min-height:calc(297mm - 16mm);margin:0 auto;padding:12mm 14mm 12mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
 .cert::before{content:'';position:absolute;inset:10px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
 .logo-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0}
 .content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
@@ -140,7 +140,7 @@ body{padding:0}
 .sign-block{text-align:center}
 .sign-line{border-top:1.5px solid #1a2e5a;width:200px;margin-top:52px;padding-top:6px;font-weight:700;font-size:13px;color:#1a2e5a;font-family:'Inter',sans-serif;letter-spacing:0.5px}
 .sign-sub{font-size:11px;margin-top:3px;color:#666}
-@media print{html,body{width:210mm;height:297mm}.cert{border:2px solid #b8960c;width:210mm;min-height:297mm;padding:14mm 16mm}@page{margin:0;size:A4 portrait}}
+@media print{html,body{width:210mm;height:297mm}.cert{border:2px solid #b8960c;width:calc(210mm - 16mm);min-height:calc(297mm - 16mm);padding:12mm 14mm}@page{margin:8mm;size:A4 portrait}}
 `;
 
 function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus, attP, attT }) {
