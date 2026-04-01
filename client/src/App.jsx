@@ -6,7 +6,7 @@ import { buildCard, printCard, printClassCards, printTC, printCC, buildTC, build
 import {
   apiLogin, apiTeacherLogin, apiParentLogin, clearToken, getToken,
   getSessions, createSession, updateSession, deleteSession,
-  loadSessionData, saveSessionData, initShadow,
+  loadSessionData, saveSessionData, initShadow, saveSessionConfig,
   getAdmins, createAdmin, updateAdmin, removeAdmin,
   getMessages, sendMessage, updateMessage, deleteMessage,
 } from './storage';
@@ -227,6 +227,8 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
     if (!editName.trim() || !editYear.trim()) return;
     try {
       await updateSession(editId, editName.trim(), editYear.trim());
+      // Also update the session config so settings.year reflects the new year
+      await saveSessionConfig(editId, { settings: { year: editYear.trim(), reportAcademicYear: editYear.trim() } });
       if (onRefresh) onRefresh();
     } catch (err) { toast('Update failed: ' + err.message, 'err'); }
     cancelEdit();
