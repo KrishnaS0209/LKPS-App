@@ -114,7 +114,7 @@ const tcCSS = `
 html,body{width:210mm;min-height:297mm;background:#fff;font-family:'Inter',sans-serif}
 body{padding:0}
 .cert{width:210mm;min-height:297mm;margin:0 auto;padding:14mm 16mm 14mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
-.cert::before{content:'';position:absolute;inset:6px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
+.cert::before{content:'';position:absolute;inset:10px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
 .logo-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0}
 .content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
 .hdr{text-align:center;padding-bottom:12px;border-bottom:2px solid #b8960c;margin-bottom:10px}
