@@ -6845,7 +6845,12 @@ function Documents({ db, save }) {
                 {db.classes.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
               <label className="block text-sm text-on-surface-variant mb-1.5">Student *</label>
-              <select value={tcStu} onChange={e=>setTcStu(e.target.value)}
+              <select value={tcStu} onChange={e=>{
+                const id=e.target.value;
+                setTcStu(id);
+                const st=db.students.find(x=>x.id===id);
+                if(st?.ad) setTcAdmDt(st.ad);
+              }}
                 className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-on-surface text-sm">
                 <option value="">— Select Student —</option>
                 {db.students.filter(st=>!tcCls||st.cls===tcCls).map(st=><option key={st.id} value={st.id}>{st.fn} {st.ln} ({st.cls})</option>)}
