@@ -3541,64 +3541,7 @@ function Students({ db, save, setPage }) {
           <Field label="City"><Input value={form.cy||''} onChange={v=>setForm(f=>({...f,cy:v,city:v}))}/></Field>
           <Field label="PIN"><Input value={form.pin||''} onChange={v=>setForm(f=>({...f,pin:v}))}/></Field>
           <SecLabel>Fees</SecLabel>
-          <Field label="Monthly Fee ₹ *">
-            <Input type="number" value={form.mf||''} onChange={v=>{
-              const mf=parseFloat(v)||0;
-              const extrasSum=(form.fextras||[]).reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
-              setForm(f=>({...f,mf:v,fee:mf*12+extrasSum}));
-            }} placeholder="Monthly fee amount"/>
-          </Field>
-          <Field label="Annual Fee ₹ (auto)">
-            <div className="px-3 py-2 bg-surface-container rounded-lg text-sm font-bold text-primary">
-              ₹{((parseFloat(form.mf)||0)*12 + (form.fextras||[]).reduce((s,e)=>s+(parseFloat(e.amt)||0),0)).toLocaleString('en-IN')}
-              <span className="text-[10px] font-normal text-on-surface-variant ml-2">= ₹{(parseFloat(form.mf)||0).toLocaleString('en-IN')} × 12{(form.fextras||[]).length?' + extras':''}</span>
-            </div>
-          </Field>
-          <Span>
-            <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 mt-1">Other Charges (added to annual fee)</div>
-            {(form.fextras||[]).map((ex,i)=>{
-              const isEditing = form._editExIdx === i;
-              return (
-                <div key={i} className="flex items-center gap-2 mb-2">
-                  {isEditing ? (
-                    <>
-                      <input autoFocus value={form._editExLabel||''} onChange={e=>setForm(f=>({...f,_editExLabel:e.target.value}))}
-                        className="flex-1 px-3 py-2 bg-white border border-primary/30 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"/>
-                      <input type="number" value={form._editExAmt||''} onChange={e=>setForm(f=>({...f,_editExAmt:e.target.value}))}
-                        className="w-28 px-3 py-2 bg-white border border-primary/30 rounded-lg text-sm font-bold text-primary text-right focus:outline-none focus:ring-2 focus:ring-primary/20"/>
-                      <button type="button" onClick={()=>{
-                        if(!form._editExLabel?.trim()||!parseFloat(form._editExAmt)){toast('Enter name and amount','err');return;}
-                        const next=(form.fextras||[]).map((e,j)=>j===i?{label:form._editExLabel.trim(),amt:form._editExAmt}:e);
-                        const extrasSum=next.reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
-                        setForm(f=>({...f,fextras:next,fee:(parseFloat(f.mf)||0)*12+extrasSum,_editExIdx:null,_editExLabel:'',_editExAmt:''}));
-                      }} className="w-7 h-7 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center border-0 cursor-pointer hover:opacity-80 transition-all">✓</button>
-                      <button type="button" onClick={()=>setForm(f=>({...f,_editExIdx:null}))}
-                        className="w-7 h-7 rounded-lg bg-surface-container text-outline text-xs font-bold flex items-center justify-center border-0 cursor-pointer hover:bg-surface-container-high transition-all">✕</button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex-1 px-3 py-2 bg-surface-container-low rounded-lg text-sm text-on-surface">{ex.label}</div>
-                      <div className="w-28 px-3 py-2 bg-surface-container-low rounded-lg text-sm font-bold text-primary text-right">₹{(parseFloat(ex.amt)||0).toLocaleString('en-IN')}</div>
-                      <button type="button" onClick={()=>setForm(f=>({...f,_editExIdx:i,_editExLabel:ex.label,_editExAmt:String(ex.amt)}))}
-                        className="w-7 h-7 rounded-lg bg-surface-container text-primary text-xs font-bold flex items-center justify-center border-0 cursor-pointer hover:bg-primary-container transition-all">✎</button>
-                      <button type="button" onClick={()=>{
-                        const next=(form.fextras||[]).filter((_,j)=>j!==i);
-                        const extrasSum=next.reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
-                        setForm(f=>({...f,fextras:next,fee:(parseFloat(f.mf)||0)*12+extrasSum}));
-                      }} className="w-7 h-7 rounded-lg bg-error-container text-error text-xs font-bold flex items-center justify-center border-0 cursor-pointer hover:bg-error hover:text-white transition-all">✕</button>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-            <FeeExtraRow onAdd={(label,amt)=>{
-              const next=[...(form.fextras||[]),{label,amt}];
-              const extrasSum=next.reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
-              setForm(f=>({...f,fextras:next,fee:(parseFloat(f.mf)||0)*12+extrasSum}));
-            }}/>
-          </Span>
           <Field label="Fee Status"><Select value={form.fst||'Pending'} onChange={v=>setForm(f=>({...f,fst:v}))}><option>Pending</option><option>Paid</option><option>Overdue</option></Select></Field>
-          <Field label="Concession %"><Input type="number" value={form.co||''} onChange={v=>setForm(f=>({...f,co:v}))} placeholder="0"/></Field>
           <SecLabel>Medical</SecLabel>
           <Field label="Condition"><Input value={form.mc||''} onChange={v=>setForm(f=>({...f,mc:v}))} placeholder="Any known condition or None"/></Field>
           <Field label="Allergies"><Input value={form.al||''} onChange={v=>setForm(f=>({...f,al:v}))} placeholder="Any allergies or None"/></Field>
@@ -5913,6 +5856,7 @@ function Fees({ db, save }) {
   const [pyExtras, setPyExtras] = useState([]); // selected fextras indices
   const [pyNewExLabel, setPyNewExLabel] = useState('');
   const [pyNewExAmt, setPyNewExAmt] = useState('');
+  const [pyConcession, setPyConcession] = useState(''); // concession amount
   const [receipt, setReceipt] = useState(null);
   const [showRec, setShowRec] = useState(false);
   const [tab, setTab] = useState(0);
@@ -5945,6 +5889,9 @@ function Fees({ db, save }) {
   const piBal = piStu ? Math.max(0, piStu.fee - piStu._paid) : 0;
   const piPct = piStu && piStu.fee > 0 ? Math.min(100, Math.round(piStu._paid / piStu.fee * 100)) : 0;
   const extrasTotal = (piStu?.fextras||[]).filter((_,i)=>pyExtras.includes(i)).reduce((s,e)=>s+(parseFloat(e.amt)||0),0);
+  const concessionAmt = parseFloat(pyConcession) || 0;
+  const pyGrossAmt = (parseFloat(pyAmt) || 0) + extrasTotal;
+  const pyNetAmt = Math.max(0, pyGrossAmt - concessionAmt);
 
   // Months already paid by this student (from pays records)
   const ALL_MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
@@ -5953,8 +5900,8 @@ function Fees({ db, save }) {
 
   // Other charges defined on the student (fextras)
   const stuExtras = piStu?.fextras || [];
-  const pyTotalAmt = (parseFloat(pyAmt) || 0);
-  const pyPreview = piStu && ((parseFloat(pyAmt) || 0) > 0 || extrasTotal > 0) ? Math.max(0, piStu.fee - piStu._paid - (parseFloat(pyAmt) || 0) - extrasTotal) : null;
+  const pyTotalAmt = pyNetAmt;
+  const pyPreview = piStu && pyNetAmt > 0 ? Math.max(0, piStu.fee - piStu._paid - pyNetAmt) : null;
 
   // History tab computed
   const filteredPays = histStu ? [...db.pays].filter(p => p.sid === histStu).reverse() : [...db.pays].reverse();
@@ -5966,7 +5913,7 @@ function Fees({ db, save }) {
     const s = db.students.find(x => x.id === selStu); if (!s) return;
     const selectedCharges = (piStu?.fextras||[]).filter((_,i) => pyExtras.includes(i));
     const tuition = pyMn ? (parseFloat(pyAmt) || 0) : 0;
-    const total = tuition + extrasTotal;
+    const total = Math.max(0, tuition + extrasTotal - concessionAmt);
     if (total <= 0) { toast('Amount must be greater than 0', 'err'); return; }
     const pp = paidTotal(db.pays, selStu), bb = Math.max(0, s.fee - pp), ba = Math.max(0, bb - total);
     const rc = 'RCP-' + new Date().getFullYear() + '-' + String(db.pays.length + 1).padStart(4, '0');
@@ -5975,7 +5922,7 @@ function Fees({ db, save }) {
     const pay = { id: 'PAY' + uid(), dt: pyDt, sid: selStu, nm: s.fn + ' ' + s.ln, cls: s.cls, fee: s.fee, amt: total, totalAmt: total, tuition, extras: selectedCharges, md: pyMd, ref: pyRef, mn: mnLabel, ty: pyTy, note: pyNote, rc, bb, ba };
     save({ ...db, pays: [...db.pays, pay] });
     setReceipt({ pay, s }); setShowRec(true);
-    setPyAmt(''); setPyRef(''); setPyNote(''); setPyMn(''); setPyExtras([]);
+    setPyAmt(''); setPyRef(''); setPyNote(''); setPyMn(''); setPyExtras([]); setPyConcession('');
     toast('Recorded! ' + rc);
   };
 
@@ -6206,6 +6153,12 @@ function Fees({ db, save }) {
               </div>
             </div>
             <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Concession (₹)</label>
+              <input type="number" value={pyConcession} onChange={e=>setPyConcession(e.target.value)}
+                placeholder="0"
+                className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 focus:ring-2 focus:ring-white/30"/>
+            </div>
+            <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Payment Date</label>
               <input type="date" value={pyDt} onChange={e=>setPyDt(e.target.value)}
                 className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-white/30"/>
@@ -6223,10 +6176,16 @@ function Fees({ db, save }) {
                   <span className="font-bold text-emerald-300">₹{(parseFloat(ex.amt)||0).toLocaleString('en-IN')}</span>
                 </div>
               ))}
-              {(parseFloat(pyAmt) > 0 || extrasTotal > 0) ? (
+              {concessionAmt > 0 && (
+                <div className="flex justify-between text-sm text-on-primary-container">
+                  <span>Concession</span>
+                  <span className="font-bold text-yellow-300">- ₹{concessionAmt.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              {pyNetAmt > 0 ? (
                 <div className="flex justify-between text-base pt-2" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
                   <span className="font-extrabold text-white uppercase tracking-wide">Total</span>
-                  <span className="font-extrabold text-white text-lg">₹{((parseFloat(pyAmt)||0)+extrasTotal).toLocaleString('en-IN')}</span>
+                  <span className="font-extrabold text-white text-lg">₹{pyNetAmt.toLocaleString('en-IN')}</span>
                 </div>
               ) : (
                 <p className="text-[11px] text-on-primary-container text-center py-2">Select month or charges to see total</p>
