@@ -97,13 +97,12 @@ export function printClassCards(students, photos, logo, phone, year, prin, theme
 
 // ── Certificate header (used by CC) ──────────────────────────────
 const certHeader = (school, addr, phone, logo) => {
-  const logoImg = logo ? `<img src="${logo}" style="width:64px;height:64px;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 1px 4px rgba(0,0,0,.15));">` : `<span style="font-size:40px;margin-bottom:8px;display:block;">🏫</span>`;
-  return `<div style="text-align:center;border-bottom:1.5px solid #c8a96e;padding-bottom:14px;margin-bottom:18px;">
+  const logoImg = logo ? `<img src="${logo}" style="width:90px;height:90px;object-fit:contain;margin-bottom:10px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.18));">` : `<span style="font-size:56px;margin-bottom:10px;display:block;">🏫</span>`;
+  return `<div style="text-align:center;border-bottom:2px solid #b8960c;padding-bottom:14px;margin-bottom:18px;">
     ${logoImg}
-    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1a2e5a;letter-spacing:0.3px;">${school}</div>
-    <div style="font-family:'Inter',sans-serif;font-size:11px;color:#777;margin-top:3px;">(Govt. Recognised)</div>
-    <div style="font-family:'Inter',sans-serif;font-size:11px;color:#666;margin-top:2px;">${addr}</div>
-    ${phone ? `<div style="font-family:'Inter',sans-serif;font-size:11px;color:#666;">Ph.: ${phone}</div>` : ''}
+    <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:#1a2e5a;letter-spacing:0.8px;text-transform:uppercase;">${school}</div>
+    <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:#555;margin-top:4px;">(Govt. Recognised)</div>
+    <div style="font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;color:#333;margin-top:3px;">${addr}${phone ? '  ·  Ph.: ' + phone : ''}</div>
   </div>`;
 };
 
@@ -283,7 +282,6 @@ function ccBody(s, logo, sets, { ccNo, dt, conduct, purpose, remarks, attP, attT
       <p>This certificate is issued for <b>${purpose}</b> as per the request of the student/parent. We wish the student all the best in future endeavours.</p>
     </div>
     <div class="seal">
-      <div style="text-align:center;"><div class="seal-circle">SCHOOL<br>SEAL</div></div>
       <div class="slk"><div class="sll">Class Teacher</div></div>
       <div class="slk">
         <div style="font-size:14px;font-style:italic;color:#1a2e5a;margin-bottom:3px;font-family:'Playfair Display',serif;">${sets.prin || ''}</div>
