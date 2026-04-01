@@ -6663,11 +6663,20 @@ function Documents({ db, save }) {
   const [ccAttP, setCcAttP] = useState(''); const [ccAttT, setCcAttT] = useState('');
   const ccAttPct = ccAttT > 0 ? Math.round((parseInt(ccAttP)||0) / parseInt(ccAttT) * 100) : 0;
 
+  const genNextNo = (type) => {
+    const year = new Date().getFullYear();
+    const prefix = type === 'tc' ? 'TC' : 'CC';
+    const existing = (db.certRegistry || []).filter(r => r.type === type && r.no?.startsWith(`${prefix}-${year}`));
+    const nums = existing.map(r => parseInt(r.no?.split('-').pop()) || 0);
+    const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+    return `${prefix}-${year}-${String(next).padStart(3,'0')}`;
+  };
+
   const doTC = () => {
     if(!tcStu){toast('Select student','err');return;}
     const st=db.students.find(x=>x.id===tcStu);if(!st)return;
     const{p,t}=getAtt(tcStu);
-    const no = tcNo||'TC-'+uid();
+    const no = tcNo || genNextNo('tc');
     const record = {
       id:'TC'+uid(), type:'tc', no, dt:new Date(tcDt).toLocaleDateString('en-IN'),
       stuId:st.id, name:st.fn+(st.ln?' '+st.ln:''), cls:st.cls, roll:st.roll||'',
@@ -6682,7 +6691,7 @@ function Documents({ db, save }) {
     const st=db.students.find(x=>x.id===ccStu);if(!st)return;
     const attP = ccAttP ? parseInt(ccAttP) : 0;
     const attT = ccAttT ? parseInt(ccAttT) : 0;
-    const no = ccNo||'CC-'+uid();
+    const no = ccNo || genNextNo('cc');
     const record = {
       id:'CC'+uid(), type:'cc', no, dt:new Date(ccDt).toLocaleDateString('en-IN'),
       stuId:st.id, name:st.fn+(st.ln?' '+st.ln:''), cls:st.cls, roll:st.roll||'',
@@ -6878,8 +6887,8 @@ function Documents({ db, save }) {
                   className="w-full p-3 bg-surface-container-low rounded-xl border-none text-sm text-primary font-semibold cursor-default"/>
               </div>
               <div>
-                <label className="block text-sm text-on-surface-variant mb-1.5">TC Number</label>
-                <input value={tcNo} onChange={e=>setTcNo(e.target.value)} placeholder="TC-2025-001"
+                <label className="block text-sm text-on-surface-variant mb-1.5">TC Number <span style={{fontSize:10,color:'#94a3b8'}}>(auto-generated if blank)</span></label>
+                <input value={tcNo} onChange={e=>setTcNo(e.target.value)} placeholder={genNextNo('tc')}
                   className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
               </div>
               <div>
@@ -6970,8 +6979,8 @@ function Documents({ db, save }) {
             ):null;})()}
             <div className="documents-two-grid grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-on-surface-variant mb-1.5">CC Number</label>
-                <input value={ccNo} onChange={e=>setCcNo(e.target.value)} placeholder="CC-2025-001"
+                <label className="block text-sm text-on-surface-variant mb-1.5">CC Number <span style={{fontSize:10,color:'#94a3b8'}}>(auto-generated if blank)</span></label>
+                <input value={ccNo} onChange={e=>setCcNo(e.target.value)} placeholder={genNextNo('cc')}
                   className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
               </div>
               <div>
