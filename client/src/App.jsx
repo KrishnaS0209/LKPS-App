@@ -3540,7 +3540,6 @@ function Students({ db, save, setPage }) {
           <Span><Field label="Address"><Input value={form.addr||''} onChange={v=>setForm(f=>({...f,addr:v}))}/></Field></Span>
           <Field label="City"><Input value={form.cy||''} onChange={v=>setForm(f=>({...f,cy:v,city:v}))}/></Field>
           <Field label="PIN"><Input value={form.pin||''} onChange={v=>setForm(f=>({...f,pin:v}))}/></Field>
-          <SecLabel>Fees</SecLabel>
           <SecLabel>Medical</SecLabel>
           <Field label="Condition"><Input value={form.mc||''} onChange={v=>setForm(f=>({...f,mc:v}))} placeholder="Any known condition or None"/></Field>
           <Field label="Allergies"><Input value={form.al||''} onChange={v=>setForm(f=>({...f,al:v}))} placeholder="Any allergies or None"/></Field>
