@@ -31,6 +31,10 @@ export default function App() {
     const savedUser = (() => { try { return JSON.parse(localStorage.getItem('lkps_user')); } catch { return null; } })();
     const savedSessId = localStorage.getItem('lkps_active_session');
     if (token && savedUser && savedSessId) {
+      // Restore photo from separate storage if needed
+      if (savedUser.pic === '__stored__') {
+        savedUser.pic = localStorage.getItem('lkps_user_pic') || '';
+      }
       const role = savedUser.role === 'teacher' ? 'teacher' : savedUser.role === 'parent' ? 'parent' : 'admin';
       setSession({ user: savedUser, role });
       setActiveSessionId(savedSessId);
@@ -58,13 +62,20 @@ export default function App() {
   const handleLogin = (authSession, sessId) => {
     setSession(authSession);
     setActiveSessionId(sessId);
-    localStorage.setItem('lkps_user', JSON.stringify(authSession.user));
+    const u = authSession.user;
+    try {
+      if (u.pic) localStorage.setItem('lkps_user_pic', u.pic);
+      localStorage.setItem('lkps_user', JSON.stringify({...u, pic: u.pic ? '__stored__' : ''}));
+    } catch(e) {
+      localStorage.setItem('lkps_user', JSON.stringify({...u, pic: ''}));
+    }
     localStorage.setItem('lkps_active_session', sessId);
   };
 
   const handleLogout = () => {
     clearToken();
     localStorage.removeItem('lkps_user');
+    localStorage.removeItem('lkps_user_pic');
     localStorage.removeItem('lkps_active_session');
     setSession(null);
     setActiveSessionId(null);
@@ -80,7 +91,17 @@ export default function App() {
   if (session.role === 'teacher') return <TeacherPortal db={db} save={save} teacher={session.user} onLogout={handleLogout} />;
   if (session.role === 'parent') return <ParentPortal db={db} student={session.user} activeSessionId={activeSessionId} onLogout={handleLogout} />;
   return <AdminApp db={db} save={save} page={page} setPage={setPage} user={session.user}
-    setUser={u => { setSession(s => ({...s, user: u})); localStorage.setItem('lkps_user', JSON.stringify(u)); }}
+    setUser={u => {
+      setSession(s => ({...s, user: u}));
+      try {
+        // Store photo separately to avoid localStorage size issues
+        if (u.pic) localStorage.setItem('lkps_user_pic', u.pic);
+        localStorage.setItem('lkps_user', JSON.stringify({...u, pic: u.pic ? '__stored__' : ''}));
+      } catch(e) {
+        // If storage fails (quota), store without photo
+        localStorage.setItem('lkps_user', JSON.stringify({...u, pic: ''}));
+      }
+    }}
     activeSessionId={activeSessionId}
     onSwitchSession={() => { setActiveSessionId(null); localStorage.removeItem('lkps_active_session'); }}
     onLogout={handleLogout} />;
