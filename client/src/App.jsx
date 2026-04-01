@@ -1746,8 +1746,11 @@ function NotificationBell({ db, setPage }) {
 
     // Fee overdue — students with pending balance
     const overdue = (db.students||[]).filter(s => {
+      const cf = (db.settings?.classFees || {})[s.cls] || {};
+      const monthly = parseFloat(cf.monthly) || 0;
+      const annualFee = monthly > 0 ? monthly * 12 + (parseFloat(cf.book) || 0) : 0;
       const paid = (db.pays||[]).filter(p=>p.sid===s.id).reduce((a,p)=>a+p.amt,0);
-      return paid < (s.fee||0);
+      return annualFee > 0 && paid < annualFee;
     });
     if (overdue.length > 0) list.push({
       id:'fee', icon:'payments', color:'#ef4444', bg:'#fee2e2',
@@ -2379,21 +2382,29 @@ function Reveal({ children, delay = 0, dir = 'up' }) {
 }
 
 function Dashboard({ db, save, setPage }) {
+  const classFeeMap = db.settings?.classFees || {};
+  const getAnnualFee = (s) => {
+    const cf = classFeeMap[s.cls] || {};
+    const monthly = parseFloat(cf.monthly) || 0;
+    const book = parseFloat(cf.book) || 0;
+    return monthly > 0 ? monthly * 12 + book : 0;
+  };
   const col = db.pays.reduce((s, p) => s + p.amt, 0);
-  const totalFee = db.students.reduce((s, x) => s + (x.fee || 0), 0);
+  const totalFee = db.students.reduce((s, x) => s + getAnnualFee(x), 0);
   const pen = db.students.reduce((s, x) => {
+    const annualFee = getAnnualFee(x);
     const paid = paidTotal(db.pays, x.id);
-    const bal = Math.max(0, (x.fee || 0) - paid);
-    return s + bal;
+    return s + Math.max(0, annualFee - paid);
   }, 0);
   const penStu = db.students.filter(s => {
+    const annualFee = getAnnualFee(s);
     const paid = paidTotal(db.pays, s.id);
-    return paid < (s.fee || 0);
+    return annualFee > 0 && paid < annualFee;
   }).slice(0, 5);
   const colPct = totalFee > 0 ? Math.round(col / totalFee * 100) : 0;
 
   // Extra computed data
-  const fullyPaid = db.students.filter(s => paidTotal(db.pays, s.id) >= s.fee && s.fee > 0).length;
+  const fullyPaid = db.students.filter(s => paidTotal(db.pays, s.id) >= getAnnualFee(s) && getAnnualFee(s) > 0).length;
   const totalStudents = db.students.length;
   const upcomingExams = db.exams.filter(e => e.st === 'Upcoming');
 
@@ -3032,8 +3043,11 @@ function Students({ db, save, setPage }) {
 
   // Real-time outstanding from actual payments
   const outstanding = db.students.reduce((sum, s) => {
+    const cf = (db.settings?.classFees || {})[s.cls] || {};
+    const monthly = parseFloat(cf.monthly) || 0;
+    const annualFee = monthly > 0 ? monthly * 12 + (parseFloat(cf.book) || 0) : 0;
     const paid = paidTotal(db.pays, s.id);
-    return sum + Math.max(0, (s.fee || 0) - paid);
+    return sum + Math.max(0, annualFee - paid);
   }, 0);
 
   const feeStatusCls = (fst) => {
