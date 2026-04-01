@@ -199,7 +199,6 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${row("Mother's Name", s.mother)}
       ${row('Address', stuAddr)}
       ${row('Date of Admission', admDt)}
-      ${row('Last Date of Attendance', ld)}
       ${row('Class', s.cls)}
       ${row('Roll No.', s.roll)}
       ${row('Admission No.', s.admno)}

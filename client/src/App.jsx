@@ -2968,7 +2968,7 @@ function Students({ db, save, setPage }) {
   const openAdd = () => { setForm({fn:'',ln:'',cls:'',fst:'Pending',mf:0,fextras:[],gn:'Male'}); setPhoto(null); setEditId(null); setOpen(true); };
   const openEdit = (s) => { setForm({...s}); setPhoto(db.photos[s.id]||null); setEditId(s.id); setOpen(true); };
   const saveStu = () => {
-    if (!form.fn?.trim() || !form.ln?.trim()) { toast('Name required', 'err'); return; }
+    if (!form.fn?.trim()) { toast('First name required', 'err'); return; }
     const id = editId || 'S' + uid();
     const mf = parseFloat(form.mf) || 0;
     const fextras = form.fextras || [];
@@ -3470,7 +3470,7 @@ function Students({ db, save, setPage }) {
         <Grid cols={2}>
           <SecLabel>Personal</SecLabel>
           <Field label="First Name *"><Input value={form.fn||''} onChange={v=>setForm(f=>({...f,fn:v}))} placeholder="Enter first name"/></Field>
-          <Field label="Last Name *"><Input value={form.ln||''} onChange={v=>setForm(f=>({...f,ln:v}))} placeholder="Enter last name"/></Field>
+          <Field label="Last Name"><Input value={form.ln||''} onChange={v=>setForm(f=>({...f,ln:v}))} placeholder="Enter last name"/></Field>
           <Field label="Date of Birth"><Input type="date" value={form.dob||''} onChange={v=>setForm(f=>({...f,dob:v}))}/></Field>
           <Field label="Gender"><Select value={form.gn||'Male'} onChange={v=>setForm(f=>({...f,gn:v}))}><option>Male</option><option>Female</option><option>Other</option></Select></Field>
           <Field label="Blood Group"><Select value={form.bl||''} onChange={v=>setForm(f=>({...f,bl:v,blood:v}))}><option value="">—</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b=><option key={b}>{b}</option>)}</Select></Field>
@@ -6795,11 +6795,6 @@ function Documents({ db, save }) {
               <div>
                 <label className="block text-sm text-on-surface-variant mb-1.5">Date of Admission</label>
                 <input type="date" value={tcAdmDt} onChange={e=>setTcAdmDt(e.target.value)}
-                  className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
-              </div>
-              <div>
-                <label className="block text-sm text-on-surface-variant mb-1.5">Last Date of Attendance</label>
-                <input type="date" value={tcLd} onChange={e=>setTcLd(e.target.value)}
                   className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
               </div>
               <div>
