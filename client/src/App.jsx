@@ -6584,6 +6584,8 @@ function Documents({ db, save }) {
   const [tcFe, setTcFe] = useState('All Dues Cleared');
   // CC state
   const [ccStu, setCcStu] = useState(''); const [ccNo, setCcNo] = useState(''); const [ccDt, setCcDt] = useState(new Date().toISOString().split('T')[0]); const [ccCo, setCcCo] = useState('Good'); const [ccPu, setCcPu] = useState('General Purpose'); const [ccRm, setCcRm] = useState('');
+  const [ccAttP, setCcAttP] = useState(''); const [ccAttT, setCcAttT] = useState('');
+  const ccAttPct = ccAttT > 0 ? Math.round((parseInt(ccAttP)||0) / parseInt(ccAttT) * 100) : 0;
 
   const doTC = () => {
     if(!tcStu){toast('Select student','err');return;}
@@ -6595,8 +6597,9 @@ function Documents({ db, save }) {
   const doCC = () => {
     if(!ccStu){toast('Select student','err');return;}
     const st=db.students.find(x=>x.id===ccStu);if(!st)return;
-    const{p,t}=getAtt(ccStu);
-    printCC(st,logo,db.settings,{ccNo:ccNo||'CC-'+uid(),dt:new Date(ccDt).toLocaleDateString('en-IN'),conduct:ccCo,purpose:ccPu,remarks:ccRm,attP:p,attT:t});
+    const attP = ccAttP ? parseInt(ccAttP) : 0;
+    const attT = ccAttT ? parseInt(ccAttT) : 0;
+    printCC(st,logo,db.settings,{ccNo:ccNo||'CC-'+uid(),dt:new Date(ccDt).toLocaleDateString('en-IN'),conduct:ccCo,purpose:ccPu,remarks:ccRm,attP,attT});
     toast('CC Generated');
   };
 
@@ -6895,6 +6898,24 @@ function Documents({ db, save }) {
                 </select>
               </div>
             </div>
+            {/* Attendance - manual entry */}
+            <div>
+              <label className="block text-sm text-on-surface-variant mb-1.5">Attendance</label>
+              <div className="flex gap-3 items-center">
+                <div className="flex-1">
+                  <input type="number" value={ccAttP} onChange={e=>setCcAttP(e.target.value)} placeholder="Days attended"
+                    className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
+                </div>
+                <span className="text-on-surface-variant font-medium">out of</span>
+                <div className="flex-1">
+                  <input type="number" value={ccAttT} onChange={e=>setCcAttT(e.target.value)} placeholder="Total working days"
+                    className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm text-on-surface"/>
+                </div>
+                {ccAttT > 0 && (
+                  <span className="text-primary font-bold text-sm whitespace-nowrap">{ccAttPct}%</span>
+                )}
+              </div>
+            </div>
             <div>
               <label className="block text-sm text-on-surface-variant mb-1.5">Remarks</label>
               <input value={ccRm} onChange={e=>setCcRm(e.target.value)} placeholder="e.g. Active in sports and cultural activities"
@@ -6917,7 +6938,8 @@ function Documents({ db, save }) {
                 ccNo: ccNo||'CC-2025-001',
                 dt: new Date(ccDt).toLocaleDateString('en-IN'),
                 conduct: ccCo, purpose: ccPu, remarks: ccRm,
-                attP: attPv, attT: attTv,
+                attP: ccAttP ? parseInt(ccAttP) : 0,
+                attT: ccAttT ? parseInt(ccAttT) : 0,
               });
               const srcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:#fff;}</style></head>${html}</html>`;
               return <DocPreview srcDoc={srcDoc} docW={820} docH={960}/>;

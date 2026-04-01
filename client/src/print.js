@@ -238,43 +238,46 @@ export function printTC(s, logo, sets, opts) {
 
 // ── Character Certificate ─────────────────────────────────────────
 const ccCSS = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#fff;padding:20px}
-.cert{background:#fff;max-width:700px;margin:0 auto;padding:36px 48px 40px;border:1.5px solid #c8a96e;position:relative;overflow:hidden}
-.cert::before{content:'';position:absolute;inset:5px;border:0.5px solid #e8d5a8;pointer-events:none;z-index:0}
-.inner{position:relative;z-index:1}
-.ttl{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#1a2e5a;text-align:center;margin:14px 0 4px;letter-spacing:1.5px;text-transform:uppercase}
-.ttl-line{width:60px;height:2px;background:#c8a96e;margin:0 auto 16px}
-.no{text-align:right;font-size:11.5px;color:#777;margin-bottom:18px;font-weight:400}
-.no b{color:#1a2e5a;font-weight:600}
-.body{font-size:13.5px;line-height:2;color:#2a2a3a;text-align:justify;font-weight:400}
-.body b{color:#1a2e5a;font-weight:600}
-.seal{display:flex;justify-content:space-between;align-items:flex-end;margin-top:36px}
-.slk{text-align:center;min-width:150px}
-.sll{font-size:12px;font-weight:600;color:#1a2e5a;margin-top:40px;border-top:1.5px solid #1a2e5a;padding-top:5px;font-family:'Inter',sans-serif;letter-spacing:0.5px}
-.seal-circle{width:72px;height:72px;border:1.5px dashed #c8a96e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#c8a96e;font-weight:600;text-align:center;padding:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px;opacity:0.35}
-.foot-note{text-align:center;margin-top:16px;font-size:10.5px;color:#bbb;border-top:1px solid #f0ebe0;padding-top:8px;font-family:'Inter',sans-serif}
-@media print{body{background:#fff;padding:0}.cert{box-shadow:none;border:1.5px solid #c8a96e;max-width:100%}@page{margin:8mm;size:A4}}
+html,body{width:210mm;min-height:297mm;background:#fff;font-family:'Inter',sans-serif}
+body{padding:5mm}
+.cert{width:calc(210mm - 10mm);min-height:calc(297mm - 10mm);margin:0 auto;padding:10mm 12mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
+.cert::before{content:'';position:absolute;inset:10px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
+.inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+.ttl{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1a2e5a;text-align:center;margin:14px 0 4px;letter-spacing:2px;text-transform:uppercase}
+.ttl-line{width:60px;height:2px;background:#b8960c;margin:0 auto 16px}
+.no{text-align:right;font-size:13px;color:#555;margin-bottom:20px;font-weight:400}
+.no b{color:#1a2e5a;font-weight:700}
+.body{font-size:14.5px;line-height:2.1;color:#2a2a3a;text-align:justify;font-weight:400;flex:1}
+.body b{color:#1a2e5a;font-weight:700}
+.seal{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:20px}
+.slk{text-align:center;min-width:160px}
+.sll{font-size:13px;font-weight:700;color:#1a2e5a;margin-top:52px;border-top:1.5px solid #1a2e5a;padding-top:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px}
+.seal-circle{width:80px;height:80px;border:1.5px dashed #b8960c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#b8960c;font-weight:600;text-align:center;padding:6px;font-family:'Inter',sans-serif;letter-spacing:0.5px;opacity:0.4}
+@media print{html,body{width:210mm;height:297mm}.cert{border:2px solid #b8960c;width:calc(210mm - 10mm);min-height:calc(297mm - 10mm);padding:10mm 12mm}@page{margin:5mm;size:A4 portrait}}
 `;
 
 function ccBody(s, logo, sets, { ccNo, dt, conduct, purpose, remarks, attP, attT }) {
   const school  = sets.school || 'LORD KRISHNA PUBLIC SCHOOL';
+  const addr    = sets.addr || 'Ishapur, Laxminagar, Mathura';
+  const phone   = sets.phone || '';
   const attPct  = attT > 0 ? Math.round(attP / attT * 100) : 0;
+  const attStr  = attT > 0 ? `<b>${attP}</b> days out of <b>${attT}</b> working days (<b>${attPct}%</b>)` : '—';
   const sonDaughter = s.gn === 'Female' ? 'Daughter' : 'Son';
   const conductMap = { Good: 'good character and conduct', 'Very Good': 'very good character and conduct', Excellent: 'excellent character and conduct', Satisfactory: 'satisfactory conduct' };
-  const certWm = logo ? `<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;object-fit:contain;opacity:0.05;pointer-events:none;z-index:0;">` : '';
+  const certWm = logo ? `<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0;">` : '';
   return `<div class="cert">
   ${certWm}
   <div class="inner">
-    ${certHeader(school, sets.addr || '', sets.phone || '', logo)}
+    ${certHeader(school, addr, phone, logo)}
     <div class="ttl">Character Certificate</div>
     <div class="ttl-line"></div>
-    <div class="no"><b>Cert. No.:</b> ${ccNo || '—'} &nbsp;&nbsp; <b>Date:</b> ${dt}</div>
+    <div class="no"><b>Cert. No.:</b> ${ccNo || '—'} &nbsp;&nbsp;&nbsp; <b>Date:</b> ${dt}</div>
     <div class="body">
-      <p>This is to certify that <b>${s.fn} ${s.ln}</b>, ${sonDaughter} of <b>${s.father || '—'}</b>, was a bonafide student of <b>${school}</b> during the academic year <b>${sets.year || '—'}</b>.</p>
+      <p>This is to certify that <b>${s.fn}${s.ln?' '+s.ln:''}</b>, ${sonDaughter} of <b>${s.father || '—'}</b>, was a bonafide student of <b>${school}</b> during the academic year <b>${sets.year || '—'}</b>.</p>
       <br>
-      <p>During the period of study in Class <b>${s.cls || '—'}</b>, the student has shown <b>${conductMap[conduct] || 'good character and conduct'}</b>. Attendance recorded was <b>${attPct}%</b>. The student has been regular and disciplined throughout the academic session.</p>
+      <p>During the period of study in Class <b>${s.cls || '—'}</b>, the student has shown <b>${conductMap[conduct] || 'good character and conduct'}</b>. The student attended school for ${attStr}. The student has been regular and disciplined throughout the academic session.</p>
       ${remarks ? `<br><p>${remarks}</p>` : ''}
       <br>
       <p>This certificate is issued for <b>${purpose}</b> as per the request of the student/parent. We wish the student all the best in future endeavours.</p>
@@ -283,11 +286,10 @@ function ccBody(s, logo, sets, { ccNo, dt, conduct, purpose, remarks, attP, attT
       <div style="text-align:center;"><div class="seal-circle">SCHOOL<br>SEAL</div></div>
       <div class="slk"><div class="sll">Class Teacher</div></div>
       <div class="slk">
-        <div style="font-size:13px;font-style:italic;color:#1a2e5a;margin-bottom:3px;font-family:'Playfair Display',serif;">${sets.prin || ''}</div>
-        <div class="sll">Principal</div>
+        <div style="font-size:14px;font-style:italic;color:#1a2e5a;margin-bottom:3px;font-family:'Playfair Display',serif;">${sets.prin || ''}</div>
+        <div class="sll">Principal / Head Master</div>
       </div>
     </div>
-    <div class="foot-note">Generated: ${new Date().toLocaleDateString('en-IN')} &nbsp;·&nbsp; ${sets.year || ''}</div>
   </div>
 </div>`;
 }
@@ -297,7 +299,7 @@ export function buildCC(s, logo, sets, opts) {
 }
 
 export function printCC(s, logo, sets, opts) {
-  const w = window.open('', '_blank', 'width=820,height=960');
-  w.document.write(`<!DOCTYPE html><html><head><title>CC - ${s.fn} ${s.ln}</title><style>${ccCSS}</style></head><body>${ccBody(s, logo, sets, opts)}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  const w = window.open('', '_blank', 'width=820,height=1100');
+  w.document.write(`<!DOCTYPE html><html><head><title>Character Certificate</title><style>${ccCSS}</style></head><body>${ccBody(s, logo, sets, opts)}<script>window.onload=()=>window.print()<\/script></body></html>`);
   w.document.close();
 }
