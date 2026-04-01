@@ -7714,7 +7714,10 @@ function Settings({ db, save, user, setUser }) {
       });
       const admins = await getAdmins();
       save({...db, admins});
-      if(editForm.username === user.username) setUser({...user, ...updated, pic: updated.photo});
+      if(editForm.username === user.username) {
+        const updatedUser = {...user, name: editForm.name, role: editForm.role, pic: editForm.pic || editForm.photo || user.pic || ''};
+        setUser(updatedUser);
+      }
       setEditOpen(false); toast('Profile updated');
     } catch(err) { toast(err.message,'err'); }
   };
