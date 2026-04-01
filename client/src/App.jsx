@@ -5919,6 +5919,26 @@ function Fees({ db, save }) {
   const [ledStu, setLedStu] = useState('');
   const [histStu, setHistStu] = useState('');
 
+  // ── Class Fee Structure ──────────────────────────────────────────
+  const classFeeMap = db.settings?.classFees || {}; // { className: { monthly, book } }
+  const saveClassFee = (cls, field, val) => {
+    const updated = { ...classFeeMap, [cls]: { ...(classFeeMap[cls]||{}), [field]: parseFloat(val)||0 } };
+    save({ ...db, settings: { ...db.settings, classFees: updated } });
+  };
+
+  // Auto-fill amount when student selected
+  const handleSelectStudent = (stuId) => {
+    setSelStu(stuId);
+    setPyExtras([]); setPyNewExLabel(''); setPyNewExAmt('');
+    if (stuId) {
+      const st = db.students.find(x => x.id === stuId);
+      if (st) {
+        const cf = classFeeMap[st.cls];
+        if (cf?.monthly) setPyAmt(String(cf.monthly));
+      }
+    }
+  };
+
   const classes = [...new Set(db.students.map(s => s.cls))].sort();
   const classStudents = selClass ? feeRows.filter(s => s.cls === selClass) : [];
   const piStu = feeRows.find(s => s.id === selStu);
@@ -6028,7 +6048,7 @@ function Fees({ db, save }) {
             {selClass && (
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Step 2 — Select Student</label>
-                <select value={selStu} onChange={e=>{setSelStu(e.target.value);setPyExtras([]);setPyNewExLabel('');setPyNewExAmt('');}}
+                <select value={selStu} onChange={e=>{handleSelectStudent(e.target.value);}}
                   className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-white/30 appearance-none">
                   <option value="" className="text-primary">— Student —</option>
                   {classStudents.map(s=><option key={s.id} value={s.id} className="text-primary">{s.fn} {s.ln} (Roll: {s.roll})</option>)}
@@ -6225,10 +6245,10 @@ function Fees({ db, save }) {
         </div>
       </div>
 
-      {/* Tabs: Overdue / History / Ledger */}
+      {/* Tabs: Overdue / History / Ledger / Fee Structure */}
       <div>
         <div className="finance-tabs flex gap-1 mb-4 bg-surface-container-low rounded-xl p-1 w-fit">
-          {['Overdue Accounts','Payment History','Student Ledger'].map((t,i)=>(
+          {['Overdue Accounts','Payment History','Student Ledger','Fee Structure'].map((t,i)=>(
             <button key={t} onClick={()=>setTab(i)}
               className={'px-4 py-2 rounded-lg text-xs font-bold transition-all '+(tab===i?'bg-white text-primary shadow-sm':'text-on-surface-variant hover:text-primary')}>
               {t}
@@ -6472,6 +6492,66 @@ function Fees({ db, save }) {
           </div>
         )}
       </div>
+
+      {/* Fee Structure Tab */}
+      {tab === 3 && (
+        <div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <div>
+              <div style={{fontSize:18,fontWeight:800,color:'#1e293b'}}>Class-wise Fee Structure</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Set monthly fee and book fee per class. These auto-fill when collecting fee.</div>
+            </div>
+          </div>
+          {db.classes.length === 0 ? (
+            <div style={{textAlign:'center',padding:60,color:'#94a3b8',background:'#fff',borderRadius:16,border:'1px solid #e8edf5'}}>
+              <span className="material-symbols-outlined" style={{fontSize:48,display:'block',marginBottom:12}}>class</span>
+              <div style={{fontSize:14,fontWeight:600}}>No classes added yet</div>
+            </div>
+          ) : (
+            <div style={{background:'#fff',borderRadius:16,border:'1px solid #e8edf5',overflow:'hidden'}}>
+              <table style={{width:'100%',borderCollapse:'collapse'}}>
+                <thead>
+                  <tr style={{background:'#1960a3'}}>
+                    {['Class','Monthly Fee (₹)','Book Fee (₹)','Total Annual (₹)'].map(h=>(
+                      <th key={h} style={{padding:'12px 20px',textAlign:'left',fontSize:11,fontWeight:700,color:'#fff',letterSpacing:'0.04em'}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {db.classes.map((cls, i) => {
+                    const cf = classFeeMap[cls.name] || {};
+                    const monthly = cf.monthly || 0;
+                    const book = cf.book || 0;
+                    const annual = monthly * 12 + book;
+                    return (
+                      <tr key={cls.id} style={{borderBottom:'1px solid #f1f5f9',background:i%2===0?'#fff':'#fafbfc'}}>
+                        <td style={{padding:'14px 20px',fontWeight:700,color:'#1e293b',fontSize:14}}>{cls.name}</td>
+                        <td style={{padding:'10px 20px'}}>
+                          <input type="number" value={cf.monthly||''} onChange={e=>saveClassFee(cls.name,'monthly',e.target.value)}
+                            placeholder="0"
+                            style={{width:120,padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',fontWeight:600}}
+                            onFocus={e=>e.target.style.borderColor='#1960a3'}
+                            onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                        </td>
+                        <td style={{padding:'10px 20px'}}>
+                          <input type="number" value={cf.book||''} onChange={e=>saveClassFee(cls.name,'book',e.target.value)}
+                            placeholder="0"
+                            style={{width:120,padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,outline:'none',fontWeight:600}}
+                            onFocus={e=>e.target.style.borderColor='#1960a3'}
+                            onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                        </td>
+                        <td style={{padding:'14px 20px',fontWeight:700,color:'#1960a3',fontSize:14}}>
+                          {annual > 0 ? `₹${annual.toLocaleString('en-IN')}` : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Receipt Modal */}
       {receipt && <Modal open={showRec} onClose={()=>setShowRec(false)} title="Receipt">
