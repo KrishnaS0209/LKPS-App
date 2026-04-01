@@ -6572,6 +6572,7 @@ function Documents({ db, save }) {
   // TC state — only fields NOT in student directory
   const [tcStu, setTcStu] = useState('');
   const [tcNo, setTcNo] = useState('');
+  const [tcCls, setTcCls] = useState('');
   const [tcDt, setTcDt] = useState(new Date().toISOString().split('T')[0]);
   const [tcAdmDt, setTcAdmDt] = useState(''); // admission date — not stored on student
   const [tcLd, setTcLd] = useState('');        // last date of attendance
@@ -6732,11 +6733,17 @@ function Documents({ db, save }) {
 
             {/* Student selector */}
             <div>
+              <label className="block text-sm text-on-surface-variant mb-1.5">Filter by Class</label>
+              <select value={tcCls||''} onChange={e=>{setTcCls(e.target.value);setTcStu('');}}
+                className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-on-surface text-sm mb-3">
+                <option value="">— All Classes —</option>
+                {db.classes.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
               <label className="block text-sm text-on-surface-variant mb-1.5">Student *</label>
               <select value={tcStu} onChange={e=>setTcStu(e.target.value)}
                 className="w-full p-3 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-on-surface text-sm">
                 <option value="">— Select Student —</option>
-                {db.students.map(st=><option key={st.id} value={st.id}>{st.fn} {st.ln} ({st.cls})</option>)}
+                {db.students.filter(st=>!tcCls||st.cls===tcCls).map(st=><option key={st.id} value={st.id}>{st.fn} {st.ln} ({st.cls})</option>)}
               </select>
             </div>
 
