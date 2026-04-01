@@ -5817,24 +5817,51 @@ function Exams({ db, save }) {
 
 function Fees({ db, save }) {
   // ── Smart overdue logic ──────────────────────────────────────────
-  // Academic year starts April. Month index: Apr=0, May=1, ... Mar=11
   const now = new Date();
   const ayStart = now.getMonth() >= 3
-    ? new Date(now.getFullYear(), 3, 1)   // Apr this year
-    : new Date(now.getFullYear() - 1, 3, 1); // Apr last year
+    ? new Date(now.getFullYear(), 3, 1)
+    : new Date(now.getFullYear() - 1, 3, 1);
   const msPerMonth = 1000 * 60 * 60 * 24 * 30.44;
   const monthsElapsed = Math.max(1, Math.floor((now - ayStart) / msPerMonth));
 
-  // Per-student computed rows
+  const classFeeMap = db.settings?.classFees || {};
+
+  // Per-student computed rows — fee comes from class fee structure
   const feeRows = db.students.map(s => {
+    const cf = classFeeMap[s.cls] || {};
+    const monthly = cf.monthly || 0;
+    const bookFee = cf.book || 0;
+    const annualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
     const paid = paidTotal(db.pays, s.id);
-    const monthly = s.mf > 0 ? s.mf : (s.fee > 0 ? s.fee / 12 : 0);
-    const expectedPaid = Math.min(s.fee, monthsElapsed * monthly);
-    const overdue = paid < expectedPaid;
-    const overdueAmt = overdue ? Math.round(expectedPaid - paid) : 0;
-    const overdueMonths = overdue ? Math.ceil((expectedPaid - paid) / (monthly || 1)) : 0;
-    const fullyPaid = paid >= s.fee && s.fee > 0;
-    return { ...s, _paid: paid, _monthly: monthly, _expectedPaid: expectedPaid, _overdue: overdue, _overdueAmt: overdueAmt, _overdueMonths: overdueMonths, _fullyPaid: fullyPaid };
+    const payMode = s.payMode || 'monthly'; // 'monthly' or 'annual'
+
+    let expectedPaid = 0;
+    let overdue = false;
+    let overdueAmt = 0;
+    let overdueMonths = 0;
+
+    if (annualFee > 0) {
+      if (payMode === 'annual') {
+        // Annual: full fee expected at start of year
+        expectedPaid = annualFee;
+        overdue = paid < annualFee;
+        overdueAmt = overdue ? annualFee - paid : 0;
+      } else {
+        // Monthly: only months elapsed are expected
+        expectedPaid = Math.min(annualFee, monthsElapsed * monthly);
+        overdue = paid < expectedPaid;
+        overdueAmt = overdue ? Math.round(expectedPaid - paid) : 0;
+        overdueMonths = overdue && monthly > 0 ? Math.ceil((expectedPaid - paid) / monthly) : 0;
+      }
+    }
+
+    const fullyPaid = annualFee > 0 && paid >= annualFee;
+    // Auto fee status
+    const autoFst = annualFee === 0 ? 'N/A' : fullyPaid ? 'Paid' : overdue ? 'Overdue' : 'Pending';
+
+    return { ...s, fee: annualFee, mf: monthly, _paid: paid, _monthly: monthly, _annualFee: annualFee,
+      _expectedPaid: expectedPaid, _overdue: overdue, _overdueAmt: overdueAmt,
+      _overdueMonths: overdueMonths, _fullyPaid: fullyPaid, _autoFst: autoFst, _payMode: payMode };
   });
 
   const overdueRows = feeRows.filter(s => s._overdue && !s._fullyPaid);
@@ -5864,7 +5891,6 @@ function Fees({ db, save }) {
   const [histStu, setHistStu] = useState('');
 
   // ── Class Fee Structure ──────────────────────────────────────────
-  const classFeeMap = db.settings?.classFees || {}; // { className: { monthly, book } }
   const saveClassFee = (cls, field, val) => {
     const updated = { ...classFeeMap, [cls]: { ...(classFeeMap[cls]||{}), [field]: parseFloat(val)||0 } };
     save({ ...db, settings: { ...db.settings, classFees: updated } });
@@ -6035,6 +6061,22 @@ function Fees({ db, save }) {
                 {piStu._overdue && !piStu._fullyPaid && (
                   <div className="text-[11px] text-red-300 font-semibold bg-red-500/10 rounded-lg px-3 py-2">⚠ Overdue ~{piStu._overdueMonths} month{piStu._overdueMonths!==1?'s':''} · ₹{piStu._overdueAmt.toLocaleString('en-IN')} pending</div>
                 )}
+                {/* Payment Mode Toggle */}
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-2">Payment Mode</div>
+                  <div className="flex gap-2">
+                    {['monthly','annual'].map(mode => (
+                      <button key={mode} type="button"
+                        onClick={() => {
+                          const updated = db.students.map(x => x.id===selStu ? {...x, payMode: mode} : x);
+                          save({...db, students: updated});
+                        }}
+                        className={'flex-1 py-2 rounded-xl text-xs font-bold transition-all border-0 cursor-pointer '+(piStu._payMode===mode?'bg-white text-primary':'bg-white/10 text-white/60 hover:bg-white/20')}>
+                        {mode === 'monthly' ? '📅 Monthly' : '📆 Annual'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="bg-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-2 border border-white/10" style={{minHeight:'160px'}}>
@@ -6047,18 +6089,26 @@ function Fees({ db, save }) {
           {/* Middle col: Month + Other Charges */}
           <div className="finance-collect-col col-span-4 space-y-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Step 3 — Fee Month</label>
-              <select value={pyMn} onChange={e=>{
-                const val = e.target.value;
-                setPyMn(val);
-                if(piStu && val && piStu.mf > 0) setPyAmt(String(piStu.mf));
-              }}
-                className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-white/30 appearance-none">
-                <option value="" className="text-primary">— Select Month (optional) —</option>
-                {availableMonths.map(m=><option key={m} className="text-primary">{m}</option>)}
-                {availableMonths.length === 0 && <option disabled className="text-primary">All months paid ✓</option>}
-              </select>
-              {paidMonths.size > 0 && (
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Step 3 — {piStu?._payMode==='annual' ? 'Annual Fee' : 'Fee Month'}</label>
+              {piStu?._payMode === 'annual' ? (
+                <button type="button"
+                  onClick={()=>{ setPyMn('Annual'); if(piStu?._annualFee) setPyAmt(String(piStu._annualFee)); }}
+                  className={'w-full rounded-xl px-4 py-3 text-sm font-bold transition-all border-0 cursor-pointer '+(pyMn==='Annual'?'bg-emerald-500/30 text-white ring-1 ring-emerald-400':'bg-white/10 text-white/70 hover:bg-white/20')}>
+                  {pyMn==='Annual' ? '✓ Annual Fee Selected' : 'Select Annual Fee'} {piStu._annualFee > 0 ? `— ₹${piStu._annualFee.toLocaleString('en-IN')}` : ''}
+                </button>
+              ) : (
+                <select value={pyMn} onChange={e=>{
+                  const val = e.target.value;
+                  setPyMn(val);
+                  if(piStu && val && piStu.mf > 0) setPyAmt(String(piStu.mf));
+                }}
+                  className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-white/30 appearance-none">
+                  <option value="" className="text-primary">— Select Month (optional) —</option>
+                  {availableMonths.map(m=><option key={m} className="text-primary">{m}</option>)}
+                  {availableMonths.length === 0 && <option disabled className="text-primary">All months paid ✓</option>}
+                </select>
+              )}
+              {paidMonths.size > 0 && piStu?._payMode !== 'annual' && (
                 <div className="text-[10px] text-on-primary-container mt-1.5 leading-relaxed">Already paid: {[...paidMonths].join(', ')}</div>
               )}
             </div>
