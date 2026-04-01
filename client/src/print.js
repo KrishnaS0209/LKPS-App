@@ -109,34 +109,38 @@ const certHeader = (school, addr, phone, logo) => {
 
 // ── Transfer Certificate ──────────────────────────────────────────
 const tcCSS = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#fff;padding:20px}
-.cert{max-width:760px;margin:0 auto;padding:32px 48px 40px;border:1.5px solid #c8a96e;position:relative;overflow:hidden}
-.cert::before{content:'';position:absolute;inset:5px;border:0.5px solid #e8d5a8;pointer-events:none;z-index:0}
-.logo-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0}
-.content{position:relative;z-index:1}
-.hdr{text-align:center;padding-bottom:14px;border-bottom:1.5px solid #c8a96e;margin-bottom:12px}
-.hdr-logo{width:68px;height:68px;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 1px 4px rgba(0,0,0,.15))}
-.hdr-logo-ph{font-size:44px;margin-bottom:8px;display:block}
-.hdr h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#1a2e5a;letter-spacing:0.5px;margin-bottom:3px}
-.hdr .sub{font-family:'Inter',sans-serif;font-size:11px;font-weight:400;color:#666;margin-top:2px;letter-spacing:0.2px}
-.ttl-box{background:#f7f2e8;border-top:1.5px solid #c8a96e;border-bottom:1.5px solid #c8a96e;padding:7px 0;margin:12px 0 14px;text-align:center}
-.ttl-box span{font-family:'Playfair Display',serif;font-size:13.5px;font-weight:600;color:#1a2e5a;letter-spacing:2px;text-transform:uppercase}
-.meta-row{display:flex;justify-content:space-between;font-size:11.5px;color:#444;margin-bottom:16px;font-weight:500;font-family:'Inter',sans-serif}
-.meta-row strong{color:#1a2e5a;font-weight:600}
-.rows{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
-.rows tr td{padding:5.5px 0;vertical-align:top;line-height:1.5}
-.rows tr td.lbl{width:220px;color:#555;font-weight:400;padding-right:8px;white-space:nowrap;font-family:'Inter',sans-serif}
-.rows tr td.sep{width:12px;text-align:center;color:#999;font-weight:300}
-.rows tr td.val{font-weight:600;color:#1a1a2e;border-bottom:1px solid #ddd;font-family:'Inter',sans-serif;padding-bottom:4px}
+html,body{width:210mm;min-height:297mm;background:#fff;font-family:'Inter',sans-serif}
+body{padding:0}
+.cert{width:210mm;min-height:297mm;margin:0 auto;padding:14mm 16mm 14mm;border:2px solid #b8960c;position:relative;display:flex;flex-direction:column}
+.cert::before{content:'';position:absolute;inset:6px;border:0.8px solid #d4b84a;pointer-events:none;z-index:0}
+.logo-wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0}
+.content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+.hdr{text-align:center;padding-bottom:12px;border-bottom:2px solid #b8960c;margin-bottom:10px}
+.hdr-logo{width:90px;height:90px;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.18))}
+.hdr-logo-ph{font-size:56px;margin-bottom:8px;display:block}
+.hdr h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:#1a2e5a;letter-spacing:0.8px;margin-bottom:4px;text-transform:uppercase}
+.hdr .sub{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:#555;margin-top:3px;letter-spacing:0.3px}
+.hdr .sub-bold{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:#333;margin-top:4px}
+.ttl-box{background:#f7f2e8;border-top:2px solid #b8960c;border-bottom:2px solid #b8960c;padding:9px 0;margin:12px 0 14px;text-align:center}
+.ttl-box span{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#1a2e5a;letter-spacing:3px;text-transform:uppercase}
+.meta-row{display:flex;justify-content:space-between;font-size:12px;color:#444;margin-bottom:14px;font-weight:500;font-family:'Inter',sans-serif}
+.meta-row strong{color:#1a2e5a;font-weight:700}
+.rows{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px}
+.rows tr td{padding:6px 0;vertical-align:top;line-height:1.55}
+.rows tr td.lbl{width:230px;color:#444;font-weight:400;padding-right:8px;white-space:nowrap;font-family:'Inter',sans-serif}
+.rows tr td.sep{width:14px;text-align:center;color:#888;font-weight:300}
+.rows tr td.val{font-weight:600;color:#1a1a2e;border-bottom:1px solid #ddd;font-family:'Inter',sans-serif;padding-bottom:5px}
 .rows tr td.val.noln{border-bottom:none}
-.foot{margin-top:28px;display:flex;justify-content:space-between;align-items:flex-end;font-size:12px;font-family:'Inter',sans-serif}
-.foot-left p{margin-bottom:6px;color:#444;font-weight:400}
+.cert-stmt{margin:18px 0 22px;font-size:12.5px;color:#333;font-style:italic;line-height:1.8;font-family:'Inter',sans-serif}
+.foot{margin-top:auto;padding-top:24px;display:flex;justify-content:space-between;align-items:flex-end;font-size:12.5px;font-family:'Inter',sans-serif}
+.foot-left p{margin-bottom:8px;color:#444;font-weight:400}
 .foot-left strong{color:#1a1a2e;font-weight:600}
 .sign-block{text-align:center}
-.sign-line{border-top:1.5px solid #1a2e5a;width:180px;margin-top:44px;padding-top:5px;font-weight:600;font-size:12.5px;color:#1a2e5a;font-family:'Inter',sans-serif;letter-spacing:0.5px}
-@media print{body{padding:0}.cert{border:1.5px solid #c8a96e;max-width:100%}@page{margin:10mm;size:A4 portrait}}
+.sign-line{border-top:1.5px solid #1a2e5a;width:200px;margin-top:52px;padding-top:6px;font-weight:700;font-size:13px;color:#1a2e5a;font-family:'Inter',sans-serif;letter-spacing:0.5px}
+.sign-sub{font-size:11px;margin-top:3px;color:#666}
+@media print{html,body{width:210mm;height:297mm}.cert{border:2px solid #b8960c;width:210mm;min-height:297mm;padding:14mm 16mm}@page{margin:0;size:A4 portrait}}
 `;
 
 function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus, attP, attT }) {
@@ -181,7 +185,7 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${logoImg}
       <h1>${school}</h1>
       <div class="sub">(Govt. Recognised)</div>
-      <div class="sub">${addr}${phone ? '  ·  Ph.: ' + phone : ''}</div>
+      <div class="sub-bold">${addr}${phone ? '  ·  Ph.: ' + phone : ''}</div>
       ${sets.year ? `<div class="sub">Academic Year : ${sets.year}</div>` : ''}
     </div>
     <div class="ttl-box"><span>Transfer Certificate</span></div>
@@ -208,17 +212,15 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${row('Character &amp; Conduct', conduct)}
       ${row('Reason for Leaving', reason, true)}
     </table>
-    <div style="margin:16px 0 20px;padding:12px 16px;border:1px solid #c8a96e;border-radius:4px;background:#fdfaf4;font-size:11.5px;color:#444;font-style:italic;line-height:1.7;font-family:'Inter',sans-serif;">
-      Certified that above scholar's register of leaving school has been filled up to date as per departmental rules.
-    </div>
+    <p class="cert-stmt">Certified that above scholar's register of leaving school has been filled up to date as per departmental rules.</p>
     <div class="foot">
       <div class="foot-left">
         <p>Date : <strong>${dt || '—'}</strong></p>
         <p>Place : <strong>Mathura</strong></p>
       </div>
       <div class="sign-block">
-        <div class="sign-line">Principal</div>
-        <div style="font-size:10.5px;margin-top:4px;color:#666;">${school}</div>
+        <div class="sign-line">Principal / Head Master</div>
+        <div class="sign-sub">${school}</div>
       </div>
     </div>
   </div>
