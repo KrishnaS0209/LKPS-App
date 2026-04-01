@@ -147,6 +147,27 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
   const attPct  = attT > 0 ? Math.round(attP / attT * 100) : 0;
   const stuAddr = [s.addr, s.city].filter(Boolean).join(', ') || '—';
 
+  // DOB in words
+  const dobInWords = (() => {
+    if (!s.dob) return '—';
+    const d = new Date(s.dob);
+    const day = d.getDate();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    const numToWords = (n) => {
+      if (n === 0) return 'Zero';
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
+      return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + numToWords(n%100) : '');
+    };
+    const year = d.getFullYear();
+    const y1 = Math.floor(year/100);
+    const y2 = year % 100;
+    const yearWords = numToWords(y1) + ' Hundred' + (y2 ? ' and ' + numToWords(y2) : '');
+    return `${numToWords(day)} ${months[d.getMonth()]} ${yearWords}`;
+  })();
+
   const logoImg  = logo ? `<img class="hdr-logo" src="${logo}">` : `<span class="hdr-logo-ph">🏫</span>`;
   const logoWm   = logo ? `<img class="logo-wm" src="${logo}">` : '';
 
@@ -180,7 +201,7 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${row('Admission No.', s.admno)}
       ${s.pen ? row('PEN No.', s.pen) : ''}
       ${s.apaar ? row('APAAR ID', s.apaar) : ''}
-      ${row('Date of Birth (as per register)', dob)}
+      ${row('Date of Birth (as per register)', dob + (s.dob ? `  <span style="font-weight:400;color:#555;font-size:11.5px">(${dobInWords})</span>` : ''))}
       ${s.blood ? row('Blood Group', s.blood) : ''}
       ${s.aadhar ? row('Aadhaar No.', s.aadhar) : ''}
       ${s.ps ? row('Previous School', s.ps) : ''}
