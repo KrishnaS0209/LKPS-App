@@ -178,6 +178,7 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
       ${row('Class', s.cls)}
       ${row('Roll No.', s.roll)}
       ${row('Admission No.', s.admno)}
+      ${s.pen ? row('PEN No.', s.pen) : ''}
       ${row('Date of Birth (as per register)', dob)}
       ${s.blood ? row('Blood Group', s.blood) : ''}
       ${s.aadhar ? row('Aadhaar No.', s.aadhar) : ''}
