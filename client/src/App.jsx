@@ -5941,6 +5941,11 @@ function Fees({ db, save }) {
   const concessionAmt = parseFloat(pyConcession) || 0;
   const pyGrossAmt = (parseFloat(pyAmt) || 0) + extrasTotal;
   const pyNetAmt = Math.max(0, pyGrossAmt - concessionAmt);
+  // Only count tuition if month is selected (monthly) or annual mode
+  const isAnnualMode = piStu?._payMode === 'annual';
+  const hasTuition = isAnnualMode ? (parseFloat(pyAmt) || 0) > 0 : (pyMn && (parseFloat(pyAmt) || 0) > 0);
+  const effectiveTuition = hasTuition ? (parseFloat(pyAmt) || 0) : 0;
+  const pyEffectiveNet = Math.max(0, effectiveTuition + extrasTotal - concessionAmt);
 
   // Months already paid by this student (from pays records)
   const ALL_MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
@@ -5949,12 +5954,9 @@ function Fees({ db, save }) {
 
   // Other charges defined on the student (fextras)
   const stuExtras = piStu?.fextras || [];
-  const pyTotalAmt = pyNetAmt;
-  // For monthly: after payment, how many months still overdue?
-  const pyPreview = piStu && pyNetAmt > 0 && piStu._payMode !== 'annual'
-    ? Math.max(0, piStu._overdueAmt - pyNetAmt)
-    : piStu && pyNetAmt > 0 && piStu._payMode === 'annual'
-    ? null // don't show for annual
+  const pyTotalAmt = pyEffectiveNet;
+  const pyPreview = piStu && pyEffectiveNet > 0 && !isAnnualMode
+    ? Math.max(0, piStu._overdueAmt - pyEffectiveNet)
     : null;
 
   // History tab computed
@@ -6304,10 +6306,10 @@ function Fees({ db, save }) {
               </div>
             )}
             <div className="bg-white/10 rounded-2xl px-5 py-4 space-y-2">
-              {pyMn && parseFloat(pyAmt) > 0 && (
+              {hasTuition && (
                 <div className="flex justify-between text-sm text-on-primary-container">
-                  <span>{piStu?._payMode==='annual'?'Annual payment':'Monthly fee'} ({pyMn})</span>
-                  <span className="font-bold text-white">₹{(parseFloat(pyAmt)||0).toLocaleString('en-IN')}</span>
+                  <span>{isAnnualMode?'Annual payment':'Monthly fee'} {pyMn?`(${pyMn})`:''}</span>
+                  <span className="font-bold text-white">₹{effectiveTuition.toLocaleString('en-IN')}</span>
                 </div>
               )}
               {(piStu?.fextras||[]).filter((_,i)=>pyExtras.includes(i)).map((ex,i)=>(
@@ -6322,14 +6324,14 @@ function Fees({ db, save }) {
                   <span className="font-bold text-yellow-300">- ₹{concessionAmt.toLocaleString('en-IN')}</span>
                 </div>
               )}
-              {pyNetAmt > 0 ? (
+              {pyEffectiveNet > 0 ? (
                 <div className="flex justify-between text-base pt-2" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
                   <span className="font-extrabold text-white uppercase tracking-wide">Paying Now</span>
-                  <span className="font-extrabold text-white text-lg">₹{pyNetAmt.toLocaleString('en-IN')}</span>
+                  <span className="font-extrabold text-white text-lg">₹{pyEffectiveNet.toLocaleString('en-IN')}</span>
                 </div>
               ) : (
                 <p className="text-[11px] text-on-primary-container text-center py-2">
-                  {piStu?._payMode==='annual' ? 'Enter amount to pay' : 'Select month or charges to see total'}
+                  {isAnnualMode ? 'Enter amount to pay' : 'Select month or charges to see total'}
                 </p>
               )}
             </div>
@@ -6338,7 +6340,7 @@ function Fees({ db, save }) {
                 After payment: {pyPreview === 0 ? '✓ No pending dues' : `₹${pyPreview.toLocaleString('en-IN')} still due`}
               </div>
             )}
-            <button onClick={recPay} disabled={!selStu || (!pyMn && pyExtras.length === 0)}
+            <button onClick={recPay} disabled={!selStu || pyEffectiveNet <= 0}
               className="w-full bg-secondary-container hover:bg-white text-primary font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 text-base disabled:opacity-40 disabled:cursor-not-allowed">
               Record Transaction →
             </button>
