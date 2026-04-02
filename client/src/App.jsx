@@ -6483,7 +6483,7 @@ function Fees({ db, save }) {
               </div>
               <div style={{flex:1,minWidth:200}}>
                 <div style={{fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Select Student</div>
-                <select value={ledStu} onChange={setLedStu}
+                <select value={ledStu} onChange={e=>setLedStu(e.target.value)}
                   style={{width:'100%',padding:'9px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#1e293b',outline:'none',cursor:'pointer'}}>
                   <option value="">— Select Student —</option>
                   {db.students.filter(s=>!ledCls||s.cls===ledCls).map(s=><option key={s.id} value={s.id}>{s.fn} {s.ln} ({s.cls})</option>)}
@@ -6496,8 +6496,10 @@ function Fees({ db, save }) {
               const cf = classFeeMap[s.cls] || {};
               const monthly = parseFloat(cf.monthly) || 0;
               const bookFee = parseFloat(cf.book) || 0;
-              const annualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
+              const baseAnnualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
               const pays = db.pays.filter(p=>p.sid===ledStu).sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+              const totalConcession = pays.reduce((sum,p)=>sum+(p.concession||0),0);
+              const annualFee = Math.max(0, baseAnnualFee - totalConcession);
               const tp = pays.reduce((sum,p)=>sum+p.amt,0);
               const bal = Math.max(0, annualFee - tp);
               const full = annualFee > 0 && bal <= 0;
@@ -6559,7 +6561,7 @@ function Fees({ db, save }) {
                   <div style={{padding:'16px 24px'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
                       <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>Payment History</div>
-                      <button onClick={()=>{setSelClass(s.cls);setSelStu(s.id);setTab(-1);setTimeout(()=>setTab(0),0);}}
+                      <button onClick={()=>{setSelClass(s.cls);setSelStu(s.id);setTab(0);window.scrollTo({top:0,behavior:'smooth'});}}
                         style={{fontSize:12,fontWeight:700,padding:'6px 14px',borderRadius:8,border:'none',background:'#1960a3',color:'#fff',cursor:'pointer'}}>
                         + Record Payment
                       </button>
