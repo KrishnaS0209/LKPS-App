@@ -5916,12 +5916,18 @@ function Fees({ db, save }) {
   // Auto-fill amount when student selected
   const handleSelectStudent = (stuId) => {
     setSelStu(stuId);
-    setPyExtras([]); setPyNewExLabel(''); setPyNewExAmt('');
+    setPyExtras([]); setPyNewExLabel(''); setPyNewExAmt(''); setPyMn('');
     if (stuId) {
       const st = db.students.find(x => x.id === stuId);
       if (st) {
         const cf = classFeeMap[st.cls];
-        if (cf?.monthly) setPyAmt(String(cf.monthly));
+        const mode = st.payMode || 'monthly';
+        if (mode === 'annual' && cf?.monthly) {
+          const annual = (parseFloat(cf.monthly)||0)*12 + (parseFloat(cf.book)||0);
+          setPyAmt(String(annual));
+        } else if (cf?.monthly) {
+          setPyAmt(String(cf.monthly));
+        }
       }
     }
   };
@@ -5952,17 +5958,19 @@ function Fees({ db, save }) {
   const histTotal = filteredPays.reduce((s, p) => s + p.amt, 0);
   const recPay = () => {
     if (!selStu || !pyDt) { toast('Student and date required', 'err'); return; }
-    if (!pyMn && pyExtras.length === 0) { toast('Select a month or at least one charge', 'err'); return; }
+    const isAnnual = piStu?._payMode === 'annual';
+    if (!isAnnual && !pyMn && pyExtras.length === 0) { toast('Select a month or at least one charge', 'err'); return; }
+    if (isAnnual && !parseFloat(pyAmt) && pyExtras.length === 0) { toast('Enter amount to pay', 'err'); return; }
     const s = db.students.find(x => x.id === selStu); if (!s) return;
     const selectedCharges = (piStu?.fextras||[]).filter((_,i) => pyExtras.includes(i));
-    const tuition = pyMn ? (parseFloat(pyAmt) || 0) : 0;
+    const tuition = isAnnual ? (parseFloat(pyAmt) || 0) : (pyMn ? (parseFloat(pyAmt) || 0) : 0);
+    const annualFeeVal = piStu?._annualFee || 0;
     const total = Math.max(0, tuition + extrasTotal - concessionAmt);
     if (total <= 0) { toast('Amount must be greater than 0', 'err'); return; }
-    const pp = paidTotal(db.pays, selStu), bb = Math.max(0, s.fee - pp), ba = Math.max(0, bb - total);
+    const pp = paidTotal(db.pays, selStu), bb = Math.max(0, annualFeeVal - pp), ba = Math.max(0, bb - total);
     const rc = 'RCP-' + new Date().getFullYear() + '-' + String(db.pays.length + 1).padStart(4, '0');
-    // For extras-only payments, set mn to the charge labels
-    const mnLabel = pyMn || selectedCharges.map(e => e.label).join(', ');
-    const pay = { id: 'PAY' + uid(), dt: pyDt, sid: selStu, nm: s.fn + ' ' + s.ln, cls: s.cls, fee: annualFee, amt: total, totalAmt: total, tuition, extras: selectedCharges, md: pyMd, ref: pyRef, mn: mnLabel, ty: pyTy, note: pyNote, rc, bb, ba, concession: concessionAmt > 0 ? concessionAmt : undefined };
+    const mnLabel = isAnnual ? 'Annual' : (pyMn || selectedCharges.map(e => e.label).join(', '));
+    const pay = { id: 'PAY' + uid(), dt: pyDt, sid: selStu, nm: s.fn + ' ' + s.ln, cls: s.cls, fee: annualFeeVal, amt: total, totalAmt: total, tuition, extras: selectedCharges, md: pyMd, ref: pyRef, mn: mnLabel, ty: isAnnual ? 'Annual Fee' : pyTy, note: pyNote, rc, bb, ba, concession: concessionAmt > 0 ? concessionAmt : undefined };
     save({ ...db, pays: [...db.pays, pay] });
     setReceipt({ pay, s }); setShowRec(true);
     setPyAmt(''); setPyRef(''); setPyNote(''); setPyMn(''); setPyExtras([]); setPyConcession('');
@@ -6212,10 +6220,14 @@ function Fees({ db, save }) {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">Monthly Fee (₹){pyMn ? ' *' : ''}</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-on-primary-container mb-1.5">
+                  {piStu?._payMode==='annual' ? 'Annual Amount (₹)' : `Monthly Fee (₹)${pyMn?' *':''}`}
+                </label>
                 <input type="number" value={pyAmt} onChange={e=>setPyAmt(e.target.value)}
-                  placeholder={pyMn ? String(piStu?.mf||0) : 'Select month first'}
-                  disabled={!pyMn}
+                  placeholder={piStu?._payMode==='annual'
+                    ? String(piStu?._annualFee||0)
+                    : pyMn ? String(piStu?._monthly||0) : 'Select month first'}
+                  disabled={piStu?._payMode!=='annual' && !pyMn}
                   className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 focus:ring-2 focus:ring-white/30 disabled:opacity-40 disabled:cursor-not-allowed"/>
               </div>
             </div>
@@ -6230,10 +6242,46 @@ function Fees({ db, save }) {
               <input type="date" value={pyDt} onChange={e=>setPyDt(e.target.value)}
                 className="w-full bg-white/10 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-white/30"/>
             </div>
+            {/* Balance info box */}
+            {piStu && (
+              <div className="bg-white/5 rounded-2xl px-5 py-4 space-y-2 border border-white/10">
+                {piStu._payMode === 'annual' ? (
+                  <>
+                    <div className="flex justify-between text-sm text-on-primary-container">
+                      <span>Annual Fee</span>
+                      <span className="font-bold text-white">₹{(piStu._annualFee||0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-on-primary-container">
+                      <span>Already Paid</span>
+                      <span className="font-bold text-emerald-300">₹{(piStu._paid||0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-on-primary-container" style={{borderTop:'1px solid rgba(255,255,255,0.1)',paddingTop:8}}>
+                      <span>Current Balance</span>
+                      <span className="font-bold text-red-300">₹{Math.max(0,(piStu._annualFee||0)-(piStu._paid||0)).toLocaleString('en-IN')}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm text-on-primary-container">
+                      <span>Monthly Fee</span>
+                      <span className="font-bold text-white">₹{(piStu._monthly||0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-on-primary-container">
+                      <span>Months Due ({monthsElapsed} elapsed)</span>
+                      <span className="font-bold text-red-300">₹{(piStu._overdueAmt||0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-on-primary-container">
+                      <span>Total Paid</span>
+                      <span className="font-bold text-emerald-300">₹{(piStu._paid||0).toLocaleString('en-IN')}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             <div className="bg-white/10 rounded-2xl px-5 py-4 space-y-2">
               {pyMn && parseFloat(pyAmt) > 0 && (
                 <div className="flex justify-between text-sm text-on-primary-container">
-                  <span>Monthly fee ({pyMn})</span>
+                  <span>{piStu?._payMode==='annual'?'Annual payment':'Monthly fee'} ({pyMn})</span>
                   <span className="font-bold text-white">₹{(parseFloat(pyAmt)||0).toLocaleString('en-IN')}</span>
                 </div>
               )}
@@ -6251,11 +6299,13 @@ function Fees({ db, save }) {
               )}
               {pyNetAmt > 0 ? (
                 <div className="flex justify-between text-base pt-2" style={{borderTop:'1px solid rgba(255,255,255,0.15)'}}>
-                  <span className="font-extrabold text-white uppercase tracking-wide">Total</span>
+                  <span className="font-extrabold text-white uppercase tracking-wide">Paying Now</span>
                   <span className="font-extrabold text-white text-lg">₹{pyNetAmt.toLocaleString('en-IN')}</span>
                 </div>
               ) : (
-                <p className="text-[11px] text-on-primary-container text-center py-2">Select month or charges to see total</p>
+                <p className="text-[11px] text-on-primary-container text-center py-2">
+                  {piStu?._payMode==='annual' ? 'Enter amount to pay' : 'Select month or charges to see total'}
+                </p>
               )}
             </div>
             {pyPreview !== null && (
