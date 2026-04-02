@@ -6068,24 +6068,24 @@ function Fees({ db, save }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {piStu._payMode === 'annual' ? (
-                    [
+                  {(() => {
+                    const isAnnual = piStu._payMode === 'annual';
+                    const items = isAnnual ? [
                       ['Annual Fee','text-white', piStu._annualFee||0],
                       ['Paid','text-emerald-300', piStu._paid||0],
                       ['Balance', piStu._fullyPaid?'text-emerald-300':'text-red-300', Math.max(0,(piStu._annualFee||0)-(piStu._paid||0))]
-                    ]
-                  ) : (
-                    [
+                    ] : [
                       ['Monthly Fee','text-white', piStu._monthly||0],
-                      ['Paid This Month','text-emerald-300', piStu._paid||0],
-                      ['Due Now', piStu._overdueAmt>0?'text-red-300':'text-emerald-300', piStu._overdueAmt||0]
-                    ]
-                  )}.map(([l,c,v])=>(
-                    <div key={l} className="text-center bg-white/10 rounded-xl py-3">
-                      <div className="text-[9px] text-on-primary-container uppercase tracking-wide mb-1">{l}</div>
-                      <div className={'text-sm font-extrabold '+c}>₹{v.toLocaleString('en-IN')}</div>
-                    </div>
-                  ))}
+                      ['Total Paid','text-emerald-300', piStu._paid||0],
+                      ['Due Now', (piStu._overdueAmt||0)>0?'text-red-300':'text-emerald-300', piStu._overdueAmt||0]
+                    ];
+                    return items.map(([l,c,v])=>(
+                      <div key={l} className="text-center bg-white/10 rounded-xl py-3">
+                        <div className="text-[9px] text-on-primary-container uppercase tracking-wide mb-1">{l}</div>
+                        <div className={'text-sm font-extrabold '+c}>₹{(v||0).toLocaleString('en-IN')}</div>
+                      </div>
+                    ));
+                  })()}
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] text-on-primary-container mb-1">
