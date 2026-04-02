@@ -6068,16 +6068,19 @@ function Fees({ db, save }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    ['Annual Fee','text-white', piStu._annualFee||0],
-                    ['Paid','text-emerald-300', piStu._paid||0],
-                    [piStu._payMode==='annual'?'Balance':'Due Now',
-                     piStu._fullyPaid?'text-emerald-300':'text-red-300',
-                     piStu._payMode==='annual'
-                       ? Math.max(0,(piStu._annualFee||0)-(piStu._paid||0))
-                       : piStu._overdueAmt||0
+                  {piStu._payMode === 'annual' ? (
+                    [
+                      ['Annual Fee','text-white', piStu._annualFee||0],
+                      ['Paid','text-emerald-300', piStu._paid||0],
+                      ['Balance', piStu._fullyPaid?'text-emerald-300':'text-red-300', Math.max(0,(piStu._annualFee||0)-(piStu._paid||0))]
                     ]
-                  ].map(([l,c,v])=>(
+                  ) : (
+                    [
+                      ['Monthly Fee','text-white', piStu._monthly||0],
+                      ['Paid This Month','text-emerald-300', piStu._paid||0],
+                      ['Due Now', piStu._overdueAmt>0?'text-red-300':'text-emerald-300', piStu._overdueAmt||0]
+                    ]
+                  )}.map(([l,c,v])=>(
                     <div key={l} className="text-center bg-white/10 rounded-xl py-3">
                       <div className="text-[9px] text-on-primary-container uppercase tracking-wide mb-1">{l}</div>
                       <div className={'text-sm font-extrabold '+c}>₹{v.toLocaleString('en-IN')}</div>
