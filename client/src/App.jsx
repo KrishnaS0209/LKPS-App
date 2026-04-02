@@ -6068,7 +6068,16 @@ function Fees({ db, save }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {[['Annual Fee','text-white',piStu.fee],['Paid','text-emerald-300',piStu._paid],['Balance','text-red-300',piBal]].map(([l,c,v])=>(
+                  {[
+                    ['Annual Fee','text-white', piStu._annualFee||0],
+                    ['Paid','text-emerald-300', piStu._paid||0],
+                    [piStu._payMode==='annual'?'Balance':'Due Now',
+                     piStu._fullyPaid?'text-emerald-300':'text-red-300',
+                     piStu._payMode==='annual'
+                       ? Math.max(0,(piStu._annualFee||0)-(piStu._paid||0))
+                       : piStu._overdueAmt||0
+                    ]
+                  ].map(([l,c,v])=>(
                     <div key={l} className="text-center bg-white/10 rounded-xl py-3">
                       <div className="text-[9px] text-on-primary-container uppercase tracking-wide mb-1">{l}</div>
                       <div className={'text-sm font-extrabold '+c}>₹{v.toLocaleString('en-IN')}</div>
@@ -6083,8 +6092,14 @@ function Fees({ db, save }) {
                     <div className="h-full rounded-full bg-emerald-400 transition-all" style={{width:piPct+'%'}}/>
                   </div>
                 </div>
-                {piStu._overdue && !piStu._fullyPaid && (
+                {piStu._overdue && !piStu._fullyPaid && piStu._payMode !== 'annual' && (
                   <div className="text-[11px] text-red-300 font-semibold bg-red-500/10 rounded-lg px-3 py-2">⚠ Overdue ~{piStu._overdueMonths} month{piStu._overdueMonths!==1?'s':''} · ₹{piStu._overdueAmt.toLocaleString('en-IN')} pending</div>
+                )}
+                {piStu._payMode === 'annual' && !piStu._fullyPaid && (
+                  <div className="text-[11px] text-red-300 font-semibold bg-red-500/10 rounded-lg px-3 py-2">⚠ Annual balance · ₹{Math.max(0,(piStu._annualFee||0)-(piStu._paid||0)).toLocaleString('en-IN')} remaining</div>
+                )}
+                {piStu._fullyPaid && (
+                  <div className="text-[11px] text-emerald-300 font-semibold bg-emerald-500/10 rounded-lg px-3 py-2">✓ Fully Paid</div>
                 )}
                 {/* Payment Mode Toggle */}
                 <div>
