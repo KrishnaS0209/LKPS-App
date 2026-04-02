@@ -2387,7 +2387,9 @@ function Dashboard({ db, save, setPage }) {
     const cf = classFeeMap[s.cls] || {};
     const monthly = parseFloat(cf.monthly) || 0;
     const book = parseFloat(cf.book) || 0;
-    return monthly > 0 ? monthly * 12 + book : 0;
+    const base = monthly > 0 ? monthly * 12 + book : 0;
+    const totalConcession = db.pays.filter(p => p.sid === s.id && p.concession).reduce((sum, p) => sum + (p.concession || 0), 0);
+    return Math.max(0, base - totalConcession);
   };
   const col = db.pays.reduce((s, p) => s + p.amt, 0);
   const totalFee = db.students.reduce((s, x) => s + getAnnualFee(x), 0);
@@ -5846,6 +5848,9 @@ function Fees({ db, save }) {
     // Only use class fee structure — ignore old s.fee / s.mf
     const annualFee = monthly > 0 ? monthly * 12 + bookFee : 0;
     const paid = paidTotal(db.pays, s.id);
+    // Total concessions given to this student
+    const totalConcession = db.pays.filter(p => p.sid === s.id && p.concession).reduce((sum, p) => sum + (p.concession || 0), 0);
+    const effectiveAnnualFee = Math.max(0, annualFee - totalConcession);
     const payMode = s.payMode || 'monthly';
 
     let expectedPaid = 0;
@@ -5853,26 +5858,24 @@ function Fees({ db, save }) {
     let overdueAmt = 0;
     let overdueMonths = 0;
 
-    if (annualFee > 0) {
+    if (effectiveAnnualFee > 0) {
       if (payMode === 'annual') {
-        // Annual: full fee expected at start of year
-        expectedPaid = annualFee;
-        overdue = paid < annualFee;
-        overdueAmt = overdue ? annualFee - paid : 0;
+        expectedPaid = effectiveAnnualFee;
+        overdue = paid < effectiveAnnualFee;
+        overdueAmt = overdue ? effectiveAnnualFee - paid : 0;
       } else {
-        // Monthly: only months elapsed are expected
-        expectedPaid = Math.min(annualFee, monthsElapsed * monthly);
+        expectedPaid = Math.min(effectiveAnnualFee, monthsElapsed * monthly);
         overdue = paid < expectedPaid;
         overdueAmt = overdue ? Math.round(expectedPaid - paid) : 0;
         overdueMonths = overdue && monthly > 0 ? Math.ceil((expectedPaid - paid) / monthly) : 0;
       }
     }
 
-    const fullyPaid = annualFee > 0 && paid >= annualFee;
-    // Auto fee status
-    const autoFst = annualFee === 0 ? 'N/A' : fullyPaid ? 'Paid' : overdue ? 'Overdue' : 'Pending';
+    const fullyPaid = effectiveAnnualFee > 0 && paid >= effectiveAnnualFee;
+    const autoFst = effectiveAnnualFee === 0 ? 'N/A' : fullyPaid ? 'Paid' : overdue ? 'Overdue' : 'Pending';
 
-    return { ...s, fee: annualFee, mf: monthly, _paid: paid, _monthly: monthly, _annualFee: annualFee,
+    return { ...s, fee: effectiveAnnualFee, mf: monthly, _paid: paid, _monthly: monthly,
+      _annualFee: effectiveAnnualFee, _totalConcession: totalConcession,
       _expectedPaid: expectedPaid, _overdue: overdue, _overdueAmt: overdueAmt,
       _overdueMonths: overdueMonths, _fullyPaid: fullyPaid, _autoFst: autoFst, _payMode: payMode };
   });
@@ -5959,7 +5962,7 @@ function Fees({ db, save }) {
     const rc = 'RCP-' + new Date().getFullYear() + '-' + String(db.pays.length + 1).padStart(4, '0');
     // For extras-only payments, set mn to the charge labels
     const mnLabel = pyMn || selectedCharges.map(e => e.label).join(', ');
-    const pay = { id: 'PAY' + uid(), dt: pyDt, sid: selStu, nm: s.fn + ' ' + s.ln, cls: s.cls, fee: s.fee, amt: total, totalAmt: total, tuition, extras: selectedCharges, md: pyMd, ref: pyRef, mn: mnLabel, ty: pyTy, note: pyNote, rc, bb, ba };
+    const pay = { id: 'PAY' + uid(), dt: pyDt, sid: selStu, nm: s.fn + ' ' + s.ln, cls: s.cls, fee: annualFee, amt: total, totalAmt: total, tuition, extras: selectedCharges, md: pyMd, ref: pyRef, mn: mnLabel, ty: pyTy, note: pyNote, rc, bb, ba, concession: concessionAmt > 0 ? concessionAmt : undefined };
     save({ ...db, pays: [...db.pays, pay] });
     setReceipt({ pay, s }); setShowRec(true);
     setPyAmt(''); setPyRef(''); setPyNote(''); setPyMn(''); setPyExtras([]); setPyConcession('');
@@ -6598,6 +6601,7 @@ function Fees({ db, save }) {
                                   </div>
                                 )}
                                 {p.note && <div style={{fontSize:11,color:'#94a3b8',marginTop:6}}>Note: {p.note}</div>}
+                                {p.concession > 0 && <div style={{fontSize:11,color:'#f59e0b',marginTop:4}}>Concession applied: ₹{p.concession.toLocaleString('en-IN')}</div>}
                                 <button onClick={()=>{setReceipt({pay:p,s});setShowRec(true);}}
                                   style={{marginTop:8,fontSize:11,fontWeight:600,padding:'4px 12px',borderRadius:8,border:'1px solid #e2e8f0',background:'#fff',color:'#1960a3',cursor:'pointer'}}>
                                   View Receipt
