@@ -5950,7 +5950,12 @@ function Fees({ db, save }) {
   // Other charges defined on the student (fextras)
   const stuExtras = piStu?.fextras || [];
   const pyTotalAmt = pyNetAmt;
-  const pyPreview = piStu && pyNetAmt > 0 ? Math.max(0, piStu.fee - piStu._paid - pyNetAmt) : null;
+  // For monthly: after payment, how many months still overdue?
+  const pyPreview = piStu && pyNetAmt > 0 && piStu._payMode !== 'annual'
+    ? Math.max(0, piStu._overdueAmt - pyNetAmt)
+    : piStu && pyNetAmt > 0 && piStu._payMode === 'annual'
+    ? null // don't show for annual
+    : null;
 
   // History tab computed
   const filteredPays = histStu ? [...db.pays].filter(p => p.sid === histStu).reverse() : [...db.pays].reverse();
@@ -6285,12 +6290,14 @@ function Fees({ db, save }) {
                       <span className="font-bold text-white">₹{(piStu._monthly||0).toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between text-sm text-on-primary-container">
-                      <span>Months Due ({monthsElapsed} elapsed)</span>
-                      <span className="font-bold text-red-300">₹{(piStu._overdueAmt||0).toLocaleString('en-IN')}</span>
+                      <span>Months elapsed</span>
+                      <span className="font-bold text-white">{monthsElapsed}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-on-primary-container">
-                      <span>Total Paid</span>
-                      <span className="font-bold text-emerald-300">₹{(piStu._paid||0).toLocaleString('en-IN')}</span>
+                    <div className="flex justify-between text-sm text-on-primary-container" style={{borderTop:'1px solid rgba(255,255,255,0.1)',paddingTop:8}}>
+                      <span>Currently Due</span>
+                      <span className={`font-bold ${(piStu._overdueAmt||0)>0?'text-red-300':'text-emerald-300'}`}>
+                        {(piStu._overdueAmt||0)>0 ? `₹${piStu._overdueAmt.toLocaleString('en-IN')}` : '✓ Paid'}
+                      </span>
                     </div>
                   </>
                 )}
@@ -6328,7 +6335,7 @@ function Fees({ db, save }) {
             </div>
             {pyPreview !== null && (
               <div className="text-[12px] text-emerald-300 font-semibold bg-emerald-500/10 rounded-xl px-4 py-2.5">
-                After payment: Annual balance = ₹{pyPreview.toLocaleString('en-IN')}
+                After payment: {pyPreview === 0 ? '✓ No pending dues' : `₹${pyPreview.toLocaleString('en-IN')} still due`}
               </div>
             )}
             <button onClick={recPay} disabled={!selStu || (!pyMn && pyExtras.length === 0)}
