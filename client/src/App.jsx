@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import { loadDB, exportJSON, importJSON, exportCSV, uid, paidTotal, grade, gradeColor } from './db';
 import { Toast, toast, Badge, Btn, Card, CardHead, Modal, ModalFooter, Field, Input, Select, Grid, Span, SecLabel, Search, Avatar, Stat, Tabs, PhotoZone, NoData, TblWrap } from './ui.jsx';
-import { buildCard, printCard, printClassCards, printTC, printCC, buildTC, buildCC } from './print.js';
+import { buildCard, buildCardBack, printCard, printClassCards, printTC, printCC, buildTC, buildCC } from './print.js';
 import {
   apiLogin, apiTeacherLogin, apiParentLogin, clearToken, getToken,
   getSessions, createSession, updateSession, deleteSession,
@@ -6982,9 +6982,10 @@ function Documents({ db, save }) {
   const clsStudents = selCls ? db.students.filter(s => s.cls === selCls) : db.students;
   const s = db.students.find(x => x.id === selStu);
   const photo = s ? (db.photos[s.id]||null) : null;
-  const previewHTML = s
-    ? buildCard(s, photo, logo, phone, year, prin, theme, true)
-    : buildCard({fn:'Student',ln:'Name',cls:'—',father:'—',mother:'—',city:'',addr:'',fphone:'',ph:'',dob:''},null,logo,phone,year,prin,theme,true);
+  const demoStu = {fn:'Student',ln:'Name',cls:'—',father:'—',mother:'—',city:'',addr:'',fphone:'',ph:'',dob:'',roll:'',admno:'',blood:''};
+  const previewStu = s || demoStu;
+  const previewHTML = buildCard(previewStu, s?photo:null, logo, phone, year, prin, theme, true);
+  const previewBackHTML = buildCardBack(previewStu, logo);
 
   // TC state — only fields NOT in student directory
   const [tcStu, setTcStu] = useState('');
@@ -7157,11 +7158,17 @@ function Documents({ db, save }) {
           </div>
           <div className="documents-preview-column col-span-7 flex flex-col gap-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Live Preview</p>
-            <div className="documents-preview-wrap flex gap-8 items-start">
-              <div className="flex flex-col gap-2 flex-1">
+            <div className="documents-preview-wrap flex gap-8 items-start flex-wrap">
+              <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Front Face</span>
                 <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'320px'}}>
                   <div dangerouslySetInnerHTML={{__html:previewHTML}}/>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Back Face</span>
+                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'320px'}}>
+                  <div dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
                 </div>
               </div>
             </div>

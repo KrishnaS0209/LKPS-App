@@ -1,112 +1,134 @@
 // ── ID Card HTML builder ──────────────────────────────────────────
 const THEMES = {
-  blue:   { h1: '#1a2e5a', h2: '#2a4a8f', acc: '#c8a96e' },
-  green:  { h1: '#0f3d2e', h2: '#1a6b4a', acc: '#6db88a' },
-  maroon: { h1: '#5a1a1a', h2: '#8b2a2a', acc: '#c8906e' },
-  navy:   { h1: '#0f172a', h2: '#1e3a5f', acc: '#7ea8c8' },
-  purple: { h1: '#2d1a5a', h2: '#4a2a8f', acc: '#a06ec8' },
+  blue:   { h1: '#1a3a8f', h2: '#2255c4', acc: '#c8a96e' },
+  green:  { h1: '#065f46', h2: '#10b981', acc: '#6db88a' },
+  maroon: { h1: '#7f1d1d', h2: '#dc2626', acc: '#c8906e' },
+  navy:   { h1: '#0f172a', h2: '#334155', acc: '#7ea8c8' },
+  purple: { h1: '#4c1d95', h2: '#8b5cf6', acc: '#a06ec8' },
 };
 
-const GFONT_CARD = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');`;
+const CARD_W = 300;
+const CARD_H = 480;
 
-export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) {
+function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const th = THEMES[theme] || THEMES.blue;
-  const w = big ? 300 : 280;
   const dob = s.dob ? new Date(s.dob).toLocaleDateString('en-IN') : '—';
-  const mob = s.fphone || s.ph || '—';
-  const addr = s.addr ? (s.addr + (s.city ? ', ' + s.city : '') + (s.pin ? '-' + s.pin : '')) : '—';
-  const ini = ((s.fn || '?')[0] || '?').toUpperCase();
-
   const logoEl = logo
-    ? `<img src="${logo}" style="width:${big?48:40}px;height:${big?48:40}px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 1px 4px rgba(0,0,0,.3));">`
-    : `<div style="width:${big?48:40}px;height:${big?48:40}px;display:flex;align-items:center;justify-content:center;font-size:${big?22:18}px;flex-shrink:0;">🏫</div>`;
+    ? `<img src="${logo}" style="width:54px;height:54px;object-fit:contain;flex-shrink:0;">`
+    : `<div style="width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🏫</div>`;
   const photoEl = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<span style="font-size:${big?30:24}px;font-weight:700;color:rgba(255,255,255,.4);font-family:'Playfair Display',serif;">${ini}</span>`;
-  const logoWm = logo
-    ? `<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${big?110:95}px;height:${big?110:95}px;object-fit:contain;opacity:0.05;pointer-events:none;">`
-    : '';
-
+    : `<span style="font-size:32px;font-weight:900;color:#94a3b8">${((s.fn||'?')[0]).toUpperCase()}</span>`;
   let qrEl = '';
   try {
-    const qrData = encodeURIComponent(
-      `${(s.fn||'')} ${(s.ln||'')}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${s.fphone||s.ph||''}`
-    );
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&margin=4&ecc=M`;
-    qrEl = `<img src="${qrUrl}" width="${big?60:52}" height="${big?60:52}" style="border:1px solid #e0e0e0;border-radius:4px;" alt="QR"/>`;
-  } catch(e) { qrEl = ''; }
-  const row = (label, val) =>
-    `<tr><td style="font-size:${big?9:8}px;font-weight:500;color:#666;padding:2.5px 6px 2.5px 0;width:80px;font-family:'Inter',sans-serif;">${label}</td>`+
-    `<td style="font-size:${big?9:8}px;color:#1a1a2e;padding:2.5px 0;font-weight:600;font-family:'Inter',sans-serif;border-bottom:1px solid #f0f0f0;">${val}</td></tr>`;
+    const qrData = encodeURIComponent(`${s.fn||''} ${s.ln||''}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${s.fphone||s.ph||''}`);
+    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&margin=4&ecc=M" width="64" height="64" style="border:1px solid #ddd;border-radius:3px;display:block;" alt="QR"/>`;
+  } catch(e){}
 
-  return `<div style="width:${w}px;background:#fff;border-radius:12px;overflow:hidden;font-family:'Inter',Helvetica,sans-serif;${big?'box-shadow:0 20px 60px rgba(0,0,0,.45);':'border:1px solid #e0e0e0;page-break-inside:avoid;'}position:relative;">
-  <style>${GFONT_CARD}</style>
-  <div style="background:linear-gradient(160deg,${th.h1} 0%,${th.h2} 100%);padding:${big?'14px 14px 28px':'12px 12px 24px'};position:relative;overflow:hidden;">
-    ${logoWm}
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;position:relative;z-index:1;">
-      ${logoEl}
-      <div>
-        <div style="font-size:${big?10.5:9}px;font-weight:700;color:#fff;font-family:'Playfair Display',serif;white-space:nowrap;letter-spacing:0.2px;text-shadow:0 1px 3px rgba(0,0,0,.3);">LORD KRISHNA PUBLIC SCHOOL</div>
-        <div style="font-size:${big?7.5:6.5}px;color:rgba(255,255,255,.75);margin-top:2px;font-family:'Inter',sans-serif;letter-spacing:0.3px;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
-        ${phone ? `<div style="font-size:${big?7.5:6.5}px;color:rgba(255,255,255,.85);margin-top:1px;font-family:'Inter',sans-serif;">Ph.: ${phone}</div>` : ''}
-      </div>
-    </div>
-    <div style="position:absolute;bottom:-1px;left:0;right:0;height:28px;overflow:hidden;z-index:1;">
-      <svg viewBox="0 0 300 28" preserveAspectRatio="none" style="width:100%;height:100%;"><path d="M0,28 L0,12 Q75,0 150,14 Q225,28 300,12 L300,28 Z" fill="#fff"/></svg>
+  return `<div style="width:${CARD_W}px;height:${CARD_H}px;background:#f0f4ff;border-radius:10px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+  <div style="background:#fff;padding:10px 12px 8px;display:flex;align-items:center;gap:10px;border-bottom:3px solid ${th.h1};">
+    ${logoEl}
+    <div style="width:1px;height:50px;background:#ddd;flex-shrink:0;"></div>
+    <div>
+      <div style="font-size:14px;font-weight:900;color:${th.h1};font-family:'Arial Black',Arial,sans-serif;text-transform:uppercase;line-height:1.15;">LORD KRISHNA PUBLIC SCHOOL</div>
+      <div style="font-size:7.5px;color:#555;margin-top:2px;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
+      ${phone?`<div style="font-size:7.5px;color:#555;">Ph.: ${phone}</div>`:''}
     </div>
   </div>
-  <div style="background:#fff;padding:${big?'6px 14px 12px':'4px 12px 10px'};">
-    <div style="display:flex;justify-content:center;margin-bottom:6px;margin-top:2px;">
-      <div style="width:${big?84:74}px;height:${big?102:90}px;border:2px solid ${th.acc};border-radius:6px;overflow:hidden;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${photoEl}</div>
+  <div style="background:${th.h1};padding:5px 0;text-align:center;">
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase;">Student ID Card</span>
+  </div>
+  <div style="background:${th.h2};padding:5px 12px;">
+    <div style="font-size:13px;font-weight:700;color:#fff;text-align:center;">${s.fn||'Student'} ${s.ln||''}</div>
+  </div>
+  <div style="flex:1;background:#fff;padding:10px 12px;display:flex;gap:10px;">
+    <div style="flex-shrink:0;">
+      <div style="width:88px;height:108px;border:2px solid ${th.h1};border-radius:4px;overflow:hidden;background:#e8f0ff;display:flex;align-items:center;justify-content:center;">${photoEl}</div>
+      <div style="margin-top:6px;">${qrEl}</div>
     </div>
-    <div style="text-align:center;font-size:${big?15:13}px;font-weight:700;color:${th.h1};margin-bottom:6px;font-family:'Playfair Display',serif;letter-spacing:0.3px;">${s.fn} ${s.ln}</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:5px;">
-      ${row("Father's Name", s.father||'—')}
-      ${row("Mother's Name", s.mother||'—')}
-      ${row('D.O.B.', dob)}
-      ${row('Contact No.', mob)}
-      ${s.blood ? row('Blood Group', s.blood) : ''}
-    </table>
-    <div style="font-size:${big?7.5:7}px;color:#888;margin-bottom:7px;font-family:'Inter',sans-serif;"><span style="font-weight:600;color:#555;">Addr:</span> ${addr}</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #f0f0f0;padding-top:5px;">
-      <div>
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
-          <div style="font-size:${big?7.5:7}px;font-weight:600;color:#999;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:0.8px;">Class</div>
-          <div style="font-size:${big?11:10}px;font-weight:700;color:${th.h2};font-family:'Playfair Display',serif;border-bottom:2px solid ${th.acc};padding-bottom:1px;line-height:1;">${s.cls||'—'}</div>
-        </div>
-        <div style="font-size:${big?7.5:7}px;color:#999;font-family:'Inter',sans-serif;">Roll: <strong style="color:#555;">${s.roll||'—'}</strong></div>
-        ${s.admno?`<div style="font-size:${big?7.5:7}px;color:#999;font-family:'Inter',sans-serif;">Adm: <strong style="color:#555;">${s.admno}</strong></div>`:''}
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        ${qrEl}
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:${big?10:9}px;font-style:italic;color:${th.h1};font-family:'Playfair Display',serif;">${prin||'__________'}</div>
-        <div style="font-size:${big?7.5:7}px;color:#888;margin-top:1px;font-family:'Inter',sans-serif;">Principal Sign.</div>
+    <div style="flex:1;font-size:9px;font-family:Arial,sans-serif;display:flex;flex-direction:column;justify-content:space-between;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="color:#555;padding:3px 0 1px;font-weight:600;font-size:8.5px;">Class / Section</td></tr>
+        <tr><td style="color:#111;font-weight:700;font-size:12px;padding-bottom:6px;border-bottom:1px solid #eee;">${s.cls||'—'}</td></tr>
+        <tr><td style="color:#555;padding:4px 0 1px;font-weight:600;font-size:8.5px;">Date of Birth</td></tr>
+        <tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:6px;border-bottom:1px solid #eee;">${dob}</td></tr>
+        <tr><td style="color:#555;padding:4px 0 1px;font-weight:600;font-size:8.5px;">Validity</td></tr>
+        <tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:6px;border-bottom:1px solid #eee;">${year||'2025-2026'}</td></tr>
+        ${s.admno?`<tr><td style="color:#555;padding:4px 0 1px;font-weight:600;font-size:8.5px;">Adm. No.</td></tr><tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:4px;">${s.admno}</td></tr>`:''}
+      </table>
+      <div style="text-align:right;border-top:1px solid #eee;padding-top:5px;">
+        <div style="font-size:11px;font-style:italic;color:${th.h1};font-family:'Times New Roman',serif;">${prin||'__________'}</div>
+        <div style="font-size:7.5px;color:#777;margin-top:1px;">Principal Sign.</div>
       </div>
     </div>
   </div>
-  <div style="background:linear-gradient(90deg,${th.h1},${th.acc},${th.h2});height:4px;"></div>
+  <div style="background:${th.h1};padding:4px 0;text-align:center;">
+    <span style="font-size:8px;color:rgba(255,255,255,.85);letter-spacing:0.5px;">lkps-app.vercel.app</span>
+  </div>
 </div>`;
 }
 
-const cardCSS = (single) => `
+export function buildCardBack(s, logo) {
+  const mob = s.fphone || s.ph || '—';
+  const addr = [s.addr, s.city, s.pin?'Pin-'+s.pin:''].filter(Boolean).join(', ') || 'Ishapur, Laxminagar, Yamuna Paar, Dist-Mathura, Uttar Pradesh Pin-281204, (India)';
+  const infoRow = (label, val) =>
+    `<div style="margin-bottom:6px;font-size:9.5px;font-family:Arial,sans-serif;"><span style="color:#333;">${label}: </span><span style="font-weight:700;color:#111;">${val}</span></div>`;
+  return `<div style="width:${CARD_W}px;height:${CARD_H}px;background:#fff;border-radius:10px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+  <div style="flex:1;padding:14px 14px 8px;overflow:hidden;">
+    ${s.blood ? infoRow('Blood Group', `<b style="font-size:11px">${s.blood}</b>`) : ''}
+    ${infoRow('Contact No.', mob)}
+    ${infoRow("Father's Name", s.father||'—')}
+    ${s.fphone ? infoRow("Father's Contact No.", s.fphone) : ''}
+    <div style="margin-bottom:3px;font-size:9.5px;color:#333;font-family:Arial,sans-serif;">Address:</div>
+    <div style="font-size:9.5px;font-weight:700;color:#111;margin-bottom:10px;line-height:1.5;font-family:Arial,sans-serif;">${addr}</div>
+    <div style="font-size:9.5px;font-weight:700;color:#111;text-decoration:underline;margin-bottom:5px;font-family:Arial,sans-serif;">Rules to be followed:</div>
+    <div style="font-size:8.5px;color:#222;line-height:1.65;font-family:Arial,sans-serif;">
+      <div style="margin-bottom:3px;">• Always carry and display the identity card in the campus when ever asked by the officials.</div>
+      <div style="margin-bottom:3px;">• The loss of this ID card must be reported immediately to HoD/PC.</div>
+      <div>• This card must be returned to HoD/PC before final clearance.</div>
+    </div>
+  </div>
+  <div style="height:72px;background:linear-gradient(180deg,#f8f8f8,#e8e8e8);display:flex;align-items:center;justify-content:center;border-top:1px solid #ddd;border-bottom:1px solid #ddd;">
+    ${logo?`<img src="${logo}" style="height:58px;object-fit:contain;opacity:0.15;">`:`<span style="font-size:44px;opacity:0.12;">🏫</span>`}
+  </div>
+  <div style="background:#111;padding:7px 10px;text-align:center;">
+    <div style="font-size:8px;color:#eee;line-height:1.6;font-family:Arial,sans-serif;">17 KM Stone, NH#2, Mathura-Delhi Road, P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
+    <div style="font-size:8px;color:#eee;font-family:Arial,sans-serif;">Phone: +91-5662-250900, 909</div>
+  </div>
+</div>`;
+}
+
+export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) {
+  return buildCardFront(s, photo, logo, phone, year, prin, theme);
+}
+
+const printCSS = (single) => `
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Arial,sans-serif;background:#e2e8f0;padding:${single?'20px':'16px'};display:${single?'flex':'block'};justify-content:center}
-  .grid{display:grid;grid-template-columns:repeat(2,280px);gap:16px;justify-content:center}
-  @media print{body{background:#fff;padding:0;}@page{margin:8px;size:${single?'310px 490px':'A4 landscape'}}}
+  body{font-family:Arial,sans-serif;background:#e2e8f0;padding:${single?'20px':'12px'};display:${single?'flex':'block'};gap:24px;justify-content:center;flex-wrap:wrap;}
+  .side-label{font-size:9px;color:#666;text-align:center;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+  .pair{display:flex;gap:20px;margin-bottom:20px;justify-content:center;page-break-inside:avoid;}
+  @media print{body{background:#fff;padding:0;gap:0;}.side-label{display:none;}.pair{gap:0;page-break-inside:avoid;}@page{margin:6px;size:${single?'640px 520px':'A4 landscape'}}}
 `;
 
 export function printCard(s, photo, logo, phone, year, prin, theme) {
-  const w = window.open('', '_blank', 'width=360,height=560');
-  w.document.write(`<!DOCTYPE html><html><head><style>${cardCSS(true)}</style></head><body>${buildCard(s, photo, logo, phone, year, prin, theme, true)}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  const front = buildCardFront(s, photo, logo, phone, year, prin, theme);
+  const back = buildCardBack(s, logo);
+  const w = window.open('', '_blank', 'width=720,height=560');
+  w.document.write(`<!DOCTYPE html><html><head><style>${printCSS(true)}</style></head><body>
+    <div><div class="side-label">Front</div>${front}</div>
+    <div><div class="side-label">Back</div>${back}</div>
+    <script>window.onload=()=>window.print()<\/script></body></html>`);
   w.document.close();
 }
 
 export function printClassCards(students, photos, logo, phone, year, prin, theme) {
-  const cards = students.map(s => buildCard(s, photos[s.id] || null, logo, phone, year, prin, theme, false)).join('');
+  const pairs = students.map(s => {
+    const front = buildCardFront(s, photos[s.id]||null, logo, phone, year, prin, theme);
+    const back = buildCardBack(s, logo);
+    return `<div class="pair"><div><div class="side-label">Front</div>${front}</div><div><div class="side-label">Back</div>${back}</div></div>`;
+  }).join('');
   const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><style>${cardCSS(false)}</style></head><body><div class="grid">${cards}</div><script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><style>${printCSS(false)}</style></head><body>${pairs}<script>window.onload=()=>window.print()<\/script></body></html>`);
   w.document.close();
 }
 
