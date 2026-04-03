@@ -274,7 +274,8 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
   const startDelete = (s, e) => { e.stopPropagation(); setDelId(s.sid || s.id); setDelConfirm(''); setDelErr(''); };
   const cancelDelete = () => { setDelId(null); setDelConfirm(''); setDelErr(''); };
   const doDelete = async () => {
-    if (delConfirm.trim().toUpperCase() !== 'YES') { setDelErr('Type YES to confirm'); return; }
+    if (!delConfirm.trim()) { setDelErr('Enter admin password'); return; }
+    if (delConfirm !== authSession?.user?.password) { setDelErr('Incorrect password'); return; }
     try {
       await deleteSession(delId);
       if (onRefresh) onRefresh();
@@ -441,9 +442,9 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
                 This will permanently delete the session and <span style={{color:'#fca5a5',fontWeight:700}}>all its data</span> including students, payments, attendance and exams. This cannot be undone.
               </div>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:7}}>Type <span style={{color:'#f87171',fontFamily:'monospace',fontSize:12}}>YES</span> to confirm</div>
+                <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:7}}>Enter admin password to confirm</div>
                 <input value={delConfirm} onChange={e=>{setDelConfirm(e.target.value);setDelErr('');}}
-                  placeholder="YES"
+                  type="password" placeholder="Admin password"
                   className="sp-input"
                   style={{width:'100%',padding:'11px 14px',borderRadius:10,border:`1.5px solid ${delErr?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.15)'}`,background:'rgba(255,255,255,0.06)',fontSize:14,fontWeight:700,color:'#fff',outline:'none',boxSizing:'border-box',letterSpacing:'0.05em'}}/>
                 {delErr&&<div style={{fontSize:11,color:'#fca5a5',marginTop:6}}>{delErr}</div>}
