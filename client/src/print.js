@@ -22,88 +22,86 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const mob = s.fphone || s.ph || '—';
 
   const logoEl = logo
-    ? `<img src="${logo}" style="width:60px;height:60px;object-fit:contain;display:block;">`
-    : `<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:30px;">🏫</div>`;
+    ? `<img src="${logo}" style="width:52px;height:52px;object-fit:contain;display:block;flex-shrink:0;">`
+    : `<div style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🏫</div>`;
 
   const photoEl = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#dde4f0;font-size:52px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#dde4f0;font-size:48px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
 
   let qrEl = '';
   try {
     const qd = encodeURIComponent(`${s.fn||''} ${s.ln||''}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${mob}`);
-    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qd}&margin=4&ecc=M" width="72" height="72" style="display:block;border-radius:4px;" alt="QR"/>`;
+    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qd}&margin=4&ecc=M" width="68" height="68" style="display:block;border-radius:3px;" alt="QR"/>`;
   } catch(e){}
 
-  const field = (label, val) =>
-    `<div style="margin-bottom:9px;">
-      <div style="font-size:9px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.9px;font-family:'Roboto',sans-serif;margin-bottom:2px;">${label}</div>
-      <div style="font-size:12.5px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;line-height:1.2;">${val}</div>
-    </div>`;
+  const row = (label, val) =>
+    `<tr>
+      <td style="font-size:9px;font-weight:600;color:#777;text-transform:uppercase;letter-spacing:0.7px;font-family:'Roboto',sans-serif;padding:5px 10px 5px 0;white-space:nowrap;vertical-align:top;width:1%;">${label}</td>
+      <td style="font-size:9px;color:#aaa;padding:5px 8px 5px 0;vertical-align:top;">:</td>
+      <td style="font-size:12px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;padding:4px 0;vertical-align:top;border-bottom:1px solid #f0f0f0;">${val}</td>
+    </tr>`;
 
-  return `<div style="width:${CW}px;height:${CH}px;border-radius:14px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;position:relative;">
+  return `<div style="width:${CW}px;height:${CH}px;border-radius:14px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;">
 <style>${GFONT}</style>
 
-<!-- ── Header ── -->
-<div style="background:linear-gradient(160deg,${th.h1} 0%,${th.h2} 100%);padding:16px 16px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;position:relative;overflow:hidden;">
-  <div style="position:absolute;top:-50px;right:-30px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none;"></div>
-  <div style="position:absolute;bottom:-60px;left:-20px;width:160px;height:160px;background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none;"></div>
-  <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:1;width:100%;">
-    ${logoEl}
-    <div style="flex:1;">
-      <div style="font-size:14.5px;font-weight:900;color:#fff;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.15;">Lord Krishna Public School</div>
-      <div style="font-size:8.5px;color:rgba(255,255,255,.72);margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
-      ${phone ? `<div style="font-size:8.5px;color:rgba(255,255,255,.78);margin-top:2px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
+<!-- Header -->
+<div style="background:linear-gradient(150deg,${th.h1} 0%,${th.h2} 100%);padding:14px 14px 12px;display:flex;align-items:center;gap:11px;flex-shrink:0;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-40px;right:-20px;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+  ${logoEl}
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:13.5px;font-weight:900;color:#fff;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;">Lord Krishna Public School</div>
+    <div style="font-size:8px;color:rgba(255,255,255,.7);margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
+    ${phone ? `<div style="font-size:8px;color:rgba(255,255,255,.75);margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
+  </div>
+</div>
+
+<!-- ID Card banner -->
+<div style="background:${th.h1};padding:5px 0;text-align:center;flex-shrink:0;">
+  <span style="font-size:9.5px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:3px;font-family:'Montserrat',sans-serif;">Student  ID  Card</span>
+</div>
+<div style="height:2.5px;background:linear-gradient(90deg,${th.acc},${th.h2},${th.acc});flex-shrink:0;"></div>
+
+<!-- Body -->
+<div style="flex:1;background:#fff;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;">
+
+  <!-- Photo + name row -->
+  <div style="display:flex;gap:13px;align-items:flex-start;">
+    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div style="width:110px;height:136px;border-radius:6px;overflow:hidden;border:2px solid ${th.h2};box-shadow:0 3px 12px rgba(0,0,0,.18);">${photoEl}</div>
+      ${qrEl}
+    </div>
+    <div style="flex:1;min-width:0;padding-top:2px;">
+      <div style="font-size:17px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;line-height:1.15;margin-bottom:4px;word-break:break-word;">${s.fn||'Student'} ${s.ln||''}</div>
+      <div style="height:2.5px;width:36px;background:${th.acc};border-radius:2px;margin-bottom:10px;"></div>
+      <table style="border-collapse:collapse;width:100%;">
+        ${row('Class', s.cls||'—')}
+        ${row('D.O.B.', dob)}
+        ${row('Validity', year||'2025-2026')}
+        ${s.admno ? row('Adm. No.', s.admno) : row('Roll No.', s.roll||'—')}
+        ${s.blood ? row('Blood Grp', s.blood) : ''}
+      </table>
     </div>
   </div>
-  <!-- ID Card label -->
-  <div style="position:relative;z-index:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 18px;margin-top:2px;">
-    <span style="font-size:10px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:2.5px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
-  </div>
-</div>
 
-<!-- ── Gold accent line ── -->
-<div style="height:3px;background:linear-gradient(90deg,${th.acc},${th.h2},${th.acc});flex-shrink:0;"></div>
-
-<!-- ── Photo + Name band ── -->
-<div style="background:#fff;padding:14px 16px 10px;display:flex;gap:14px;align-items:flex-start;flex-shrink:0;border-bottom:1px solid #eef0f5;">
-  <div style="flex-shrink:0;">
-    <div style="width:100px;height:122px;border-radius:8px;overflow:hidden;border:2.5px solid ${th.h2};box-shadow:0 4px 16px rgba(0,0,0,.15);">${photoEl}</div>
-  </div>
-  <div style="flex:1;padding-top:4px;">
-    <div style="font-size:18px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;line-height:1.15;margin-bottom:6px;">${s.fn||'Student'} ${s.ln||''}</div>
-    <div style="height:2px;width:40px;background:${th.acc};border-radius:2px;margin-bottom:10px;"></div>
-    ${field('Class / Section', s.cls||'—')}
-    ${field('Date of Birth', dob)}
-  </div>
-</div>
-
-<!-- ── Details grid ── -->
-<div style="background:#fff;padding:12px 16px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px;">
-    ${field('Validity', year||'2025-2026')}
-    ${s.admno ? field('Adm. No.', s.admno) : field('Roll No.', s.roll||'—')}
-    ${field('Contact', mob)}
-    ${s.blood ? field('Blood Group', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
-  </div>
-
-  <!-- ── QR + Sign row ── -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eef0f5;padding-top:10px;margin-top:4px;">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
-      ${qrEl}
-      <div style="font-size:7px;color:#bbb;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.5px;">Scan</div>
+  <!-- Contact + Sign row -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eef0f5;padding-top:10px;margin-top:auto;">
+    <div>
+      <div style="font-size:8px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.8px;font-family:'Roboto',sans-serif;margin-bottom:2px;">Contact</div>
+      <div style="font-size:11.5px;font-weight:700;color:#222;font-family:'Montserrat',sans-serif;">${mob}</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:14px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;min-width:100px;border-bottom:1px solid #ddd;padding-bottom:4px;">${prin||'__________'}</div>
-      <div style="font-size:8px;color:#aaa;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
+      <div style="font-size:13px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #ccc;min-width:90px;">${prin||'__________'}</div>
+      <div style="font-size:7.5px;color:#aaa;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
     </div>
   </div>
+
 </div>
 
-<!-- ── Footer ── -->
-<div style="background:${th.h1};padding:6px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-  <div style="font-size:8px;color:rgba(255,255,255,.5);font-family:'Roboto',sans-serif;letter-spacing:0.5px;">lkps-app.vercel.app</div>
-  <div style="font-size:8px;color:${th.acc};font-family:'Roboto',sans-serif;font-weight:700;letter-spacing:0.5px;">EST. 2009</div>
+<!-- Footer -->
+<div style="background:${th.h1};padding:5px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+  <div style="font-size:7.5px;color:rgba(255,255,255,.45);font-family:'Roboto',sans-serif;">lkps-app.vercel.app</div>
+  <div style="font-size:7.5px;color:${th.acc};font-family:'Roboto',sans-serif;font-weight:700;letter-spacing:0.5px;">EST. 2009</div>
 </div>
 </div>`;
 }
@@ -114,59 +112,59 @@ export function buildCardBack(s, logo) {
     || 'Ishapur, Laxminagar, Yamuna Paar, Dist-Mathura, Uttar Pradesh Pin-281204, (India)';
 
   const row = (label, val) =>
-    `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:baseline;">
-      <div style="font-size:9.5px;font-weight:600;color:#666;font-family:'Roboto',sans-serif;white-space:nowrap;min-width:118px;">${label}</div>
-      <div style="font-size:10.5px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;flex:1;line-height:1.3;">${val}</div>
-    </div>`;
+    `<tr>
+      <td style="font-size:9px;font-weight:600;color:#666;font-family:'Roboto',sans-serif;white-space:nowrap;padding:5px 8px 5px 0;vertical-align:top;width:1%;">${label}</td>
+      <td style="font-size:9px;color:#aaa;padding:5px 6px 5px 0;vertical-align:top;">:</td>
+      <td style="font-size:11px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;padding:4px 0;vertical-align:top;border-bottom:1px solid #f0f0f0;line-height:1.4;">${val}</td>
+    </tr>`;
 
   return `<div style="width:${CW}px;height:${CH}px;border-radius:14px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;">
 <style>${GFONT}</style>
 
-<!-- ── Top accent ── -->
-<div style="height:6px;background:linear-gradient(90deg,#0d2b6e,#1749b1,#f0c040);flex-shrink:0;"></div>
+<!-- Top accent -->
+<div style="height:5px;background:linear-gradient(90deg,#0d2b6e,#1749b1,#f0c040);flex-shrink:0;"></div>
 
-<!-- ── School name mini header ── -->
-<div style="background:#f8faff;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8edf5;flex-shrink:0;">
+<!-- Mini header -->
+<div style="background:#f4f7ff;padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e0e8f5;flex-shrink:0;">
   ${logo
-    ? `<img src="${logo}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">`
-    : `<div style="font-size:22px;flex-shrink:0;">🏫</div>`}
+    ? `<img src="${logo}" style="width:34px;height:34px;object-fit:contain;flex-shrink:0;">`
+    : `<div style="font-size:20px;flex-shrink:0;">🏫</div>`}
   <div>
-    <div style="font-size:11px;font-weight:900;color:#0d2b6e;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;">Lord Krishna Public School</div>
-    <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;">Ishapur, Laxminagar, Mathura</div>
+    <div style="font-size:10.5px;font-weight:900;color:#0d2b6e;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;">Lord Krishna Public School</div>
+    <div style="font-size:7.5px;color:#888;font-family:'Roboto',sans-serif;">Ishapur, Laxminagar, Mathura</div>
   </div>
 </div>
 
-<!-- ── Info body ── -->
-<div style="flex:1;padding:14px 16px 10px;background:#fff;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;">
-  <div>
+<!-- Info body -->
+<div style="flex:1;padding:12px 14px;background:#fff;display:flex;flex-direction:column;gap:0;overflow:hidden;">
+  <table style="border-collapse:collapse;width:100%;margin-bottom:10px;">
     ${s.blood ? row('Blood Group', `<span style="font-size:13px;font-weight:900;color:#b91c1c;">${s.blood}</span>`) : ''}
     ${row('Contact No.', mob)}
     ${row("Father's Name", s.father||'—')}
     ${s.fphone ? row("Father's Contact", s.fphone) : ''}
-    <div style="margin-bottom:3px;font-size:9.5px;font-weight:600;color:#666;font-family:'Roboto',sans-serif;">Address</div>
-    <div style="font-size:10px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;line-height:1.55;margin-bottom:12px;">${addr}</div>
+    ${row('Address', addr)}
+  </table>
 
-    <!-- Rules -->
-    <div style="display:inline-block;font-size:9px;font-weight:800;color:#0d2b6e;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-family:'Montserrat',sans-serif;border-bottom:2px solid #f0c040;padding-bottom:2px;">Rules to be followed</div>
+  <!-- Rules -->
+  <div style="border-top:2px solid #f0c040;padding-top:8px;">
+    <div style="font-size:8.5px;font-weight:800;color:#0d2b6e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Rules to be followed</div>
     <div style="font-size:8.5px;color:#333;line-height:1.75;font-family:'Roboto',sans-serif;">
-      <div style="margin-bottom:2px;">• Always carry and display this card in campus when asked by officials.</div>
-      <div style="margin-bottom:2px;">• Loss of this ID card must be reported immediately to HoD/PC.</div>
+      <div style="margin-bottom:3px;">• Always carry and display this card in campus when asked by officials.</div>
+      <div style="margin-bottom:3px;">• Loss of this ID card must be reported immediately to HoD/PC.</div>
       <div>• This card must be returned to HoD/PC before final clearance.</div>
     </div>
   </div>
-
-  <!-- Watermark logo -->
-  <div style="display:flex;justify-content:center;margin-top:8px;opacity:0.07;pointer-events:none;">
-    ${logo
-      ? `<img src="${logo}" style="width:80px;height:80px;object-fit:contain;">`
-      : `<div style="font-size:64px;">🏫</div>`}
-  </div>
 </div>
 
-<!-- ── Footer ── -->
-<div style="background:#111;padding:8px 16px;text-align:center;flex-shrink:0;">
-  <div style="font-size:8.5px;color:#ccc;font-family:'Roboto',sans-serif;line-height:1.65;">17 KM Stone, NH#2, Mathura-Delhi Road, P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
-  <div style="font-size:8.5px;color:#888;font-family:'Roboto',sans-serif;margin-top:1px;">Phone: +91-5662-250900, 909</div>
+<!-- Watermark + footer -->
+<div style="background:linear-gradient(180deg,#f4f7ff,#e8eeff);padding:8px 14px;display:flex;align-items:center;justify-content:center;border-top:1px solid #e0e8f5;flex-shrink:0;">
+  ${logo
+    ? `<img src="${logo}" style="height:32px;object-fit:contain;opacity:0.2;">`
+    : `<div style="font-size:24px;opacity:0.15;">🏫</div>`}
+</div>
+<div style="background:#111;padding:7px 14px;text-align:center;flex-shrink:0;">
+  <div style="font-size:8px;color:#ccc;font-family:'Roboto',sans-serif;line-height:1.65;">17 KM Stone, NH#2, Mathura-Delhi Road, P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
+  <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;margin-top:1px;">Phone: +91-5662-250900, 909</div>
 </div>
 </div>`;
 }
