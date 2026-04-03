@@ -31,53 +31,54 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   } catch(e){}
 
   const drow = (label, val) =>
-    `<div style="margin-bottom:11px;">
-      <div style="font-size:9.5px;color:#555;font-family:'Roboto',sans-serif;margin-bottom:1px;">${label}</div>
-      <div style="font-size:13px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;line-height:1.2;">${val}</div>
+    `<div style="margin-bottom:12px;">
+      <div style="font-size:9px;color:#888;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:2px;">${label}</div>
+      <div style="font-size:14px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;line-height:1.2;">${val}</div>
     </div>`;
 
   return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- ① Header: centered logo + school name -->
-<div style="background:#fff;padding:14px 14px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
+<!-- ① Header: logo left + school name right, GLA style -->
+<div style="background:#fff;padding:12px 14px 10px;display:flex;align-items:center;gap:12px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
   ${logo
-    ? `<img src="${logo}" style="width:58px;height:58px;object-fit:contain;display:block;">`
-    : `<div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:32px;">🏫</div>`}
-  <div style="text-align:center;">
-    <div style="font-size:16px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.5px;line-height:1.15;">Lord Krishna Public School</div>
-    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
-    ${phone ? `<div style="font-size:8px;color:#666;margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
+    ? `<img src="${logo}" style="width:64px;height:64px;object-fit:contain;display:block;flex-shrink:0;">`
+    : `<div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;">🏫</div>`}
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:18px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.1;">Lord Krishna</div>
+    <div style="font-size:18px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.1;">Public School</div>
+    <div style="font-size:8.5px;color:#555;margin-top:4px;font-family:'Roboto',sans-serif;">Ishapur, Laxminagar, Mathura</div>
+    ${phone ? `<div style="font-size:8px;color:#777;margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
   </div>
 </div>
 
 <!-- ② Gray "Student ID Card" bar -->
-<div style="background:#e8edf5;padding:6px 0;text-align:center;flex-shrink:0;">
-  <span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:2.5px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
+<div style="background:#dde3f0;padding:7px 0;text-align:center;flex-shrink:0;">
+  <span style="font-size:12px;font-weight:700;color:#222;text-transform:uppercase;letter-spacing:3px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
 </div>
 
-<!-- ③ Dark name bar -->
-<div style="background:${th.h1};padding:7px 14px;flex-shrink:0;">
-  <div style="font-size:15px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;">${s.fn||'Student'} ${s.ln||''}</div>
+<!-- ③ Dark name bar — centered -->
+<div style="background:${th.h1};padding:8px 14px;flex-shrink:0;text-align:center;">
+  <div style="font-size:17px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:0.3px;">${s.fn||'Student'} ${s.ln||''}</div>
 </div>
 
-<!-- ④ Body: photo left, details right -->
+<!-- ④ Body: photo left, details right — no flex spacer, tight layout -->
 <div style="flex:1;display:flex;background:#fff;min-height:0;">
-  <div style="width:148px;flex-shrink:0;padding:14px 10px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;border-right:1px solid #eee;">
-    <div style="width:120px;height:150px;overflow:hidden;border:1.5px solid #ccc;flex-shrink:0;">${photoEl}</div>
-    <div style="flex:1;"></div>
+  <div style="width:150px;flex-shrink:0;padding:14px 10px 12px 14px;display:flex;flex-direction:column;align-items:flex-start;border-right:1px solid #eee;">
+    <div style="width:122px;height:152px;overflow:hidden;border:2px solid ${th.h2};flex-shrink:0;">${photoEl}</div>
+    <div style="flex:1;min-height:10px;"></div>
     ${qrEl}
   </div>
-  <div style="flex:1;padding:14px 14px 14px;display:flex;flex-direction:column;min-width:0;">
-    ${drow('Class / Section :', s.cls||'—')}
-    ${drow('Date of Birth :', dob)}
-    ${drow('Validity :', year||'2025-2026')}
-    ${s.admno ? drow('Adm. No. :', s.admno) : drow('Roll No. :', s.roll||'—')}
-    ${s.blood ? drow('Blood Group :', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
-    <div style="flex:1;"></div>
+  <div style="flex:1;padding:14px 12px 12px;display:flex;flex-direction:column;min-width:0;">
+    ${drow('Class / Section', s.cls||'—')}
+    ${drow('Date of Birth', dob)}
+    ${drow('Validity', year||'2025-2026')}
+    ${s.admno ? drow('Adm. No.', s.admno) : drow('Roll No.', s.roll||'—')}
+    ${s.blood ? drow('Blood Group', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
+    <div style="flex:1;min-height:8px;"></div>
     <div style="text-align:right;padding-top:8px;border-top:1px solid #eee;">
-      <div style="font-size:14px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #bbb;display:inline-block;min-width:100px;">${prin||'__________'}</div>
-      <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
+      <div style="font-size:15px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #bbb;display:inline-block;min-width:90px;">${prin||'__________'}</div>
+      <div style="font-size:8px;color:#999;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
     </div>
   </div>
 </div>
