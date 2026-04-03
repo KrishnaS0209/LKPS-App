@@ -762,7 +762,7 @@ function Login({ db, onLogin }) {
                 <label style={{display:'block',fontSize:11,fontWeight:700,color:'#475569',marginBottom:7,letterSpacing:'0.01em'}}>{role==='admin'?'Username':role==='teacher'?'Teacher Username':'Parent Username'}</label>
                 <div style={{position:'relative'}}>
                   <span className="material-symbols-outlined" style={{position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',fontSize:18,color:'#94a3b8',pointerEvents:'none'}}>person</span>
-                  <input value={u} onChange={e=>setU(e.target.value)} placeholder={role==='admin'?'admin':role==='teacher'?'teacher.username':'parent.username'}
+                  <input value={u} onChange={e=>setU(e.target.value)} placeholder={role==='admin'?'Enter username':role==='teacher'?'Enter teacher username':'Enter parent username'}
                     autoComplete="off" onKeyDown={e=>e.key==='Enter'&&document.getElementById('lp-pw').focus()}
                     className="lp-input"
                     style={{width:'100%',paddingLeft:42,paddingRight:14,paddingTop:12,paddingBottom:12,borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box'}}/>
@@ -772,7 +772,7 @@ function Login({ db, onLogin }) {
                 <label style={{display:'block',fontSize:11,fontWeight:700,color:'#475569',marginBottom:7,letterSpacing:'0.01em'}}>Password</label>
                 <div style={{position:'relative'}}>
                   <span className="material-symbols-outlined" style={{position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',fontSize:18,color:'#94a3b8',pointerEvents:'none'}}>lock</span>
-                  <input id="lp-pw" value={p} onChange={e=>setP(e.target.value)} type={showPw?'text':'password'} placeholder="••••••••"
+                  <input id="lp-pw" value={p} onChange={e=>setP(e.target.value)} type={showPw?'text':'password'} placeholder="Enter password"
                     onKeyDown={e=>e.key==='Enter'&&signin()}
                     className="lp-input"
                     style={{width:'100%',paddingLeft:42,paddingRight:44,paddingTop:12,paddingBottom:12,borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box'}}/>
