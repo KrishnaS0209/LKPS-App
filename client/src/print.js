@@ -27,16 +27,20 @@ export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) 
     ? `<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${big?110:95}px;height:${big?110:95}px;object-fit:contain;opacity:0.05;pointer-events:none;">`
     : '';
 
-  const qrData = encodeURIComponent(JSON.stringify({
-    id: s.id || s.sid,
-    name: `${s.fn} ${s.ln}`,
-    cls: s.cls,
-    roll: s.roll,
-    admno: s.admno,
-    father: s.father,
-    phone: s.fphone || s.ph,
-  }));
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=64x64&data=${qrData}&margin=2`;
+  try {
+    const qrData = encodeURIComponent([
+      `Name:${(s.fn||'')} ${(s.ln||'')}`,
+      `Class:${s.cls||''}`,
+      `Roll:${s.roll||''}`,
+      `Adm:${s.admno||''}`,
+      `Father:${s.father||''}`,
+      `Ph:${s.fphone||s.ph||''}`,
+    ].join('|'));
+    var qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${qrData}&margin=2`;
+  } catch(e) {
+    var qrUrl = '';
+  }
+  const qrEl = qrUrl ? `<img src="${qrUrl}" width="${big?52:44}" height="${big?52:44}" style="border:1px solid #e0e0e0;border-radius:4px;" alt="QR"/>` : '';
     `<tr><td style="font-size:${big?9:8}px;font-weight:500;color:#666;padding:2.5px 6px 2.5px 0;width:80px;font-family:'Inter',sans-serif;">${label}</td>`+
     `<td style="font-size:${big?9:8}px;color:#1a1a2e;padding:2.5px 0;font-weight:600;font-family:'Inter',sans-serif;border-bottom:1px solid #f0f0f0;">${val}</td></tr>`;
 
@@ -79,8 +83,8 @@ export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) 
         ${s.admno?`<div style="font-size:${big?7.5:7}px;color:#999;font-family:'Inter',sans-serif;">Adm: <strong style="color:#555;">${s.admno}</strong></div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <img src="${qrUrl}" width="${big?52:44}" height="${big?52:44}" style="border:1px solid #e0e0e0;border-radius:4px;" alt="QR"/>
-        <div style="font-size:6px;color:#aaa;font-family:'Inter',sans-serif;">Scan for details</div>
+        ${qrEl}
+        ${qrEl ? `<div style="font-size:6px;color:#aaa;font-family:'Inter',sans-serif;">Scan for details</div>` : ''}
       </div>
       <div style="text-align:right;">
         <div style="font-size:${big?10:9}px;font-style:italic;color:${th.h1};font-family:'Playfair Display',serif;">${prin||'__________'}</div>
