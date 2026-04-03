@@ -457,7 +457,13 @@ export async function saveSessionData(sessionId, db) {
   await Promise.allSettled(ops);
 }
 
-// ── Legacy compat — no-op (data is in MongoDB now) ───────────────
+export async function requestOTP() {
+  return req('POST', '/auth/request-otp');
+}
+
+export async function verifyOTPChangePassword(otp, newPassword) {
+  return req('POST', '/auth/verify-otp-change-password', { otp, newPassword });
+}
 export async function migrateLegacyData() { return; }
 export async function saveSessions() { return; } // sessions managed via API
 

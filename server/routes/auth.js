@@ -4,10 +4,76 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const { auth } = require('../middleware/auth');
+const nodemailer = require('nodemailer');
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 }
+
+function makeOTP() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function getMailer() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+  });
+}
+
+// POST /api/auth/request-otp  — send OTP to admin email for password change
+router.post('/request-otp', auth, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.adminId);
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    if (!admin.email) return res.status(400).json({ error: 'No email set for this admin. Add email in settings first.' });
+
+    const otp = makeOTP();
+    admin.otp = otp;
+    admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    await admin.save();
+
+    await getMailer().sendMail({
+      from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
+      to: admin.email,
+      subject: 'Password Change OTP — LKPS Portal',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
+        <h2 style="color:#0d2b6e;margin-bottom:8px;">Password Change Request</h2>
+        <p style="color:#555;font-size:14px;">Your OTP to change the admin password is:</p>
+        <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
+        <p style="color:#888;font-size:12px;">This OTP is valid for <b>10 minutes</b>. Do not share it with anyone.</p>
+        <p style="color:#888;font-size:12px;">If you did not request this, please secure your account immediately.</p>
+      </div>`,
+    });
+
+    res.json({ ok: true, email: admin.email.replace(/(.{2}).+(@.+)/, '$1***$2') });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/auth/verify-otp-change-password
+router.post('/verify-otp-change-password', auth, async (req, res) => {
+  try {
+    const { otp, newPassword } = req.body;
+    if (!otp || !newPassword) return res.status(400).json({ error: 'OTP and new password required' });
+
+    const admin = await Admin.findById(req.user.adminId);
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    if (!admin.otp || admin.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (!admin.otpExpiry || new Date() > admin.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
+    if (newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+    admin.password = newPassword;
+    admin.otp = '';
+    admin.otpExpiry = null;
+    await admin.save();
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // POST /api/auth/login  — admin login
 router.post('/login', async (req, res) => {

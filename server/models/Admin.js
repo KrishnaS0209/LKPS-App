@@ -6,7 +6,10 @@ const AdminSchema = new Schema({
   password: { type: String, required: true },
   name:     { type: String, required: true },
   role:     { type: String, default: 'Admin' },
-  photo:    { type: String, default: '' }, // base64 or URL
+  photo:    { type: String, default: '' },
+  email:    { type: String, default: '' },
+  otp:      { type: String, default: '' },
+  otpExpiry:{ type: Date,   default: null },
 }, { timestamps: true });
 
 // Hash password before save

@@ -9,6 +9,7 @@ import {
   loadSessionData, saveSessionData, initShadow, saveSessionConfig,
   getAdmins, createAdmin, updateAdmin, removeAdmin,
   getMessages, sendMessage, updateMessage, deleteMessage,
+  requestOTP, verifyOTPChangePassword,
 } from './storage';
 import ParentPortal from './ParentPortal';
 import AdminMessages from './AdminMessages';
@@ -8177,7 +8178,10 @@ function Settings({ db, save, user, setUser }) {
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [cpOld, setCpOld] = useState(''); const [cpNew, setCpNew] = useState(''); const [cpConf, setCpConf] = useState('');
-  const isMainAdmin = user.username === 'admin';
+  const [cpOtpStep, setCpOtpStep] = useState(false); // false = form, true = otp entry
+  const [cpOtp, setCpOtp] = useState('');
+  const [cpOtpSending, setCpOtpSending] = useState(false);
+  const [cpOtpEmail, setCpOtpEmail] = useState('');  const isMainAdmin = user.username === 'admin';
 
   const sf = k => v => { const nf={...form,[k]:v}; setForm(nf); save({...db,settings:nf}); };
 
@@ -8234,12 +8238,24 @@ function Settings({ db, save, user, setUser }) {
     if(cpNew!==cpConf){toast('Passwords do not match','err');return;}
     if(cpNew.length<6){toast('Min 6 chars','err');return;}
     try {
-      // Verify old password by attempting login
       await apiLogin(user.username, cpOld);
-      const a = db.admins.find(x=>x.username===user.username);
-      await updateAdmin(a?._id || a?.id || user.id, { password: cpNew });
-      setCpOld('');setCpNew('');setCpConf('');toast('Password updated');
+      // Send OTP
+      setCpOtpSending(true);
+      const res = await requestOTP();
+      setCpOtpEmail(res.email);
+      setCpOtpStep(true);
+      toast('OTP sent to your email');
     } catch(err) { toast(err.message||'Wrong current password','err'); }
+    finally { setCpOtpSending(false); }
+  };
+
+  const chpwVerify = async () => {
+    if(!cpOtp){toast('Enter OTP','err');return;}
+    try {
+      await verifyOTPChangePassword(cpOtp, cpNew);
+      setCpOld('');setCpNew('');setCpConf('');setCpOtp('');setCpOtpStep(false);setCpOtpEmail('');
+      toast('Password updated successfully');
+    } catch(err) { toast(err.message||'Invalid OTP','err'); }
   };
 
   return (
@@ -8301,12 +8317,30 @@ function Settings({ db, save, user, setUser }) {
 
       <Card className="settings-card p-5">
         <div className="text-sm font-semibold text-on-surface mb-4 pb-3" style={{borderBottom:'1px solid rgba(196,198,207,0.5)'}}>Change Password</div>
-        <Grid>
-          <Field label="Current Password"><Input type="password" value={cpOld} onChange={setCpOld}/></Field>
-          <Field label="New Password"><Input type="password" value={cpNew} onChange={setCpNew}/></Field>
-          <Field label="Confirm"><Input type="password" value={cpConf} onChange={setCpConf}/></Field>
-        </Grid>
-        <div className="mt-3"><Btn variant="primary" size="sm" onClick={chpw}>Update Password</Btn></div>
+        {!cpOtpStep ? (
+          <>
+            <Grid>
+              <Field label="Current Password"><Input type="password" value={cpOld} onChange={setCpOld}/></Field>
+              <Field label="New Password"><Input type="password" value={cpNew} onChange={setCpNew}/></Field>
+              <Field label="Confirm New Password"><Input type="password" value={cpConf} onChange={setCpConf}/></Field>
+            </Grid>
+            <div className="mt-3"><Btn variant="primary" size="sm" onClick={chpw} disabled={cpOtpSending}>{cpOtpSending?'Sending OTP…':'Send OTP & Continue'}</Btn></div>
+            <div style={{fontSize:11,color:'#94a3b8',marginTop:8}}>An OTP will be sent to your registered email to confirm the change.</div>
+          </>
+        ) : (
+          <>
+            <div style={{fontSize:13,color:'#475569',marginBottom:14}}>
+              OTP sent to <b>{cpOtpEmail}</b>. Enter it below to confirm your password change.
+            </div>
+            <Field label="Enter OTP">
+              <Input value={cpOtp} onChange={setCpOtp} placeholder="6-digit OTP" maxLength={6}/>
+            </Field>
+            <div style={{display:'flex',gap:8,marginTop:12}}>
+              <Btn variant="primary" size="sm" onClick={chpwVerify}>Verify & Update Password</Btn>
+              <Btn variant="ghost" size="sm" onClick={()=>{setCpOtpStep(false);setCpOtp('');}}>Cancel</Btn>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* Add User Modal */}
