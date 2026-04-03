@@ -5906,6 +5906,8 @@ function Fees({ db, save }) {
   const [ledStu, setLedStu] = useState('');
   const [ledCls, setLedCls] = useState('');
   const [histStu, setHistStu] = useState('');
+  const [histCls, setHistCls] = useState('');
+  const [overdueCls, setOverdueCls] = useState('');
 
   // ── Class Fee Structure ──────────────────────────────────────────
   const saveClassFee = (cls, field, val) => {
@@ -6363,12 +6365,21 @@ function Fees({ db, save }) {
         {tab===0 && (
           <div className="bg-surface-container-low rounded-2xl p-1">
             <div className="bg-surface-container-lowest rounded-2xl overflow-hidden">
-              <div className="px-6 py-5 flex justify-between items-center border-b border-surface-container-low">
+              <div className="px-6 py-5 flex justify-between items-center border-b border-surface-container-low flex-wrap gap-3">
                 <div>
                   <h3 className="text-xl font-bold text-primary" style={{fontFamily:'Manrope,sans-serif'}}>Overdue Accounts</h3>
                   <p className="text-xs text-on-surface-variant mt-0.5">Students with fee overdue by at least 1 month</p>
                 </div>
-                <span className="text-xs font-bold text-on-surface-variant">{overdueRows.length} student{overdueRows.length!==1?'s':''} overdue</span>
+                <div className="flex items-center gap-3">
+                  <select value={overdueCls} onChange={e=>setOverdueCls(e.target.value)}
+                    className="bg-surface-container-low border border-outline-variant rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none">
+                    <option value="">All Classes</option>
+                    {[...new Set(db.students.map(s=>s.cls))].sort().map(c=><option key={c}>{c}</option>)}
+                  </select>
+                  <span className="text-xs font-bold text-on-surface-variant">
+                    {overdueRows.filter(s=>!overdueCls||s.cls===overdueCls).length} overdue
+                  </span>
+                </div>
               </div>
               <div className="overflow-x-auto finance-overdue-table">
                 <table className="w-full text-left">
@@ -6380,7 +6391,7 @@ function Fees({ db, save }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-container-low">
-                    {overdueRows.map(s=>(
+                    {overdueRows.filter(s=>!overdueCls||s.cls===overdueCls).map(s=>(
                       <tr key={s.id} className="group hover:bg-surface-container-low transition-colors">
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-3">
@@ -6409,7 +6420,7 @@ function Fees({ db, save }) {
                         </td>
                       </tr>
                     ))}
-                    {!overdueRows.length && (
+                    {!overdueRows.filter(s=>!overdueCls||s.cls===overdueCls).length && (
                       <tr><td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant text-sm">
                         <div className="text-3xl mb-2">✅</div>No overdue accounts — all students are up to date!
                       </td></tr>
@@ -6418,7 +6429,7 @@ function Fees({ db, save }) {
                 </table>
               </div>
               <div className="finance-overdue-mobile-list">
-                {overdueRows.map(s=>(
+                {overdueRows.filter(s=>!overdueCls||s.cls===overdueCls).map(s=>(
                   <div key={s.id} className="finance-mobile-card">
                     <div className="finance-mobile-card-head">
                       <div>
