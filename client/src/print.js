@@ -1,6 +1,5 @@
-// ── ID Card HTML builder — CR80 Portrait (54 × 85.6 mm) ─────────
-// Rendered at 2× for screen clarity: 404 × 638 px
-// Print CSS scales back to physical CR80 via transform:scale(0.51)
+// ── ID Card — CR80 Portrait (54 × 85.6 mm) ───────────────────────
+// Rendered at 2× for screen: 404 × 638 px
 
 const GFONT = `@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap');`;
 
@@ -12,7 +11,6 @@ const THEMES = {
   purple: { h1: '#3b0764', h2: '#7c3aed', acc: '#ddd6fe' },
 };
 
-// CR80 portrait at 2× scale: 54mm × 85.6mm → 404 × 638 px
 const CW = 404;
 const CH = 638;
 export const CARD_DIMS = { CW, CH };
@@ -22,9 +20,7 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const dob = s.dob ? new Date(s.dob).toLocaleDateString('en-IN') : '—';
   const mob = s.fphone || s.ph || '—';
 
-  const logoEl = logo
-    ? `<img src="${logo}" style="width:58px;height:58px;object-fit:contain;display:block;flex-shrink:0;">`
-    : `<div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">🏫</div>`;
+  const photoEl = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e8edf5;font-size:46px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
 
@@ -34,7 +30,6 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
     qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qd}&margin=4&ecc=M" width="80" height="80" style="display:block;" alt="QR"/>`;
   } catch(e){}
 
-  // GLA-style detail row
   const drow = (label, val) =>
     `<div style="margin-bottom:11px;">
       <div style="font-size:9.5px;color:#555;font-family:'Roboto',sans-serif;margin-bottom:1px;">${label}</div>
@@ -44,39 +39,35 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- ① Header -->
-<div style="background:#fff;padding:14px 14px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
+<!-- ① Header: centered logo + school name -->
+<div style="background:#fff;padding:14px 14px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
   ${logo
-    ? `<img src="${logo}" style="width:56px;height:56px;object-fit:contain;display:block;">`
-    : `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:32px;">🏫</div>`}
+    ? `<img src="${logo}" style="width:58px;height:58px;object-fit:contain;display:block;">`
+    : `<div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:32px;">🏫</div>`}
   <div style="text-align:center;">
     <div style="font-size:16px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.5px;line-height:1.15;">Lord Krishna Public School</div>
-    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;letter-spacing:0.2px;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
+    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
     ${phone ? `<div style="font-size:8px;color:#666;margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
   </div>
 </div>
 
-<!-- ② Gray bar -->
+<!-- ② Gray "Student ID Card" bar -->
 <div style="background:#e8edf5;padding:6px 0;text-align:center;flex-shrink:0;">
   <span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:2.5px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
 </div>
 
-<!-- ③ Name bar -->
+<!-- ③ Dark name bar -->
 <div style="background:${th.h1};padding:7px 14px;flex-shrink:0;">
   <div style="font-size:15px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;">${s.fn||'Student'} ${s.ln||''}</div>
 </div>
 
-<!-- ④ Body -->
+<!-- ④ Body: photo left, details right -->
 <div style="flex:1;display:flex;background:#fff;min-height:0;">
-
-  <!-- Photo column — fills full height -->
   <div style="width:148px;flex-shrink:0;padding:14px 10px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;border-right:1px solid #eee;">
     <div style="width:120px;height:150px;overflow:hidden;border:1.5px solid #ccc;flex-shrink:0;">${photoEl}</div>
     <div style="flex:1;"></div>
     ${qrEl}
   </div>
-
-  <!-- Details column — fills full height, no justify-content:space-between -->
   <div style="flex:1;padding:14px 14px 14px;display:flex;flex-direction:column;min-width:0;">
     ${drow('Class / Section :', s.cls||'—')}
     ${drow('Date of Birth :', dob)}
@@ -84,7 +75,6 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
     ${s.admno ? drow('Adm. No. :', s.admno) : drow('Roll No. :', s.roll||'—')}
     ${s.blood ? drow('Blood Group :', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
     <div style="flex:1;"></div>
-    <!-- Sign pinned to bottom -->
     <div style="text-align:right;padding-top:8px;border-top:1px solid #eee;">
       <div style="font-size:14px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #bbb;display:inline-block;min-width:100px;">${prin||'__________'}</div>
       <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
@@ -113,8 +103,6 @@ export function buildCardBack(s, logo) {
 
   return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
-
-<!-- Info section — fixed height, no flex:1 -->
 <div style="padding:16px 16px 12px;display:flex;flex-direction:column;">
   ${s.blood ? infoRow('Blood Group :', `<b style="font-size:13px;">${s.blood}</b>`) : ''}
   ${infoRow('Contact No. :', mob)}
@@ -129,19 +117,13 @@ export function buildCardBack(s, logo) {
     <div>• This card must be returned to HoD/PC before final clearance.</div>
   </div>
 </div>
-
-<!-- Spacer that fills remaining space -->
 <div style="flex:1;background:#fff;"></div>
-
-<!-- School sketch band -->
 <div style="height:100px;background:linear-gradient(180deg,#f5f5f5,#e8e8e8);display:flex;align-items:center;justify-content:center;border-top:1px solid #ddd;border-bottom:1px solid #ddd;flex-shrink:0;overflow:hidden;position:relative;">
   ${logo
     ? `<img src="${logo}" style="height:78px;object-fit:contain;opacity:0.13;">`
     : `<div style="font-size:66px;opacity:0.08;line-height:1;">🏫</div>`}
   <div style="position:absolute;bottom:5px;width:100%;text-align:center;font-size:7.5px;color:#bbb;font-family:'Roboto',sans-serif;letter-spacing:0.5px;">LORD KRISHNA PUBLIC SCHOOL · MATHURA</div>
 </div>
-
-<!-- Address footer -->
 <div style="background:#111;padding:9px 14px;text-align:center;flex-shrink:0;">
   <div style="font-size:9px;color:#ddd;font-family:'Roboto',sans-serif;line-height:1.7;">17 KM Stone, NH#2, Mathura-Delhi Road,</div>
   <div style="font-size:9px;color:#ddd;font-family:'Roboto',sans-serif;line-height:1.7;">P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
@@ -154,7 +136,6 @@ export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) 
   return buildCardFront(s, photo, logo, phone, year, prin, theme);
 }
 
-// Print CSS — 2× rendered card scaled to physical CR80 portrait (0.51×)
 const printCSS = (single) => `
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:Arial,sans-serif;background:#cbd5e1;padding:${single?'24px':'14px'};display:flex;gap:28px;justify-content:center;flex-wrap:wrap;align-items:flex-start;}
@@ -162,13 +143,7 @@ const printCSS = (single) => `
   .card-wrap{transform:scale(0.51);transform-origin:top left;display:inline-block;line-height:0;}
   .side{display:flex;flex-direction:column;align-items:flex-start;width:${Math.round(CW*0.51)}px;height:${Math.round(CH*0.51)}px;}
   .pair{display:flex;gap:28px;margin-bottom:${single?'0':'24px'};justify-content:center;page-break-inside:avoid;align-items:flex-start;}
-  @media print{
-    body{background:#fff;padding:4mm;}
-    .side-label{display:none;}
-    .card-wrap{transform:scale(0.51);transform-origin:top left;}
-    .pair{gap:8mm;}
-    @page{margin:4mm;size:${single?'130mm 120mm':'A4 portrait'}}
-  }
+  @media print{body{background:#fff;padding:4mm;}.side-label{display:none;}.card-wrap{transform:scale(0.51);transform-origin:top left;}.pair{gap:8mm;}@page{margin:4mm;size:${single?'130mm 120mm':'A4 portrait'}}}
 `;
 
 export function printCard(s, photo, logo, phone, year, prin, theme) {
@@ -253,7 +228,6 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
   const dob     = s.dob ? new Date(s.dob).toLocaleDateString('en-IN') : '—';
   const attPct  = attT > 0 ? Math.round(attP / attT * 100) : 0;
   const stuAddr = [s.addr, s.city].filter(Boolean).join(', ') || '—';
-
   const dobInWords = (() => {
     if (!s.dob) return '—';
     const d = new Date(s.dob);
@@ -261,76 +235,29 @@ function tcBody(s, logo, sets, { tcNo, dt, admDt, ld, reason, conduct, feeStatus
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
     const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-    const numToWords = (n) => {
-      if (n === 0) return 'Zero';
-      if (n < 20) return ones[n];
-      if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
-      return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + numToWords(n%100) : '');
-    };
-    const year = d.getFullYear();
-    const y1 = Math.floor(year/100);
-    const y2 = year % 100;
-    const yearWords = numToWords(y1) + ' Hundred' + (y2 ? ' and ' + numToWords(y2) : '');
-    return `${numToWords(day)} ${months[d.getMonth()]} ${yearWords}`;
+    const numToWords = (n) => { if(n===0)return'Zero';if(n<20)return ones[n];if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');return ones[Math.floor(n/100)]+' Hundred'+(n%100?' '+numToWords(n%100):''); };
+    const year=d.getFullYear(),y1=Math.floor(year/100),y2=year%100;
+    return `${numToWords(day)} ${months[d.getMonth()]} ${numToWords(y1)} Hundred${y2?' and '+numToWords(y2):''}`;
   })();
-
   const logoImg = logo ? `<img class="hdr-logo" src="${logo}">` : `<span class="hdr-logo-ph">🏫</span>`;
   const logoWm  = logo ? `<img class="logo-wm" src="${logo}">` : '';
   const row = (label, value, noUnderline = false) =>
     `<tr><td class="lbl">${label}</td><td class="sep">:</td><td class="val${noUnderline?' noln':''}">${value || '—'}</td></tr>`;
-
-  return `<div class="cert">
-  ${logoWm}
-  <div class="content">
-    <div class="hdr">
-      ${logoImg}
-      <h1>${school}</h1>
-      <div class="sub">(Govt. Recognised)</div>
-      <div class="sub-bold">${addr}${phone ? '  ·  Ph.: ' + phone : ''}</div>
-      ${sets.year ? `<div class="sub">Academic Year : ${sets.year}</div>` : ''}
-    </div>
+  return `<div class="cert">${logoWm}<div class="content">
+    <div class="hdr">${logoImg}<h1>${school}</h1><div class="sub">(Govt. Recognised)</div><div class="sub-bold">${addr}${phone?'  ·  Ph.: '+phone:''}</div>${sets.year?`<div class="sub">Academic Year : ${sets.year}</div>`:''}</div>
     <div class="ttl-box"><span>Transfer Certificate</span></div>
-    <div class="meta-row">
-      <span>Sl. No. : <strong>${tcNo || '—'}</strong></span>
-      <span>Date : <strong>${dt || '—'}</strong></span>
-    </div>
+    <div class="meta-row"><span>Sl. No. : <strong>${tcNo||'—'}</strong></span><span>Date : <strong>${dt||'—'}</strong></span></div>
     <table class="rows">
-      ${row('Name of Student', s.fn + ' ' + s.ln)}
-      ${row("Father's Name", s.father)}
-      ${row("Mother's Name", s.mother)}
-      ${row('Address', stuAddr)}
-      ${row('Date of Admission', admDt)}
-      ${row('Class', s.cls)}
-      ${row('Roll No.', s.roll)}
-      ${row('Admission No.', s.admno)}
-      ${s.pen ? row('PEN No.', s.pen) : ''}
-      ${s.apaar ? row('APAAR ID', s.apaar) : ''}
-      ${row('Date of Birth (as per register)', dob + (s.dob ? `  <span style="font-weight:400;color:#555;font-size:11.5px">(${dobInWords})</span>` : ''))}
-      ${s.blood ? row('Blood Group', s.blood) : ''}
-      ${s.aadhar ? row('Aadhaar No.', s.aadhar) : ''}
-      ${s.ps ? row('Previous School', s.ps) : ''}
-      ${row('Character &amp; Conduct', conduct)}
-      ${row('Reason for Leaving', reason, true)}
+      ${row('Name of Student',s.fn+' '+s.ln)}${row("Father's Name",s.father)}${row("Mother's Name",s.mother)}${row('Address',stuAddr)}${row('Date of Admission',admDt)}${row('Class',s.cls)}${row('Roll No.',s.roll)}${row('Admission No.',s.admno)}${s.pen?row('PEN No.',s.pen):''}${s.apaar?row('APAAR ID',s.apaar):''}${row('Date of Birth (as per register)',dob+(s.dob?`  <span style="font-weight:400;color:#555;font-size:11.5px">(${dobInWords})</span>`:''))}${s.blood?row('Blood Group',s.blood):''}${s.aadhar?row('Aadhaar No.',s.aadhar):''}${s.ps?row('Previous School',s.ps):''}${row('Character &amp; Conduct',conduct)}${row('Reason for Leaving',reason,true)}
     </table>
     <p class="cert-stmt">Certified that above scholar's register of leaving school has been filled up to date as per departmental rules.</p>
-    <div class="foot">
-      <div class="foot-left">
-        <p>Date : <strong>${dt || '—'}</strong></p>
-        <p>Place : <strong>Mathura</strong></p>
-      </div>
-      <div class="sign-block">
-        <div class="sign-line">Principal / Head Master</div>
-        <div class="sign-sub">${school}</div>
-      </div>
-    </div>
-  </div>
-</div>`;
+    <div class="foot"><div class="foot-left"><p>Date : <strong>${dt||'—'}</strong></p><p>Place : <strong>Mathura</strong></p></div><div class="sign-block"><div class="sign-line">Principal / Head Master</div><div class="sign-sub">${school}</div></div></div>
+  </div></div>`;
 }
 
 export function buildTC(s, logo, sets, opts) {
   return `<style>${tcCSS}</style><body style="padding:0;background:#fff;">${tcBody(s, logo, sets, opts)}</body>`;
 }
-
 export function printTC(s, logo, sets, opts) {
   const w = window.open('', '_blank', 'width=820,height=1100');
   w.document.write(`<!DOCTYPE html><html><head><title>Transfer Certificate</title><style>${tcCSS}</style></head><body>${tcBody(s, logo, sets, opts)}<script>window.onload=()=>window.print()<\/script></body></html>`);
@@ -359,44 +286,32 @@ body{padding:5mm}
 `;
 
 function ccBody(s, logo, sets, { ccNo, dt, conduct, purpose, remarks, attP, attT }) {
-  const school  = sets.school || 'LORD KRISHNA PUBLIC SCHOOL';
-  const addr    = sets.addr || 'Ishapur, Laxminagar, Mathura';
-  const phone   = sets.phone || '';
-  const attPct  = attT > 0 ? Math.round(attP / attT * 100) : 0;
-  const attStr  = attT > 0 ? `<b>${attP}</b> days out of <b>${attT}</b> working days (<b>${attPct}%</b>)` : '—';
-  const sonDaughter = s.gn === 'Female' ? 'Daughter' : 'Son';
-  const conductMap = { Good: 'good character and conduct', 'Very Good': 'very good character and conduct', Excellent: 'excellent character and conduct', Satisfactory: 'satisfactory conduct' };
-  const certWm = logo ? `<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0;">` : '';
-  return `<div class="cert">
-  ${certWm}
-  <div class="inner">
-    ${certHeader(school, addr, phone, logo)}
-    <div class="ttl">Character Certificate</div>
-    <div class="ttl-line"></div>
-    <div class="no"><b>Cert. No.:</b> ${ccNo || '—'} &nbsp;&nbsp;&nbsp; <b>Date:</b> ${dt}</div>
+  const school = sets.school||'LORD KRISHNA PUBLIC SCHOOL', addr=sets.addr||'Ishapur, Laxminagar, Mathura', phone=sets.phone||'';
+  const attPct = attT>0?Math.round(attP/attT*100):0;
+  const attStr = attT>0?`<b>${attP}</b> days out of <b>${attT}</b> working days (<b>${attPct}%</b>)`:'—';
+  const sonDaughter = s.gn==='Female'?'Daughter':'Son';
+  const conductMap = {Good:'good character and conduct','Very Good':'very good character and conduct',Excellent:'excellent character and conduct',Satisfactory:'satisfactory conduct'};
+  const certWm = logo?`<img src="${logo}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0;">`:'';
+  return `<div class="cert">${certWm}<div class="inner">
+    ${certHeader(school,addr,phone,logo)}
+    <div class="ttl">Character Certificate</div><div class="ttl-line"></div>
+    <div class="no"><b>Cert. No.:</b> ${ccNo||'—'} &nbsp;&nbsp;&nbsp; <b>Date:</b> ${dt}</div>
     <div class="body">
-      <p>This is to certify that <b>${s.fn}${s.ln?' '+s.ln:''}</b>, ${sonDaughter} of <b>${s.father || '—'}</b>, was a bonafide student of <b>${school}</b> during the academic year <b>${sets.year || '—'}</b>.</p>
-      <br>
-      <p>During the period of study in Class <b>${s.cls || '—'}</b>, the student has shown <b>${conductMap[conduct] || 'good character and conduct'}</b>. The student attended school for ${attStr}. The student has been regular and disciplined throughout the academic session.</p>
-      ${remarks ? `<br><p>${remarks}</p>` : ''}
-      <br>
+      <p>This is to certify that <b>${s.fn}${s.ln?' '+s.ln:''}</b>, ${sonDaughter} of <b>${s.father||'—'}</b>, was a bonafide student of <b>${school}</b> during the academic year <b>${sets.year||'—'}</b>.</p><br>
+      <p>During the period of study in Class <b>${s.cls||'—'}</b>, the student has shown <b>${conductMap[conduct]||'good character and conduct'}</b>. The student attended school for ${attStr}. The student has been regular and disciplined throughout the academic session.</p>
+      ${remarks?`<br><p>${remarks}</p>`:''}<br>
       <p>This certificate is issued for <b>${purpose}</b> as per the request of the student/parent. We wish the student all the best in future endeavours.</p>
     </div>
     <div class="seal">
       <div class="slk"><div class="sll">Class Teacher</div></div>
-      <div class="slk">
-        <div style="font-size:14px;font-style:italic;color:#1a2e5a;margin-bottom:3px;font-family:'Playfair Display',serif;">${sets.prin || ''}</div>
-        <div class="sll">Principal / Head Master</div>
-      </div>
+      <div class="slk"><div style="font-size:14px;font-style:italic;color:#1a2e5a;margin-bottom:3px;font-family:'Playfair Display',serif;">${sets.prin||''}</div><div class="sll">Principal / Head Master</div></div>
     </div>
-  </div>
-</div>`;
+  </div></div>`;
 }
 
 export function buildCC(s, logo, sets, opts) {
   return `<style>${ccCSS}</style><body style="padding:0;background:#fff;">${ccBody(s, logo, sets, opts)}</body>`;
 }
-
 export function printCC(s, logo, sets, opts) {
   const w = window.open('', '_blank', 'width=820,height=1100');
   w.document.write(`<!DOCTYPE html><html><head><title>Character Certificate</title><style>${ccCSS}</style></head><body>${ccBody(s, logo, sets, opts)}<script>window.onload=()=>window.print()<\/script></body></html>`);
