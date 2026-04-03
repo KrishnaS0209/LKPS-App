@@ -46,7 +46,7 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- ① Header: white bg, logo | divider | school name -->
+<!-- ① Header -->
 <div style="background:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
   ${logoEl}
   <div style="width:1.5px;height:52px;background:#ddd;flex-shrink:0;"></div>
@@ -57,36 +57,35 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   </div>
 </div>
 
-<!-- ② Gray "Student ID Card" bar -->
+<!-- ② Gray bar -->
 <div style="background:#e8edf5;padding:6px 0;text-align:center;flex-shrink:0;">
   <span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:2.5px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
 </div>
 
-<!-- ③ Dark name bar -->
+<!-- ③ Name bar -->
 <div style="background:${th.h1};padding:7px 14px;flex-shrink:0;">
-  <div style="font-size:15px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:0.2px;">${s.fn||'Student'} ${s.ln||''}</div>
+  <div style="font-size:15px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;">${s.fn||'Student'} ${s.ln||''}</div>
 </div>
 
-<!-- ④ Body: photo left, details right -->
-<div style="flex:1;display:flex;gap:0;background:#fff;overflow:hidden;">
+<!-- ④ Body -->
+<div style="flex:1;display:flex;background:#fff;min-height:0;">
 
-  <!-- Photo column -->
-  <div style="width:140px;flex-shrink:0;padding:14px 12px 12px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;border-right:1px solid #eee;">
-    <div style="width:112px;height:138px;overflow:hidden;border:1.5px solid #ccc;">${photoEl}</div>
+  <!-- Photo column — fills full height -->
+  <div style="width:148px;flex-shrink:0;padding:14px 10px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;border-right:1px solid #eee;">
+    <div style="width:120px;height:150px;overflow:hidden;border:1.5px solid #ccc;flex-shrink:0;">${photoEl}</div>
+    <div style="flex:1;"></div>
     ${qrEl}
   </div>
 
-  <!-- Details column -->
-  <div style="flex:1;padding:14px 14px 12px;display:flex;flex-direction:column;justify-content:space-between;">
-    <div>
-      ${drow('Class / Section :', s.cls||'—')}
-      ${drow('Date of Birth :', dob)}
-      ${drow('Validity :', year||'2025-2026')}
-      ${s.admno ? drow('Adm. No. :', s.admno) : drow('Roll No. :', s.roll||'—')}
-      ${s.blood ? drow('Blood Group :', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
-    </div>
-
-    <!-- Sign -->
+  <!-- Details column — fills full height, no justify-content:space-between -->
+  <div style="flex:1;padding:14px 14px 14px;display:flex;flex-direction:column;min-width:0;">
+    ${drow('Class / Section :', s.cls||'—')}
+    ${drow('Date of Birth :', dob)}
+    ${drow('Validity :', year||'2025-2026')}
+    ${s.admno ? drow('Adm. No. :', s.admno) : drow('Roll No. :', s.roll||'—')}
+    ${s.blood ? drow('Blood Group :', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
+    <div style="flex:1;"></div>
+    <!-- Sign pinned to bottom -->
     <div style="text-align:right;padding-top:8px;border-top:1px solid #eee;">
       <div style="font-size:14px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #bbb;display:inline-block;min-width:100px;">${prin||'__________'}</div>
       <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
@@ -116,30 +115,31 @@ export function buildCardBack(s, logo) {
   return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- Info section -->
-<div style="flex:1;padding:16px 16px 10px;display:flex;flex-direction:column;overflow:hidden;">
+<!-- Info section — fixed height, no flex:1 -->
+<div style="padding:16px 16px 12px;display:flex;flex-direction:column;">
   ${s.blood ? infoRow('Blood Group :', `<b style="font-size:13px;">${s.blood}</b>`) : ''}
   ${infoRow('Contact No. :', mob)}
   ${infoRow("Father's Name :", s.father||'—')}
   ${s.fphone ? infoRow("Father's Contact No :", s.fphone) : ''}
   <div style="margin-bottom:4px;font-size:10.5px;color:#222;font-family:'Roboto',sans-serif;">Address :</div>
   <div style="font-size:11px;font-weight:700;color:#000;font-family:'Montserrat',sans-serif;line-height:1.55;margin-bottom:14px;">${addr}</div>
-
-  <!-- Rules -->
-  <div style="font-size:10.5px;font-weight:700;color:#000;text-decoration:underline;margin-bottom:6px;font-family:'Roboto',sans-serif;">Rules to be followed :</div>
-  <div style="font-size:9.5px;color:#111;line-height:1.8;font-family:'Roboto',sans-serif;">
-    <div>• Always carry and display the identity card in the campus when ever asked by the officials.</div>
-    <div>• The loss of this ID card must be reported immediately to HoD/PC.</div>
+  <div style="font-size:10.5px;font-weight:700;color:#000;text-decoration:underline;margin-bottom:7px;font-family:'Roboto',sans-serif;">Rules to be followed :</div>
+  <div style="font-size:9.5px;color:#111;line-height:1.85;font-family:'Roboto',sans-serif;">
+    <div style="margin-bottom:2px;">• Always carry and display the identity card in the campus when ever asked by the officials.</div>
+    <div style="margin-bottom:2px;">• The loss of this ID card must be reported immediately to HoD/PC.</div>
     <div>• This card must be returned to HoD/PC before final clearance.</div>
   </div>
 </div>
 
-<!-- School sketch / watermark band -->
-<div style="height:90px;background:linear-gradient(180deg,#f5f5f5,#ebebeb);display:flex;align-items:center;justify-content:center;border-top:1px solid #ddd;border-bottom:1px solid #ddd;flex-shrink:0;overflow:hidden;position:relative;">
+<!-- Spacer that fills remaining space -->
+<div style="flex:1;background:#fff;"></div>
+
+<!-- School sketch band -->
+<div style="height:100px;background:linear-gradient(180deg,#f5f5f5,#e8e8e8);display:flex;align-items:center;justify-content:center;border-top:1px solid #ddd;border-bottom:1px solid #ddd;flex-shrink:0;overflow:hidden;position:relative;">
   ${logo
-    ? `<img src="${logo}" style="height:72px;object-fit:contain;opacity:0.12;">`
-    : `<div style="font-size:60px;opacity:0.08;line-height:1;">🏫</div>`}
-  <div style="position:absolute;bottom:4px;width:100%;text-align:center;font-size:7px;color:#bbb;font-family:'Roboto',sans-serif;letter-spacing:0.5px;">LORD KRISHNA PUBLIC SCHOOL · MATHURA</div>
+    ? `<img src="${logo}" style="height:78px;object-fit:contain;opacity:0.13;">`
+    : `<div style="font-size:66px;opacity:0.08;line-height:1;">🏫</div>`}
+  <div style="position:absolute;bottom:5px;width:100%;text-align:center;font-size:7.5px;color:#bbb;font-family:'Roboto',sans-serif;letter-spacing:0.5px;">LORD KRISHNA PUBLIC SCHOOL · MATHURA</div>
 </div>
 
 <!-- Address footer -->
