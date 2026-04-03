@@ -7159,18 +7159,21 @@ function Documents({ db, save }) {
           <div className="documents-preview-column col-span-7 flex flex-col gap-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Live Preview</p>
             <div className="documents-preview-wrap flex gap-6 items-start flex-wrap">
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Front Face</span>
-                <div className="bg-surface-container-low rounded-2xl p-3 flex items-start justify-center" style={{width:`${Math.round(CARD_DIMS.CW*0.48)+24}px`,height:`${Math.round(CARD_DIMS.CH*0.48)+24}px`,overflow:'hidden'}}>
-                  <div style={{transform:'scale(0.48)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewHTML}}/>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Back Face</span>
-                <div className="bg-surface-container-low rounded-2xl p-3 flex items-start justify-center" style={{width:`${Math.round(CARD_DIMS.CW*0.48)+24}px`,height:`${Math.round(CARD_DIMS.CH*0.48)+24}px`,overflow:'hidden'}}>
-                  <div style={{transform:'scale(0.48)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
-                </div>
-              </div>
+              {[['Front Face', previewHTML], ['Back Face', previewBackHTML]].map(([label, html]) => {
+                const scale = 0.46;
+                const W = Math.round(CARD_DIMS.CW * scale);
+                const H = Math.round(CARD_DIMS.CH * scale);
+                return (
+                  <div key={label} className="flex flex-col gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</span>
+                    <div className="bg-surface-container-low rounded-2xl" style={{width: W+16, height: H+16, padding:8, overflow:'hidden', flexShrink:0}}>
+                      <div style={{width: W, height: H, overflow:'hidden', borderRadius:6, flexShrink:0}}>
+                        <div style={{transform:`scale(${scale})`, transformOrigin:'top left', width: CARD_DIMS.CW, height: CARD_DIMS.CH, lineHeight:0, flexShrink:0}} dangerouslySetInnerHTML={{__html: html}}/>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
