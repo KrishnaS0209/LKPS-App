@@ -564,10 +564,21 @@ function Login({ db, onLogin }) {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const genCaptcha = () => {
+    const a = Math.floor(Math.random()*9)+1;
+    const b = Math.floor(Math.random()*9)+1;
+    return { q:`${a} + ${b}`, ans: a+b };
+  };
+  const [captcha, setCaptcha] = useState(genCaptcha);
+  const [captchaVal, setCaptchaVal] = useState('');
+  const refreshCaptcha = () => { setCaptcha(genCaptcha()); setCaptchaVal(''); };
+
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
   const signin = async () => {
     if (!u || !p) { setErr('Enter username and password'); return; }
+    if (parseInt(captchaVal) !== captcha.ans) { setErr('Incorrect captcha answer'); refreshCaptcha(); return; }
     setLoading(true); setErr('');
     try {
       if (role === 'admin') {
@@ -781,6 +792,22 @@ function Login({ db, onLogin }) {
                     <span className="material-symbols-outlined" style={{fontSize:18}}>{showPw?'visibility_off':'visibility'}</span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Captcha */}
+            <div style={{...anim(230),marginBottom:16}}>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:'#475569',marginBottom:7,letterSpacing:'0.01em'}}>Verification</label>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,background:'#f1f5f9',border:'1.5px solid #e2e8f0',borderRadius:12,padding:'10px 16px',fontWeight:800,fontSize:15,color:'#0f172a',letterSpacing:'0.05em',flexShrink:0,fontFamily:'monospace'}}>
+                  {captcha.q} = ?
+                </div>
+                <input value={captchaVal} onChange={e=>setCaptchaVal(e.target.value)} placeholder="Answer" onKeyDown={e=>e.key==='Enter'&&signin()}
+                  style={{flex:1,padding:'11px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box'}}/>
+                <button onClick={refreshCaptcha} title="Refresh" tabIndex={-1}
+                  style={{padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',cursor:'pointer',display:'flex',alignItems:'center',color:'#64748b',flexShrink:0}}>
+                  <span className="material-symbols-outlined" style={{fontSize:18}}>refresh</span>
+                </button>
               </div>
             </div>
 
