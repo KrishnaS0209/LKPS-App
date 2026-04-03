@@ -37,10 +37,11 @@ router.patch('/:id', auth, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { name, role, photo, password } = req.body;
+    const { name, role, photo, password, email } = req.body;
     if (name)  admin.name  = name;
     if (role)  admin.role  = role;
     if (photo !== undefined) admin.photo = photo;
+    if (email !== undefined) admin.email = email;
     if (password) admin.password = password; // will be hashed by pre-save hook
 
     await admin.save();

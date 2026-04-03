@@ -8214,6 +8214,7 @@ function Settings({ db, save, user, setUser }) {
         name: editForm.name,
         role: editForm.role,
         photo: editForm.pic || editForm.photo || '',
+        email: editForm.email || '',
       });
       const admins = await getAdmins();
       save({...db, admins});
@@ -8381,6 +8382,7 @@ function Settings({ db, save, user, setUser }) {
         <Grid>
           <Field label="Display Name *"><Input value={editForm.name||''} onChange={v=>setEditForm(f=>({...f,name:v}))}/></Field>
           <Field label="Username"><Input value={editForm.username||''} disabled style={{opacity:0.6}}/></Field>
+          <Field label="Email (for OTP)"><Input type="email" value={editForm.email||''} onChange={v=>setEditForm(f=>({...f,email:v}))} placeholder="your@gmail.com"/></Field>
           <Field label="Role">
             <Select value={editForm.role||'Admin'} onChange={v=>setEditForm(f=>({...f,role:v}))}>
               <option>Admin</option><option>Accountant</option><option>Principal</option>
