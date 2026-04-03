@@ -25,8 +25,6 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const logoEl = logo
     ? `<img src="${logo}" style="width:58px;height:58px;object-fit:contain;display:block;flex-shrink:0;">`
     : `<div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">🏫</div>`;
-
-  const photoEl = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e8edf5;font-size:46px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
 
@@ -47,12 +45,13 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
 <style>${GFONT}</style>
 
 <!-- ① Header -->
-<div style="background:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
-  ${logoEl}
-  <div style="width:1.5px;height:52px;background:#ddd;flex-shrink:0;"></div>
-  <div style="flex:1;min-width:0;">
-    <div style="font-size:15px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.15;">Lord Krishna Public School</div>
-    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
+<div style="background:#fff;padding:14px 14px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
+  ${logo
+    ? `<img src="${logo}" style="width:56px;height:56px;object-fit:contain;display:block;">`
+    : `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:32px;">🏫</div>`}
+  <div style="text-align:center;">
+    <div style="font-size:16px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.5px;line-height:1.15;">Lord Krishna Public School</div>
+    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;letter-spacing:0.2px;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
     ${phone ? `<div style="font-size:8px;color:#666;margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
   </div>
 </div>
