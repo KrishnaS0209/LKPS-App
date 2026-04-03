@@ -7161,14 +7161,14 @@ function Documents({ db, save }) {
             <div className="documents-preview-wrap flex gap-8 items-start flex-wrap">
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Front Face</span>
-                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'220px'}}>
-                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0}} dangerouslySetInnerHTML={{__html:previewHTML}}/>
+                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-start justify-center" style={{minHeight:'340px',overflow:'hidden'}}>
+                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewHTML}}/>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Back Face</span>
-                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-center justify-center" style={{minHeight:'220px'}}>
-                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0}} dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
+                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-start justify-center" style={{minHeight:'340px',overflow:'hidden'}}>
+                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
                 </div>
               </div>
             </div>
