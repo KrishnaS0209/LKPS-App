@@ -29,16 +29,11 @@ export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) 
 
   let qrEl = '';
   try {
-    const qrData = encodeURIComponent([
-      `Name:${(s.fn||'')} ${(s.ln||'')}`,
-      `Class:${s.cls||''}`,
-      `Roll:${s.roll||''}`,
-      `Adm:${s.admno||''}`,
-      `Father:${s.father||''}`,
-      `Ph:${s.fphone||s.ph||''}`,
-    ].join('|'));
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${qrData}&margin=2`;
-    qrEl = `<img src="${qrUrl}" width="${big?52:44}" height="${big?52:44}" style="border:1px solid #e0e0e0;border-radius:4px;" alt="QR"/><div style="font-size:6px;color:#aaa;font-family:'Inter',sans-serif;text-align:center;">Scan for details</div>`;
+    const qrData = encodeURIComponent(
+      `${(s.fn||'')} ${(s.ln||'')}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${s.fphone||s.ph||''}`
+    );
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&margin=4&ecc=M`;
+    qrEl = `<img src="${qrUrl}" width="${big?60:52}" height="${big?60:52}" style="border:1px solid #e0e0e0;border-radius:4px;" alt="QR"/>`;
   } catch(e) { qrEl = ''; }
   const row = (label, val) =>
     `<tr><td style="font-size:${big?9:8}px;font-weight:500;color:#666;padding:2.5px 6px 2.5px 0;width:80px;font-family:'Inter',sans-serif;">${label}</td>`+
@@ -84,7 +79,6 @@ export function buildCard(s, photo, logo, phone, year, prin, theme, big = true) 
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         ${qrEl}
-        ${qrEl ? `<div style="font-size:6px;color:#aaa;font-family:'Inter',sans-serif;">Scan for details</div>` : ''}
       </div>
       <div style="text-align:right;">
         <div style="font-size:${big?10:9}px;font-style:italic;color:${th.h1};font-family:'Playfair Display',serif;">${prin||'__________'}</div>
