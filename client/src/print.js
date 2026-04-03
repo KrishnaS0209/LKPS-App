@@ -15,6 +15,7 @@ const THEMES = {
 // CR80 portrait at 2× scale: 54mm × 85.6mm → 404 × 638 px
 const CW = 404;
 const CH = 638;
+export const CARD_DIMS = { CW, CH };
 
 function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const th = THEMES[theme] || THEMES.blue;
@@ -22,86 +23,81 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
   const mob = s.fphone || s.ph || '—';
 
   const logoEl = logo
-    ? `<img src="${logo}" style="width:52px;height:52px;object-fit:contain;display:block;flex-shrink:0;">`
-    : `<div style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🏫</div>`;
+    ? `<img src="${logo}" style="width:58px;height:58px;object-fit:contain;display:block;flex-shrink:0;">`
+    : `<div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">🏫</div>`;
 
   const photoEl = photo
     ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#dde4f0;font-size:48px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e8edf5;font-size:46px;font-weight:900;color:#8899bb;font-family:'Montserrat',sans-serif;">${((s.fn||'?')[0]).toUpperCase()}</div>`;
 
   let qrEl = '';
   try {
     const qd = encodeURIComponent(`${s.fn||''} ${s.ln||''}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${mob}`);
-    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qd}&margin=4&ecc=M" width="68" height="68" style="display:block;border-radius:3px;" alt="QR"/>`;
+    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qd}&margin=4&ecc=M" width="80" height="80" style="display:block;" alt="QR"/>`;
   } catch(e){}
 
-  const row = (label, val) =>
-    `<tr>
-      <td style="font-size:9px;font-weight:600;color:#777;text-transform:uppercase;letter-spacing:0.7px;font-family:'Roboto',sans-serif;padding:5px 10px 5px 0;white-space:nowrap;vertical-align:top;width:1%;">${label}</td>
-      <td style="font-size:9px;color:#aaa;padding:5px 8px 5px 0;vertical-align:top;">:</td>
-      <td style="font-size:12px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;padding:4px 0;vertical-align:top;border-bottom:1px solid #f0f0f0;">${val}</td>
-    </tr>`;
+  // GLA-style detail row
+  const drow = (label, val) =>
+    `<div style="margin-bottom:11px;">
+      <div style="font-size:9.5px;color:#555;font-family:'Roboto',sans-serif;margin-bottom:1px;">${label}</div>
+      <div style="font-size:13px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;line-height:1.2;">${val}</div>
+    </div>`;
 
-  return `<div style="width:${CW}px;height:${CH}px;border-radius:14px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;">
+  return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- Header -->
-<div style="background:linear-gradient(150deg,${th.h1} 0%,${th.h2} 100%);padding:14px 14px 12px;display:flex;align-items:center;gap:11px;flex-shrink:0;position:relative;overflow:hidden;">
-  <div style="position:absolute;top:-40px;right:-20px;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+<!-- ① Header: white bg, logo | divider | school name -->
+<div style="background:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px;border-bottom:3px solid ${th.h1};flex-shrink:0;">
   ${logoEl}
+  <div style="width:1.5px;height:52px;background:#ddd;flex-shrink:0;"></div>
   <div style="flex:1;min-width:0;">
-    <div style="font-size:13.5px;font-weight:900;color:#fff;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;">Lord Krishna Public School</div>
-    <div style="font-size:8px;color:rgba(255,255,255,.7);margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
-    ${phone ? `<div style="font-size:8px;color:rgba(255,255,255,.75);margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
+    <div style="font-size:15px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.15;">Lord Krishna Public School</div>
+    <div style="font-size:8px;color:#666;margin-top:3px;font-family:'Roboto',sans-serif;">(Govt. Recognised) · Ishapur, Laxminagar, Mathura</div>
+    ${phone ? `<div style="font-size:8px;color:#666;margin-top:1px;font-family:'Roboto',sans-serif;">Ph: ${phone}</div>` : ''}
   </div>
 </div>
 
-<!-- ID Card banner -->
-<div style="background:${th.h1};padding:5px 0;text-align:center;flex-shrink:0;">
-  <span style="font-size:9.5px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:3px;font-family:'Montserrat',sans-serif;">Student  ID  Card</span>
+<!-- ② Gray "Student ID Card" bar -->
+<div style="background:#e8edf5;padding:6px 0;text-align:center;flex-shrink:0;">
+  <span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:2.5px;font-family:'Montserrat',sans-serif;">Student ID Card</span>
 </div>
-<div style="height:2.5px;background:linear-gradient(90deg,${th.acc},${th.h2},${th.acc});flex-shrink:0;"></div>
 
-<!-- Body -->
-<div style="flex:1;background:#fff;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;">
+<!-- ③ Dark name bar -->
+<div style="background:${th.h1};padding:7px 14px;flex-shrink:0;">
+  <div style="font-size:15px;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif;letter-spacing:0.2px;">${s.fn||'Student'} ${s.ln||''}</div>
+</div>
 
-  <!-- Photo + name row -->
-  <div style="display:flex;gap:13px;align-items:flex-start;">
-    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;">
-      <div style="width:110px;height:136px;border-radius:6px;overflow:hidden;border:2px solid ${th.h2};box-shadow:0 3px 12px rgba(0,0,0,.18);">${photoEl}</div>
-      ${qrEl}
-    </div>
-    <div style="flex:1;min-width:0;padding-top:2px;">
-      <div style="font-size:17px;font-weight:900;color:${th.h1};font-family:'Montserrat',sans-serif;line-height:1.15;margin-bottom:4px;word-break:break-word;">${s.fn||'Student'} ${s.ln||''}</div>
-      <div style="height:2.5px;width:36px;background:${th.acc};border-radius:2px;margin-bottom:10px;"></div>
-      <table style="border-collapse:collapse;width:100%;">
-        ${row('Class', s.cls||'—')}
-        ${row('D.O.B.', dob)}
-        ${row('Validity', year||'2025-2026')}
-        ${s.admno ? row('Adm. No.', s.admno) : row('Roll No.', s.roll||'—')}
-        ${s.blood ? row('Blood Grp', s.blood) : ''}
-      </table>
-    </div>
+<!-- ④ Body: photo left, details right -->
+<div style="flex:1;display:flex;gap:0;background:#fff;overflow:hidden;">
+
+  <!-- Photo column -->
+  <div style="width:140px;flex-shrink:0;padding:14px 12px 12px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;border-right:1px solid #eee;">
+    <div style="width:112px;height:138px;overflow:hidden;border:1.5px solid #ccc;">${photoEl}</div>
+    ${qrEl}
   </div>
 
-  <!-- Contact + Sign row -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eef0f5;padding-top:10px;margin-top:auto;">
+  <!-- Details column -->
+  <div style="flex:1;padding:14px 14px 12px;display:flex;flex-direction:column;justify-content:space-between;">
     <div>
-      <div style="font-size:8px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.8px;font-family:'Roboto',sans-serif;margin-bottom:2px;">Contact</div>
-      <div style="font-size:11.5px;font-weight:700;color:#222;font-family:'Montserrat',sans-serif;">${mob}</div>
+      ${drow('Class / Section :', s.cls||'—')}
+      ${drow('Date of Birth :', dob)}
+      ${drow('Validity :', year||'2025-2026')}
+      ${s.admno ? drow('Adm. No. :', s.admno) : drow('Roll No. :', s.roll||'—')}
+      ${s.blood ? drow('Blood Group :', `<span style="color:#b91c1c;">${s.blood}</span>`) : ''}
     </div>
-    <div style="text-align:right;">
-      <div style="font-size:13px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #ccc;min-width:90px;">${prin||'__________'}</div>
-      <div style="font-size:7.5px;color:#aaa;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
+
+    <!-- Sign -->
+    <div style="text-align:right;padding-top:8px;border-top:1px solid #eee;">
+      <div style="font-size:14px;font-style:italic;color:${th.h1};font-family:'Georgia',serif;padding-bottom:4px;border-bottom:1px solid #bbb;display:inline-block;min-width:100px;">${prin||'__________'}</div>
+      <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;text-transform:uppercase;letter-spacing:0.8px;margin-top:3px;">Principal</div>
     </div>
   </div>
-
 </div>
 
-<!-- Footer -->
+<!-- ⑤ Footer -->
 <div style="background:${th.h1};padding:5px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-  <div style="font-size:7.5px;color:rgba(255,255,255,.45);font-family:'Roboto',sans-serif;">lkps-app.vercel.app</div>
-  <div style="font-size:7.5px;color:${th.acc};font-family:'Roboto',sans-serif;font-weight:700;letter-spacing:0.5px;">EST. 2009</div>
+  <div style="font-size:7.5px;color:rgba(255,255,255,.5);font-family:'Roboto',sans-serif;">lkps-app.vercel.app</div>
+  <div style="font-size:7.5px;color:${th.acc};font-family:'Roboto',sans-serif;font-weight:700;">EST. 2009</div>
 </div>
 </div>`;
 }
@@ -111,60 +107,46 @@ export function buildCardBack(s, logo) {
   const addr = [s.addr, s.city, s.pin ? 'Pin-'+s.pin : ''].filter(Boolean).join(', ')
     || 'Ishapur, Laxminagar, Yamuna Paar, Dist-Mathura, Uttar Pradesh Pin-281204, (India)';
 
-  const row = (label, val) =>
-    `<tr>
-      <td style="font-size:9px;font-weight:600;color:#666;font-family:'Roboto',sans-serif;white-space:nowrap;padding:5px 8px 5px 0;vertical-align:top;width:1%;">${label}</td>
-      <td style="font-size:9px;color:#aaa;padding:5px 6px 5px 0;vertical-align:top;">:</td>
-      <td style="font-size:11px;font-weight:700;color:#111;font-family:'Montserrat',sans-serif;padding:4px 0;vertical-align:top;border-bottom:1px solid #f0f0f0;line-height:1.4;">${val}</td>
-    </tr>`;
+  const infoRow = (label, val) =>
+    `<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:9px;">
+      <div style="font-size:10.5px;color:#222;font-family:'Roboto',sans-serif;white-space:nowrap;">${label}</div>
+      <div style="font-size:11px;font-weight:700;color:#000;font-family:'Montserrat',sans-serif;flex:1;line-height:1.4;">${val}</div>
+    </div>`;
 
-  return `<div style="width:${CW}px;height:${CH}px;border-radius:14px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;">
+  return `<div style="width:${CW}px;height:${CH}px;border-radius:10px;overflow:hidden;font-family:'Montserrat',sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;background:#fff;">
 <style>${GFONT}</style>
 
-<!-- Top accent -->
-<div style="height:5px;background:linear-gradient(90deg,#0d2b6e,#1749b1,#f0c040);flex-shrink:0;"></div>
-
-<!-- Mini header -->
-<div style="background:#f4f7ff;padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e0e8f5;flex-shrink:0;">
-  ${logo
-    ? `<img src="${logo}" style="width:34px;height:34px;object-fit:contain;flex-shrink:0;">`
-    : `<div style="font-size:20px;flex-shrink:0;">🏫</div>`}
-  <div>
-    <div style="font-size:10.5px;font-weight:900;color:#0d2b6e;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.3px;line-height:1.2;">Lord Krishna Public School</div>
-    <div style="font-size:7.5px;color:#888;font-family:'Roboto',sans-serif;">Ishapur, Laxminagar, Mathura</div>
-  </div>
-</div>
-
-<!-- Info body -->
-<div style="flex:1;padding:12px 14px;background:#fff;display:flex;flex-direction:column;gap:0;overflow:hidden;">
-  <table style="border-collapse:collapse;width:100%;margin-bottom:10px;">
-    ${s.blood ? row('Blood Group', `<span style="font-size:13px;font-weight:900;color:#b91c1c;">${s.blood}</span>`) : ''}
-    ${row('Contact No.', mob)}
-    ${row("Father's Name", s.father||'—')}
-    ${s.fphone ? row("Father's Contact", s.fphone) : ''}
-    ${row('Address', addr)}
-  </table>
+<!-- Info section -->
+<div style="flex:1;padding:16px 16px 10px;display:flex;flex-direction:column;overflow:hidden;">
+  ${s.blood ? infoRow('Blood Group :', `<b style="font-size:13px;">${s.blood}</b>`) : ''}
+  ${infoRow('Contact No. :', mob)}
+  ${infoRow("Father's Name :", s.father||'—')}
+  ${s.fphone ? infoRow("Father's Contact No :", s.fphone) : ''}
+  <div style="margin-bottom:4px;font-size:10.5px;color:#222;font-family:'Roboto',sans-serif;">Address :</div>
+  <div style="font-size:11px;font-weight:700;color:#000;font-family:'Montserrat',sans-serif;line-height:1.55;margin-bottom:14px;">${addr}</div>
 
   <!-- Rules -->
-  <div style="border-top:2px solid #f0c040;padding-top:8px;">
-    <div style="font-size:8.5px;font-weight:800;color:#0d2b6e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Rules to be followed</div>
-    <div style="font-size:8.5px;color:#333;line-height:1.75;font-family:'Roboto',sans-serif;">
-      <div style="margin-bottom:3px;">• Always carry and display this card in campus when asked by officials.</div>
-      <div style="margin-bottom:3px;">• Loss of this ID card must be reported immediately to HoD/PC.</div>
-      <div>• This card must be returned to HoD/PC before final clearance.</div>
-    </div>
+  <div style="font-size:10.5px;font-weight:700;color:#000;text-decoration:underline;margin-bottom:6px;font-family:'Roboto',sans-serif;">Rules to be followed :</div>
+  <div style="font-size:9.5px;color:#111;line-height:1.8;font-family:'Roboto',sans-serif;">
+    <div>• Always carry and display the identity card in the campus when ever asked by the officials.</div>
+    <div>• The loss of this ID card must be reported immediately to HoD/PC.</div>
+    <div>• This card must be returned to HoD/PC before final clearance.</div>
   </div>
 </div>
 
-<!-- Watermark + footer -->
-<div style="background:linear-gradient(180deg,#f4f7ff,#e8eeff);padding:8px 14px;display:flex;align-items:center;justify-content:center;border-top:1px solid #e0e8f5;flex-shrink:0;">
+<!-- School sketch / watermark band -->
+<div style="height:90px;background:linear-gradient(180deg,#f5f5f5,#ebebeb);display:flex;align-items:center;justify-content:center;border-top:1px solid #ddd;border-bottom:1px solid #ddd;flex-shrink:0;overflow:hidden;position:relative;">
   ${logo
-    ? `<img src="${logo}" style="height:32px;object-fit:contain;opacity:0.2;">`
-    : `<div style="font-size:24px;opacity:0.15;">🏫</div>`}
+    ? `<img src="${logo}" style="height:72px;object-fit:contain;opacity:0.12;">`
+    : `<div style="font-size:60px;opacity:0.08;line-height:1;">🏫</div>`}
+  <div style="position:absolute;bottom:4px;width:100%;text-align:center;font-size:7px;color:#bbb;font-family:'Roboto',sans-serif;letter-spacing:0.5px;">LORD KRISHNA PUBLIC SCHOOL · MATHURA</div>
 </div>
-<div style="background:#111;padding:7px 14px;text-align:center;flex-shrink:0;">
-  <div style="font-size:8px;color:#ccc;font-family:'Roboto',sans-serif;line-height:1.65;">17 KM Stone, NH#2, Mathura-Delhi Road, P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
-  <div style="font-size:8px;color:#888;font-family:'Roboto',sans-serif;margin-top:1px;">Phone: +91-5662-250900, 909</div>
+
+<!-- Address footer -->
+<div style="background:#111;padding:9px 14px;text-align:center;flex-shrink:0;">
+  <div style="font-size:9px;color:#ddd;font-family:'Roboto',sans-serif;line-height:1.7;">17 KM Stone, NH#2, Mathura-Delhi Road,</div>
+  <div style="font-size:9px;color:#ddd;font-family:'Roboto',sans-serif;line-height:1.7;">P.O.: Chaumuhan, Mathura - 281 406 (UP) India</div>
+  <div style="font-size:9px;color:#aaa;font-family:'Roboto',sans-serif;margin-top:1px;">Phone: +91-5662-250900, 909</div>
 </div>
 </div>`;
 }

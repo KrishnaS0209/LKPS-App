@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import { loadDB, exportJSON, importJSON, exportCSV, uid, paidTotal, grade, gradeColor } from './db';
 import { Toast, toast, Badge, Btn, Card, CardHead, Modal, ModalFooter, Field, Input, Select, Grid, Span, SecLabel, Search, Avatar, Stat, Tabs, PhotoZone, NoData, TblWrap } from './ui.jsx';
-import { buildCard, buildCardBack, printCard, printClassCards, printTC, printCC, buildTC, buildCC } from './print.js';
+import { buildCard, buildCardBack, CARD_DIMS, printCard, printClassCards, printTC, printCC, buildTC, buildCC } from './print.js';
 import {
   apiLogin, apiTeacherLogin, apiParentLogin, clearToken, getToken,
   getSessions, createSession, updateSession, deleteSession,
@@ -7158,17 +7158,17 @@ function Documents({ db, save }) {
           </div>
           <div className="documents-preview-column col-span-7 flex flex-col gap-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Live Preview</p>
-            <div className="documents-preview-wrap flex gap-8 items-start flex-wrap">
+            <div className="documents-preview-wrap flex gap-6 items-start flex-wrap">
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Front Face</span>
-                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-start justify-center" style={{minHeight:'340px',overflow:'hidden'}}>
-                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewHTML}}/>
+                <div className="bg-surface-container-low rounded-2xl p-3 flex items-start justify-center" style={{width:`${Math.round(CARD_DIMS.CW*0.48)+24}px`,height:`${Math.round(CARD_DIMS.CH*0.48)+24}px`,overflow:'hidden'}}>
+                  <div style={{transform:'scale(0.48)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewHTML}}/>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Back Face</span>
-                <div className="documents-preview-panel bg-surface-container-low rounded-2xl p-4 flex items-start justify-center" style={{minHeight:'340px',overflow:'hidden'}}>
-                  <div style={{transform:'scale(0.51)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
+                <div className="bg-surface-container-low rounded-2xl p-3 flex items-start justify-center" style={{width:`${Math.round(CARD_DIMS.CW*0.48)+24}px`,height:`${Math.round(CARD_DIMS.CH*0.48)+24}px`,overflow:'hidden'}}>
+                  <div style={{transform:'scale(0.48)',transformOrigin:'top left',display:'inline-block',lineHeight:0,flexShrink:0}} dangerouslySetInnerHTML={{__html:previewBackHTML}}/>
                 </div>
               </div>
             </div>
