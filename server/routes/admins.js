@@ -20,7 +20,7 @@ router.post('/', auth, mainAdminOnly, async (req, res) => {
     const exists = await Admin.findOne({ username });
     if (exists) return res.status(409).json({ error: 'Username already taken' });
     const admin = await Admin.create({ username, password, name, role: role || 'Admin' });
-    res.status(201).json({ id: admin._id, username: admin.username, name: admin.name, role: admin.role });
+    res.status(201).json({ id: admin._id, username: admin.username, name: admin.name, role: admin.role, email: admin.email || '' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -45,7 +45,7 @@ router.patch('/:id', auth, async (req, res) => {
     if (password) admin.password = password; // will be hashed by pre-save hook
 
     await admin.save();
-    res.json({ id: admin._id, username: admin.username, name: admin.name, role: admin.role, photo: admin.photo });
+    res.json({ id: admin._id, username: admin.username, name: admin.name, role: admin.role, photo: admin.photo, email: admin.email || '' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
