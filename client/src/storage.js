@@ -258,6 +258,7 @@ export async function loadSessionData(sessionId) {
         extras: (config.fstr?.extras || []).map(({ _id, __v, ...r }) => r),
       },
       events:   (config.events   || []).map(({ _id, __v, ...r }) => r),
+      certRegistry: (config.certRegistry || []).map(({ _id, __v, ...r }) => r),
       admins:   await getAdmins().catch(() => []),
       students: (Array.isArray(students) ? students : []).map(s => ({ ...s, id: s.sid })),
       teachers: (Array.isArray(teachers) ? teachers : []).map(t => ({ ...t, id: t.tid })),
@@ -310,6 +311,7 @@ export async function saveSessionData(sessionId, db) {
     slots:    db.slots,
     fstr:     db.fstr,
     events:   db.events,
+    certRegistry: db.certRegistry || [],
   };
   ops.push(saveSessionConfig(sessionId, configPatch));
 
