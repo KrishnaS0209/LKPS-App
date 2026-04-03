@@ -24,6 +24,50 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [page, setPage] = useState('dash');
   const [loading, setLoading] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [lockWarning, setLockWarning] = useState(false);
+
+  const IDLE_TIMEOUT = 15 * 60 * 1000;   // 15 min → lock
+  const WARN_BEFORE  =  2 * 60 * 1000;   // warn 2 min before
+  const idleTimer  = React.useRef(null);
+  const warnTimer  = React.useRef(null);
+
+  const clearTimers = () => {
+    clearTimeout(idleTimer.current);
+    clearTimeout(warnTimer.current);
+  };
+
+  const resetIdleTimer = useCallback(() => {
+    if (!session || locked) return;
+    clearTimers();
+    setLockWarning(false);
+    warnTimer.current  = setTimeout(() => setLockWarning(true),  IDLE_TIMEOUT - WARN_BEFORE);
+    idleTimer.current  = setTimeout(() => { setLocked(true); setLockWarning(false); }, IDLE_TIMEOUT);
+  }, [session, locked]);
+
+  // Attach activity listeners
+  useEffect(() => {
+    if (!session) return;
+    const events = ['mousemove','keydown','mousedown','touchstart','scroll','click'];
+    events.forEach(e => window.addEventListener(e, resetIdleTimer, { passive: true }));
+    resetIdleTimer();
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetIdleTimer));
+      clearTimers();
+    };
+  }, [session, resetIdleTimer]);
+
+  // BroadcastChannel — logout other tabs when this one logs in
+  useEffect(() => {
+    const bc = new BroadcastChannel('lkps_auth');
+    bc.onmessage = (e) => {
+      if (e.data === 'logout') {
+        clearToken();
+        setSession(null); setActiveSessionId(null); setDB(null);
+      }
+    };
+    return () => bc.close();
+  }, []);
 
   // On mount — check if token + session already stored (stay logged in)
   useEffect(() => {
@@ -78,6 +122,8 @@ export default function App() {
   const handleLogin = (authSession, sessId) => {
     setSession(authSession);
     setActiveSessionId(sessId);
+    setLocked(false);
+    setLockWarning(false);
     const u = authSession.user;
     try {
       if (u.pic) localStorage.setItem('lkps_user_pic', u.pic);
@@ -86,6 +132,7 @@ export default function App() {
       localStorage.setItem('lkps_user', JSON.stringify({...u, pic: ''}));
     }
     localStorage.setItem('lkps_active_session', sessId);
+    try { new BroadcastChannel('lkps_auth').postMessage('login'); } catch(e) {}
   };
 
   const handleLogout = () => {
@@ -96,6 +143,10 @@ export default function App() {
     setSession(null);
     setActiveSessionId(null);
     setDB(null);
+    setLocked(false);
+    setLockWarning(false);
+    clearTimers();
+    try { new BroadcastChannel('lkps_auth').postMessage('logout'); } catch(e) {}
   };
 
   if (loading) return <div className="flex items-center justify-center h-screen text-on-surface-variant bg-surface text-sm font-medium">Loading…</div>;
@@ -104,23 +155,88 @@ export default function App() {
     return <LoginFlow onLogin={handleLogin} skipAuth={session} authSession={session} />;
   }
   if (!db) return <div className="flex items-center justify-center h-screen text-on-surface-variant bg-surface text-sm font-medium">Loading session…</div>;
-  if (session.role === 'teacher') return <TeacherPortal db={db} save={save} teacher={session.user} onLogout={handleLogout} />;
-  if (session.role === 'parent') return <ParentPortal db={db} student={session.user} activeSessionId={activeSessionId} onLogout={handleLogout} />;
-  return <AdminApp db={db} save={save} page={page} setPage={setPage} user={session.user}
-    setUser={u => {
-      setSession(s => ({...s, user: u}));
-      try {
-        // Store photo separately to avoid localStorage size issues
-        if (u.pic) localStorage.setItem('lkps_user_pic', u.pic);
-        localStorage.setItem('lkps_user', JSON.stringify({...u, pic: u.pic ? '__stored__' : ''}));
-      } catch(e) {
-        // If storage fails (quota), store without photo
-        localStorage.setItem('lkps_user', JSON.stringify({...u, pic: ''}));
+
+  // Lock screen
+  if (locked) return <LockScreen user={session.user} onUnlock={(ok) => { if(ok){setLocked(false);resetIdleTimer();} }} onLogout={handleLogout} />;
+
+  return (
+    <>
+      {/* Idle warning banner */}
+      {lockWarning && (
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'#b45309',color:'#fff',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:13,fontWeight:600,boxShadow:'0 2px 12px rgba(0,0,0,0.3)'}}>
+          <span>⚠️ You'll be locked out in 2 minutes due to inactivity.</span>
+          <button onClick={resetIdleTimer} style={{background:'rgba(255,255,255,0.2)',border:'none',color:'#fff',padding:'5px 14px',borderRadius:8,cursor:'pointer',fontWeight:700,fontSize:12}}>Stay Active</button>
+        </div>
+      )}
+      {session.role === 'teacher'
+        ? <TeacherPortal db={db} save={save} teacher={session.user} onLogout={handleLogout} />
+        : session.role === 'parent'
+        ? <ParentPortal db={db} student={session.user} activeSessionId={activeSessionId} onLogout={handleLogout} />
+        : <AdminApp db={db} save={save} page={page} setPage={setPage} user={session.user}
+            setUser={u => {
+              setSession(s => ({...s, user: u}));
+              try {
+                if (u.pic) localStorage.setItem('lkps_user_pic', u.pic);
+                localStorage.setItem('lkps_user', JSON.stringify({...u, pic: u.pic ? '__stored__' : ''}));
+              } catch(e) {
+                localStorage.setItem('lkps_user', JSON.stringify({...u, pic: ''}));
+              }
+            }}
+            activeSessionId={activeSessionId}
+            onSwitchSession={() => { setActiveSessionId(null); localStorage.removeItem('lkps_active_session'); }}
+            onLogout={handleLogout} />
       }
-    }}
-    activeSessionId={activeSessionId}
-    onSwitchSession={() => { setActiveSessionId(null); localStorage.removeItem('lkps_active_session'); }}
-    onLogout={handleLogout} />;
+    </>
+  );
+}
+
+// ── LockScreen ───────────────────────────────────────────────────
+function LockScreen({ user, onUnlock, onLogout }) {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+  const [showPw, setShowPw] = useState(false);
+
+  const tryUnlock = async () => {
+    if (!pw) { setErr('Enter your password'); return; }
+    try {
+      await apiLogin(user.username, pw);
+      onUnlock(true);
+    } catch(e) {
+      setErr('Incorrect password');
+      setPw('');
+    }
+  };
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'linear-gradient(145deg,#001530,#002045)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:99999,fontFamily:'Inter,sans-serif'}}>
+      <div style={{width:'100%',maxWidth:360,padding:'36px 32px',borderRadius:20,background:'rgba(255,255,255,0.06)',border:'1.5px solid rgba(255,255,255,0.12)',backdropFilter:'blur(20px)',boxShadow:'0 24px 60px rgba(0,0,0,0.5)',textAlign:'center'}}>
+        <div style={{width:64,height:64,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(25,96,163,0.4)'}}>
+          <span className="material-symbols-outlined" style={{fontSize:30,color:'#fff',fontVariationSettings:"'FILL' 1"}}>lock</span>
+        </div>
+        <div style={{fontSize:18,fontWeight:800,color:'#fff',marginBottom:4}}>Session Locked</div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginBottom:24}}>Locked due to inactivity. Enter your password to continue.</div>
+        <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.6)',marginBottom:6,textAlign:'left'}}>
+          {user?.name || user?.username}
+        </div>
+        {err && <div style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:10,padding:'8px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid rgba(239,68,68,0.3)'}}>{err}</div>}
+        <div style={{position:'relative',marginBottom:16}}>
+          <span className="material-symbols-outlined" style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:18,color:'#94a3b8',pointerEvents:'none'}}>lock</span>
+          <input value={pw} onChange={e=>{setPw(e.target.value);setErr('');}} type={showPw?'text':'password'}
+            placeholder="Enter password" onKeyDown={e=>e.key==='Enter'&&tryUnlock()} autoFocus
+            style={{width:'100%',padding:'12px 42px',borderRadius:12,border:'1.5px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.07)',fontSize:13,color:'#fff',outline:'none',boxSizing:'border-box'}}/>
+          <button onClick={()=>setShowPw(v=>!v)} tabIndex={-1} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'#94a3b8',padding:2,display:'flex',alignItems:'center'}}>
+            <span className="material-symbols-outlined" style={{fontSize:18}}>{showPw?'visibility_off':'visibility'}</span>
+          </button>
+        </div>
+        <button onClick={tryUnlock} style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:12,boxShadow:'0 4px 16px rgba(25,96,163,0.35)'}}>
+          Unlock
+        </button>
+        <button onClick={onLogout} style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.45)',fontWeight:600,fontSize:12,cursor:'pointer'}}>
+          Sign out instead
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ── LoginFlow — handles auth → session picker ─────────────────────
@@ -275,7 +391,12 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
   const cancelDelete = () => { setDelId(null); setDelConfirm(''); setDelErr(''); };
   const doDelete = async () => {
     if (!delConfirm.trim()) { setDelErr('Enter admin password'); return; }
-    if (delConfirm !== authSession?.user?.password) { setDelErr('Incorrect password'); return; }
+    try {
+      await apiLogin(authSession?.user?.username, delConfirm);
+    } catch(e) {
+      setDelErr('Incorrect password');
+      return;
+    }
     try {
       await deleteSession(delId);
       if (onRefresh) onRefresh();
