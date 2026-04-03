@@ -25,7 +25,7 @@ function buildFront(s, photo, ph, yr, prin, th, logo) {
   let qrEl = '';
   try {
     const qrData = encodeURIComponent(`${s.fn||''} ${s.ln||''}\nClass:${s.cls||''} Roll:${s.roll||''}\nAdm:${s.admno||''}\nFather:${s.father||''}\nPh:${s.fphone||s.ph||''}`);
-    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&margin=4&ecc=M" width="62" height="62" style="border:1px solid #ddd;border-radius:3px;" alt="QR"/>`;
+    qrEl = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&margin=4&ecc=M" width="80" height="80" style="border:1px solid #ddd;border-radius:3px;" alt="QR"/>`;
   } catch(e){}
 
   return `<div style="width:${CARD_W}px;height:${CARD_H}px;background:#f0f4ff;border-radius:10px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;box-shadow:0 16px 48px rgba(0,0,0,.45);display:flex;flex-direction:column;position:relative;">
@@ -51,12 +51,12 @@ function buildFront(s, photo, ph, yr, prin, th, logo) {
   <!-- Body -->
   <div style="flex:1;background:#fff;padding:10px 12px;display:flex;gap:10px;">
     <!-- Photo -->
-    <div style="flex-shrink:0;">
-      <div style="width:88px;height:108px;border:2px solid ${th.h1};border-radius:4px;overflow:hidden;background:#e8f0ff;display:flex;align-items:center;justify-content:center;">${phEl}</div>
+    <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
+      <div style="width:100px;height:120px;border:2px solid ${th.h1};border-radius:4px;overflow:hidden;background:#e8f0ff;display:flex;align-items:center;justify-content:center;">${phEl}</div>
       <div style="margin-top:6px;">${qrEl}</div>
     </div>
     <!-- Details -->
-    <div style="flex:1;font-size:9px;font-family:Arial,sans-serif;">
+    <div style="flex:1;font-size:9px;font-family:Arial,sans-serif;display:flex;flex-direction:column;">
       <table style="width:100%;border-collapse:collapse;">
         <tr><td style="color:#555;padding:3px 0;font-weight:600;white-space:nowrap;">Class / Sec.</td></tr>
         <tr><td style="color:#111;font-weight:700;font-size:11px;padding-bottom:5px;border-bottom:1px solid #eee;">${s.cls||'—'}</td></tr>
@@ -65,9 +65,10 @@ function buildFront(s, photo, ph, yr, prin, th, logo) {
         <tr><td style="color:#555;padding:3px 0 1px;font-weight:600;">Validity</td></tr>
         <tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:5px;border-bottom:1px solid #eee;">${validity}</td></tr>
         ${s.roll?`<tr><td style="color:#555;padding:3px 0 1px;font-weight:600;">Roll No.</td></tr><tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:5px;border-bottom:1px solid #eee;">${s.roll}</td></tr>`:''}
-        ${s.admno?`<tr><td style="color:#555;padding:3px 0 1px;font-weight:600;">Adm. No.</td></tr><tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:5px;">${s.admno}</td></tr>`:''}
+        ${s.admno?`<tr><td style="color:#555;padding:3px 0 1px;font-weight:600;">Adm. No.</td></tr><tr><td style="color:#111;font-weight:700;font-size:10px;padding-bottom:4px;">${s.admno}</td></tr>`:''}
       </table>
-      <div style="margin-top:auto;padding-top:6px;border-top:1px solid #eee;text-align:right;">
+      <div style="flex:1;"></div>
+      <div style="padding-top:5px;border-top:1px solid #ddd;text-align:right;">
         <div style="font-size:11px;font-style:italic;color:${th.h1};font-family:'Times New Roman',serif;">${prin||'__________'}</div>
         <div style="font-size:7.5px;color:#777;margin-top:1px;">Principal Sign.</div>
       </div>

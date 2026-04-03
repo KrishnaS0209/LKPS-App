@@ -6983,7 +6983,7 @@ function Documents({ db, save }) {
   const demoStu = {fn:'Student',ln:'Name',cls:'—',father:'—',mother:'—',city:'',addr:'',fphone:'',ph:'',dob:'',roll:'',admno:'',blood:''};
   const previewStu = s || demoStu;
   const previewHTML = buildCard(previewStu, s?photo:null, logo, phone, year, prin, theme, true);
-  const previewBackHTML = buildCardBack(previewStu, logo);
+  const previewBackHTML = buildCardBack(previewStu, logo, phone);
 
   // TC state — only fields NOT in student directory
   const [tcStu, setTcStu] = useState('');
@@ -7161,13 +7161,16 @@ function Documents({ db, save }) {
                 const scale = 0.46;
                 const W = Math.round(CARD_DIMS.CW * scale);
                 const H = Math.round(CARD_DIMS.CH * scale);
+                const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:transparent;}</style></head><body>${html}</body></html>`;
                 return (
                   <div key={label} className="flex flex-col gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{label}</span>
-                    <div className="bg-surface-container-low rounded-2xl" style={{width: W+16, height: H+16, padding:8, overflow:'hidden', flexShrink:0}}>
-                      <div style={{width: W, height: H, overflow:'hidden', borderRadius:6, flexShrink:0}}>
-                        <div style={{transform:`scale(${scale})`, transformOrigin:'top left', width: CARD_DIMS.CW, height: CARD_DIMS.CH, lineHeight:0, flexShrink:0}} dangerouslySetInnerHTML={{__html: html}}/>
-                      </div>
+                    <div className="bg-surface-container-low rounded-2xl" style={{width:W+16, height:H+16, padding:8, overflow:'hidden', flexShrink:0}}>
+                      <iframe
+                        srcDoc={doc}
+                        scrolling="no"
+                        style={{width:CARD_DIMS.CW, height:CARD_DIMS.CH, border:'none', transform:`scale(${scale})`, transformOrigin:'top left', display:'block', flexShrink:0}}
+                      />
                     </div>
                   </div>
                 );
