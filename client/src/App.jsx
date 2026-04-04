@@ -8230,13 +8230,31 @@ function Settings({ db, save, user, setUser }) {
   };
 
   const sendEmailChangeOtp = async () => {
+    // If no current email, allow setting directly
+    if (!editForm.email) {
+      setEmailOtpStep('new');
+      return;
+    }
     try {
       setEmailOtpSending(true);
       const res = await requestEmailOTP();
-      setEmailOtpStep('otp'); // step: enter otp
+      setEmailOtpStep('otp');
       toast(`OTP sent to ${res.email}`);
+    } catch(err) {
+      toast(err.message || 'Failed to send OTP', 'err');
+    } finally { setEmailOtpSending(false); }
+  };
+
+  const saveEmailDirect = async () => {
+    if (!emailNew) { toast('Enter email','err'); return; }
+    try {
+      await updateAdmin(editForm._id || editForm.id, { email: emailNew });
+      const admins = await getAdmins();
+      save({...db, admins});
+      setEditForm(f => ({...f, email: emailNew}));
+      setEmailOtpStep(false); setEmailNew('');
+      toast('Email saved');
     } catch(err) { toast(err.message,'err'); }
-    finally { setEmailOtpSending(false); }
   };
 
   const verifyEmailAndSave = async () => {
@@ -8436,6 +8454,16 @@ function Settings({ db, save, user, setUser }) {
               <div style={{display:'flex',gap:8}}>
                 <Btn variant="primary" size="sm" onClick={verifyEmailAndSave}>Verify & Save Email</Btn>
                 <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
+              </div>
+            </div>
+          )}
+          {emailOtpStep === 'new' && (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{fontSize:12,color:'#0369a1',fontWeight:600}}>Enter your email address:</div>
+              <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="your@gmail.com"/>
+              <div style={{display:'flex',gap:8}}>
+                <Btn variant="primary" size="sm" onClick={saveEmailDirect}>Save Email</Btn>
+                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailNew('');}}>Cancel</Btn>
               </div>
             </div>
           )}
