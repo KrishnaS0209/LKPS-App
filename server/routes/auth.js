@@ -4,7 +4,7 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const { auth } = require('../middleware/auth');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -15,19 +15,15 @@ function makeOTP() {
 }
 
 async function sendMail({ to, subject, html }) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER || process.env.MAIL_USER,
-      pass: process.env.SMTP_PASS || process.env.MAIL_PASS,
-    },
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { data, error } = await resend.emails.send({
+    from: 'LKPS Portal <onboarding@resend.dev>',
+    to,
+    subject,
+    html,
   });
-  await transporter.sendMail({
-    from: `"LKPS Portal" <${process.env.SMTP_FROM || process.env.MAIL_USER}>`,
-    to, subject, html,
-  });
+  if (error) throw new Error(error.message || JSON.stringify(error));
+  return data;
 }
 
 // GET /api/auth/test-mail
