@@ -21,14 +21,12 @@ function getMailer() {
   });
 }
 
-// POST /api/auth/request-email-otp  — send OTP to new email before saving it
+// POST /api/auth/request-email-otp  — send OTP to CURRENT email before allowing email change
 router.post('/request-email-otp', auth, async (req, res) => {
   try {
-    const { newEmail } = req.body;
-    if (!newEmail) return res.status(400).json({ error: 'New email required' });
-
     const admin = await Admin.findById(req.user.adminId);
     if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    if (!admin.email) return res.status(400).json({ error: 'No email set. Add an email first.' });
 
     const otp = makeOTP();
     admin.otp = otp;
@@ -37,27 +35,28 @@ router.post('/request-email-otp', auth, async (req, res) => {
 
     await getMailer().sendMail({
       from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
-      to: newEmail,
-      subject: 'Email Verification OTP — LKPS Portal',
+      to: admin.email,
+      subject: 'Email Change OTP — LKPS Portal',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
-        <h2 style="color:#0d2b6e;margin-bottom:8px;">Email Verification</h2>
-        <p style="color:#555;font-size:14px;">Your OTP to verify this email address is:</p>
+        <h2 style="color:#0d2b6e;margin-bottom:8px;">Email Change Request</h2>
+        <p style="color:#555;font-size:14px;">Your OTP to authorize changing your email address is:</p>
         <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
         <p style="color:#888;font-size:12px;">This OTP is valid for <b>10 minutes</b>. Do not share it with anyone.</p>
+        <p style="color:#888;font-size:12px;">If you did not request this, please secure your account immediately.</p>
       </div>`,
     });
 
-    res.json({ ok: true });
+    res.json({ ok: true, email: admin.email.replace(/(.{2}).+(@.+)/, '$1***$2') });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/auth/verify-email-otp  — verify OTP and save new email
+// POST /api/auth/verify-email-otp  — verify OTP then save new email
 router.post('/verify-email-otp', auth, async (req, res) => {
   try {
     const { otp, newEmail } = req.body;
-    if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and email required' });
+    if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and new email required' });
 
     const admin = await Admin.findById(req.user.adminId);
     if (!admin) return res.status(404).json({ error: 'Admin not found' });

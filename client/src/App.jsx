@@ -8180,6 +8180,7 @@ function Settings({ db, save, user, setUser }) {
   const [emailOtpStep, setEmailOtpStep] = useState(false);
   const [emailOtpVal, setEmailOtpVal] = useState('');
   const [emailOtpSending, setEmailOtpSending] = useState(false);
+  const [emailNew, setEmailNew] = useState('');
   const [cpOld, setCpOld] = useState(''); const [cpNew, setCpNew] = useState(''); const [cpConf, setCpConf] = useState('');
   const [cpOtpStep, setCpOtpStep] = useState(false); // false = form, true = otp entry
   const [cpOtp, setCpOtp] = useState('');
@@ -8209,30 +8210,14 @@ function Settings({ db, save, user, setUser }) {
     } catch(err) { toast(err.message,'err'); }
   };
 
-  const openEdit = a => { setEditForm({...a}); setEditOpen(true); setEmailOtpStep(false); setEmailOtpVal(''); };
+  const openEdit = a => { setEditForm({...a}); setEditOpen(true); setEmailOtpStep(false); setEmailOtpVal(''); setEmailNew(''); };
   const saveEdit = async () => {
     if(!editForm.name?.trim()){toast('Name required','err');return;}
-    const currentAdmin = db.admins.find(x => x.username === editForm.username);
-    const emailChanged = (editForm.email||'') !== (currentAdmin?.email||'');
-
-    // If email changed, require OTP verification first
-    if (emailChanged && editForm.email) {
-      try {
-        setEmailOtpSending(true);
-        await requestEmailOTP(editForm.email);
-        setEmailOtpStep(true);
-        toast('OTP sent to new email');
-      } catch(err) { toast(err.message,'err'); }
-      finally { setEmailOtpSending(false); }
-      return;
-    }
-
     try {
       await updateAdmin(editForm._id || editForm.id, {
         name: editForm.name,
         role: editForm.role,
         photo: editForm.pic || editForm.photo || '',
-        email: editForm.email || '',
       });
       const admins = await getAdmins();
       save({...db, admins});
@@ -8244,23 +8229,26 @@ function Settings({ db, save, user, setUser }) {
     } catch(err) { toast(err.message,'err'); }
   };
 
+  const sendEmailChangeOtp = async () => {
+    try {
+      setEmailOtpSending(true);
+      const res = await requestEmailOTP();
+      setEmailOtpStep('otp'); // step: enter otp
+      toast(`OTP sent to ${res.email}`);
+    } catch(err) { toast(err.message,'err'); }
+    finally { setEmailOtpSending(false); }
+  };
+
   const verifyEmailAndSave = async () => {
     if (!emailOtpVal) { toast('Enter OTP','err'); return; }
+    if (!emailNew) { toast('Enter new email','err'); return; }
     try {
-      await verifyEmailOTP(emailOtpVal, editForm.email);
-      // Email saved on backend, now save rest of profile
-      await updateAdmin(editForm._id || editForm.id, {
-        name: editForm.name,
-        role: editForm.role,
-        photo: editForm.pic || editForm.photo || '',
-      });
+      await verifyEmailOTP(emailOtpVal, emailNew);
       const admins = await getAdmins();
       save({...db, admins});
-      if(editForm.username === user.username) {
-        const updatedUser = {...user, name: editForm.name, role: editForm.role, pic: editForm.pic || editForm.photo || user.pic || ''};
-        setUser(updatedUser);
-      }
-      setEditOpen(false); setEmailOtpStep(false); setEmailOtpVal(''); toast('Profile updated');
+      setEditForm(f => ({...f, email: emailNew}));
+      setEmailOtpStep(false); setEmailOtpVal(''); setEmailNew('');
+      toast('Email updated successfully');
     } catch(err) { toast(err.message,'err'); }
   };
 
@@ -8420,25 +8408,42 @@ function Settings({ db, save, user, setUser }) {
         <Grid>
           <Field label="Display Name *"><Input value={editForm.name||''} onChange={v=>setEditForm(f=>({...f,name:v}))}/></Field>
           <Field label="Username"><Input value={editForm.username||''} disabled style={{opacity:0.6}}/></Field>
-          <Field label="Email (for OTP)"><Input type="email" value={editForm.email||''} onChange={v=>setEditForm(f=>({...f,email:v}))} placeholder="your@gmail.com"/></Field>
           <Field label="Role">
             <Select value={editForm.role||'Admin'} onChange={v=>setEditForm(f=>({...f,role:v}))}>
               <option>Admin</option><option>Accountant</option><option>Principal</option>
             </Select>
           </Field>
         </Grid>
-        {emailOtpStep && (
-          <div style={{marginTop:14,padding:'14px',background:'#f0f9ff',borderRadius:10,border:'1px solid #bae6fd'}}>
-            <div style={{fontSize:12,color:'#0369a1',marginBottom:8,fontWeight:600}}>OTP sent to <b>{editForm.email}</b> — enter it to verify:</div>
-            <Input value={emailOtpVal} onChange={setEmailOtpVal} placeholder="6-digit OTP" maxLength={6}/>
+
+        {/* Email change section */}
+        <div style={{marginTop:16,padding:'14px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom: emailOtpStep ? 12 : 0}}>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:'#475569',marginBottom:2}}>EMAIL (FOR OTP)</div>
+              <div style={{fontSize:13,color:'#0f172a'}}>{editForm.email || <span style={{color:'#94a3b8'}}>Not set</span>}</div>
+            </div>
+            {!emailOtpStep && (
+              <Btn size="sm" onClick={sendEmailChangeOtp} disabled={emailOtpSending}>
+                {emailOtpSending ? 'Sending…' : editForm.email ? 'Change Email' : 'Add Email'}
+              </Btn>
+            )}
           </div>
-        )}
+          {emailOtpStep === 'otp' && (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{fontSize:12,color:'#0369a1',fontWeight:600}}>OTP sent to your current email. Verify to proceed:</div>
+              <Input value={emailOtpVal} onChange={setEmailOtpVal} placeholder="Enter 6-digit OTP" maxLength={6}/>
+              <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="Enter new email address"/>
+              <div style={{display:'flex',gap:8}}>
+                <Btn variant="primary" size="sm" onClick={verifyEmailAndSave}>Verify & Save Email</Btn>
+                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
+              </div>
+            </div>
+          )}
+        </div>
+
         <ModalFooter>
-          <Btn onClick={()=>{setEditOpen(false);setEmailOtpStep(false);setEmailOtpVal('');}}>Cancel</Btn>
-          {emailOtpStep
-            ? <Btn variant="primary" onClick={verifyEmailAndSave}>Verify & Save</Btn>
-            : <Btn variant="primary" onClick={saveEdit} disabled={emailOtpSending}>{emailOtpSending?'Sending OTP…':'Save Changes'}</Btn>
-          }
+          <Btn onClick={()=>{setEditOpen(false);setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
+          <Btn variant="primary" onClick={saveEdit}>Save Changes</Btn>
         </ModalFooter>
       </Modal>
     </div>

@@ -465,8 +465,8 @@ export async function verifyOTPChangePassword(otp, newPassword) {
   return req('POST', '/auth/verify-otp-change-password', { otp, newPassword });
 }
 
-export async function requestEmailOTP(newEmail) {
-  return req('POST', '/auth/request-email-otp', { newEmail });
+export async function requestEmailOTP() {
+  return req('POST', '/auth/request-email-otp');
 }
 
 export async function verifyEmailOTP(otp, newEmail) {
