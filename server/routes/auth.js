@@ -16,10 +16,28 @@ function makeOTP() {
 
 function getMailer() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
   });
 }
+
+// GET /api/auth/test-mail  — test if mail config works (remove after testing)
+router.get('/test-mail', auth, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.adminId);
+    await getMailer().sendMail({
+      from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
+      to: process.env.MAIL_USER,
+      subject: 'LKPS Mail Test',
+      text: `Mail config working. MAIL_USER=${process.env.MAIL_USER}`,
+    });
+    res.json({ ok: true, mailUser: process.env.MAIL_USER, adminEmail: admin?.email });
+  } catch(err) {
+    res.status(500).json({ error: err.message, mailUser: process.env.MAIL_USER });
+  }
+});
 
 // POST /api/auth/request-email-otp  — send OTP to CURRENT email before allowing email change
 router.post('/request-email-otp', auth, async (req, res) => {
