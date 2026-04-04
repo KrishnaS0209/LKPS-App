@@ -110,6 +110,9 @@ router.post('/verify-current-email-otp', auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// POST /api/auth/verify-email-otp
+router.post('/verify-email-otp', auth, async (req, res) => {
   try {
     const { otp, newEmail } = req.body;
     if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and new email required' });
