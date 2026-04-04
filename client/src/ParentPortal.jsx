@@ -4,6 +4,7 @@ import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterO
 
 const PARENT_NAV = [
   { id:'pdash',  icon:'home',          label:'Dashboard'   },
+  { id:'pfee',   icon:'payments',      label:'Fee Status'  },
   { id:'patt',   icon:'fact_check',    label:'Attendance'  },
   { id:'pmarks', icon:'quiz',          label:'Marks'       },
   { id:'pexam',  icon:'event_note',    label:'Exams'       },
@@ -66,6 +67,7 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
 
   const pages = {
     pdash:  <ParentDash db={db} child={child} student={student} setPage={setPage} />,
+    pfee:   <ParentFee db={db} child={child} />,
     patt:   <ParentAttendance db={db} child={child} />,
     pmarks: <ParentMarks db={db} child={child} />,
     pexam:  <ParentExams db={db} child={child} />,
@@ -74,15 +76,30 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   };
 
   return (
-    <div className="parent-portal-shell" style={{ display: 'flex', height: '100vh', background: '#f7fafc', fontFamily: 'Inter,sans-serif' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#f0f4ff', fontFamily: 'Inter,sans-serif', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes pp-slidein{from{opacity:0;transform:translateX(-100%)}to{opacity:1;transform:none}}
+        .pp-nav-btn:hover{background:rgba(96,165,250,0.15)!important;color:#60a5fa!important}
+        .pp-nav-btn.active{background:rgba(96,165,250,0.18)!important;color:#60a5fa!important}
+        .pp-stat:hover{transform:translateY(-3px)!important;box-shadow:0 8px 24px rgba(0,31,77,0.12)!important}
+        @media(max-width:768px){
+          .pp-main-pad{padding:20px 16px!important}
+          .pp-stats-grid{grid-template-columns:1fr 1fr!important}
+          .pp-dash-grid{grid-template-columns:1fr!important}
+          .pp-header-title{display:none!important}
+        }
+      `}</style>
 
       {/* Email Registration Prompt Modal */}
       {showEmailPrompt && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-          <div style={{width:'100%',maxWidth:400,background:'#fff',borderRadius:16,padding:'28px 24px',boxShadow:'0 24px 60px rgba(0,0,0,0.2)'}}>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+          <div style={{width:'100%',maxWidth:400,background:'#fff',borderRadius:20,padding:'32px 28px',boxShadow:'0 24px 60px rgba(0,0,0,0.25)'}}>
+            <div style={{width:48,height:48,borderRadius:14,background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+              <span className="material-symbols-outlined" style={{fontSize:24,color:'#fff',fontVariationSettings:"'FILL' 1"}}>mail</span>
+            </div>
             <div style={{fontSize:18,fontWeight:800,color:'#0f172a',marginBottom:6}}>Register Your Email</div>
             <div style={{fontSize:13,color:'#64748b',marginBottom:20,lineHeight:1.6}}>
-              Register your email address to enable self-service credential recovery in case you forget your username or password.
+              Register your email to enable self-service credential recovery if you forget your username or password.
             </div>
             {emailErr && <div style={{background:'#fef2f2',color:'#dc2626',borderRadius:10,padding:'9px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid #fecaca'}}>{emailErr}</div>}
             {emailStep === 'input' ? <>
@@ -116,78 +133,90 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
         </div>
       )}
 
+      {/* Sidebar overlay (mobile) */}
+      {isMobile && mobileNavOpen && (
+        <div onClick={() => setMobileNavOpen(false)}
+          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1100,backdropFilter:'blur(2px)'}} />
+      )}
+
       {/* Sidebar */}
-      <aside className="parent-portal-sidebar" style={{ width: 220, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)', display: 'flex', flexDirection: 'column', flexShrink: 0,
-        position: isMobile ? 'fixed' : 'relative', left: 0, top: isMobile ? 0 : undefined, bottom: isMobile ? 0 : undefined,
-        transform: isMobile ? (mobileNavOpen ? 'translateX(0)' : 'translateX(-110%)') : 'none',
-        transition: isMobile ? 'transform 220ms ease' : 'none', zIndex: isMobile ? 1200 : 'auto' }}>
-        {/* Logo */}
-        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 4 }}>Parent Portal</div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>LORD KRISHNA PUBLIC SCHOOL</div>
+      <aside style={{
+        width: 240, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)',
+        display: 'flex', flexDirection: 'column', flexShrink: 0,
+        position: isMobile ? 'fixed' : 'relative',
+        left: 0, top: 0, bottom: 0,
+        transform: isMobile ? (mobileNavOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        transition: 'transform 240ms cubic-bezier(0.4,0,0.2,1)',
+        zIndex: isMobile ? 1200 : 'auto',
+        boxShadow: isMobile && mobileNavOpen ? '4px 0 32px rgba(0,0,0,0.4)' : 'none',
+      }}>
+        {/* Header */}
+        <div style={{padding:'20px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
+          <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:4}}>Parent Portal</div>
+          <div style={{fontSize:13,fontWeight:800,color:'#fff',lineHeight:1.3}}>LORD KRISHNA<br/>PUBLIC SCHOOL</div>
         </div>
-        {/* Child info */}
-        <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#1960a3,#60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-            {photo ? <img src={photo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : ini}
+        {/* Student info */}
+        <div style={{padding:'14px 18px',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,color:'#fff',flexShrink:0,overflow:'hidden'}}>
+            {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{child.cls || '—'} · Parent View</div>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,0.4)'}}>Class {child.cls||'—'}</div>
           </div>
         </div>
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
+        <nav style={{flex:1,padding:'10px 10px',overflowY:'auto'}}>
           {PARENT_NAV.map(item => (
-            <button key={item.id} onClick={() => setPage(item.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 2, fontWeight: 600, fontSize: 13, transition: 'all 150ms', textAlign: 'left',
-                background: page === item.id ? 'rgba(96,165,250,0.18)' : 'transparent',
-                color: page === item.id ? '#60a5fa' : 'rgba(255,255,255,0.6)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{item.icon}</span>
+            <button key={item.id} onClick={()=>setPage(item.id)}
+              className={`pp-nav-btn${page===item.id?' active':''}`}
+              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',marginBottom:2,fontWeight:600,fontSize:13,transition:'all 150ms',textAlign:'left',
+                background: page===item.id ? 'rgba(96,165,250,0.18)' : 'transparent',
+                color: page===item.id ? '#60a5fa' : 'rgba(255,255,255,0.55)'}}>
+              <span className="material-symbols-outlined" style={{fontSize:18,fontVariationSettings:page===item.id?"'FILL' 1":"'FILL' 0"}}>{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
         {/* Logout */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{padding:'12px 10px',borderTop:'1px solid rgba(255,255,255,0.07)'}}>
           <button onClick={onLogout}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontWeight: 600, fontSize: 13, transition: 'all 150ms' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#fca5a5'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
+            style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',background:'transparent',color:'rgba(255,255,255,0.45)',fontWeight:600,fontSize:13,transition:'all 150ms'}}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,0.15)';e.currentTarget.style.color='#fca5a5';}}
+            onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.45)';}}>
+            <span className="material-symbols-outlined" style={{fontSize:18}}>logout</span>
             Sign Out
           </button>
         </div>
       </aside>
-      {isMobile && mobileNavOpen && (
-        <div className="parent-portal-overlay" onClick={() => setMobileNavOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:1100 }} />
-      )}
 
-      {/* Main content */}
-      <div className="parent-portal-main" style={{ flex: 1, display:'flex', flexDirection:'column', minWidth:0 }}>
-        <header className="parent-portal-header" style={{ height:64, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', background:'#fff', borderBottom:'1px solid #e8edf5', boxShadow:'0 2px 12px rgba(0,31,77,0.07)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <button type="button" className="parent-portal-menu-btn" onClick={() => setMobileNavOpen(v => !v)} style={{ display:'none', border:0, background:'transparent', cursor:'pointer', color:'#1960a3', padding:4 }} aria-label="Open parent navigation">
-              <span className="material-symbols-outlined" style={{ fontSize:22 }}>menu</span>
+      {/* Main */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,overflow:'hidden'}}>
+        {/* Top bar */}
+        <header style={{height:60,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',background:'#fff',borderBottom:'1px solid #e8edf5',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',zIndex:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <button onClick={()=>setMobileNavOpen(v=>!v)}
+              style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#1960a3',flexShrink:0}}>
+              <span className="material-symbols-outlined" style={{fontSize:20}}>{mobileNavOpen?'close':'menu'}</span>
             </button>
-            <div>
-              <div style={{ fontSize:13, fontWeight:800, color:'#1e293b', fontFamily:'Manrope,sans-serif' }}>LORD KRISHNA PUBLIC SCHOOL</div>
-              <div style={{ fontSize:10, color:'#94a3b8', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase' }}>Parent Portal</div>
+            <div className="pp-header-title">
+              <div style={{fontSize:13,fontWeight:800,color:'#1e293b'}}>LORD KRISHNA PUBLIC SCHOOL</div>
+              <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,letterSpacing:'0.06em',textTransform:'uppercase'}}>Parent Portal</div>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:12, fontWeight:700, color:'#1e293b' }}>{name}</div>
-              <div style={{ fontSize:10, color:'#94a3b8' }}>{child.cls || '—'} · Parent View</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{name}</div>
+              <div style={{fontSize:10,color:'#94a3b8'}}>Class {child.cls||'—'}</div>
             </div>
-            <div style={{ width:34, height:34, borderRadius:'50%', background:'linear-gradient(135deg,#1960a3,#60a5fa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:'#fff', overflow:'hidden', flexShrink:0 }}>
-              {photo ? <img src={photo} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : ini}
+            <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#fff',overflow:'hidden',flexShrink:0}}>
+              {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
             </div>
           </div>
         </header>
-      <main className="parent-portal-content" style={{ flex: 1, overflowY: 'auto', padding: '32px 36px' }}>
-        {pages[page] || pages.pdash}
-      </main>
+        <main style={{flex:1,overflowY:'auto',padding:'28px 32px'}} className="pp-main-pad">
+          {pages[page] || pages.pdash}
+        </main>
       </div>
     </div>
   );
@@ -220,11 +249,18 @@ function ParentDash({ db, child, student, setPage }) {
     if (m && m[sid] !== undefined) recentMarks.push({ exam: e.name, marks: m[sid], max: e.max || 100 });
   });
 
+  // Fee summary
+  const pays = (db.pays || []).filter(p => p.sid === sid);
+  const totalPaid = pays.reduce((s, p) => s + (p.amt || 0), 0);
+  const totalFee = child.fee || 0;
+  const feeDue = Math.max(0, totalFee - totalPaid);
+  const lastPay = pays.sort((a,b)=>(b.dt||'').localeCompare(a.dt||''))[0];
+
   const STATS = [
     { icon: 'fact_check', label: 'Attendance', value: attPct + '%', color: attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626', page: 'patt' },
+    { icon: 'payments', label: 'Fee Due', value: '₹'+feeDue.toLocaleString('en-IN'), color: feeDue > 0 ? '#dc2626' : '#059669', page: 'pfee' },
     { icon: 'quiz', label: 'Exams Taken', value: recentMarks.length, color: '#1960a3', page: 'pmarks' },
     { icon: 'event_note', label: 'Upcoming Exams', value: upcoming.length, color: '#7c3aed', page: 'pexam' },
-    { icon: 'class', label: 'Class', value: child.cls || '—', color: '#0891b2', page: null },
   ];
 
   return (
@@ -286,6 +322,97 @@ function ParentDash({ db, child, student, setPage }) {
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Parent Fee Status ─────────────────────────────────────────────
+function ParentFee({ db, child }) {
+  const sid = child.sid || child.id;
+  const pays = (db.pays || []).filter(p => p.sid === sid).sort((a,b)=>(b.dt||'').localeCompare(a.dt||''));
+  const totalFee = child.fee || 0;
+  const totalPaid = pays.reduce((s,p) => s + (p.amt||0), 0);
+  const feeDue = Math.max(0, totalFee - totalPaid);
+  const lastPay = pays[0];
+  const feeStatus = child.fst || (feeDue === 0 ? 'Paid' : 'Pending');
+  const statusColor = feeStatus === 'Paid' ? '#059669' : feeStatus === 'Partial' ? '#d97706' : '#dc2626';
+
+  return (
+    <div>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>Fee Status</div>
+        <h1 style={{fontSize:28,fontWeight:900,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>{child.fn} {child.ln}</h1>
+        <div style={{fontSize:13,color:'#64748b',marginTop:4}}>Class {child.cls||'—'} · {db.settings?.year||''}</div>
+      </div>
+
+      {/* Summary cards */}
+      <div className="pp-stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
+        {[
+          {label:'Annual Fee',    value:'₹'+totalFee.toLocaleString('en-IN'),  color:'#1960a3', icon:'receipt_long'},
+          {label:'Total Paid',    value:'₹'+totalPaid.toLocaleString('en-IN'), color:'#059669', icon:'check_circle'},
+          {label:'Amount Due',    value:'₹'+feeDue.toLocaleString('en-IN'),    color: feeDue>0?'#dc2626':'#059669', icon:'pending'},
+          {label:'Status',        value:feeStatus,                              color:statusColor, icon:'info'},
+        ].map(s=>(
+          <div key={s.label} className="pp-stat" style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',transition:'all 150ms'}}>
+            <div style={{width:36,height:36,borderRadius:10,background:s.color+'18',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
+              <span className="material-symbols-outlined" style={{fontSize:18,color:s.color,fontVariationSettings:"'FILL' 1"}}>{s.icon}</span>
+            </div>
+            <div style={{fontSize:20,fontWeight:900,color:s.color,fontFamily:'Manrope,sans-serif'}}>{s.value}</div>
+            <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Last payment highlight */}
+      {lastPay && (
+        <div style={{background:'linear-gradient(135deg,#002045,#1960a3)',borderRadius:16,padding:'20px 24px',marginBottom:24,display:'flex',alignItems:'center',gap:16}}>
+          <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <span className="material-symbols-outlined" style={{fontSize:22,color:'#fff',fontVariationSettings:"'FILL' 1"}}>payments</span>
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:2}}>Last Payment</div>
+            <div style={{fontSize:20,fontWeight:900,color:'#fff',fontFamily:'Manrope,sans-serif'}}>₹{(lastPay.amt||0).toLocaleString('en-IN')}</div>
+            <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:2}}>
+              {lastPay.dt ? new Date(lastPay.dt).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : '—'}
+              {lastPay.md ? ` · ${lastPay.md}` : ''}
+              {lastPay.mn ? ` · ${lastPay.mn}` : ''}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment history */}
+      <div style={{background:'#fff',borderRadius:16,boxShadow:'0 1px 8px rgba(0,31,77,0.06)',overflow:'hidden'}}>
+        <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',fontSize:13,fontWeight:700,color:'#1e293b'}}>
+          Payment History ({pays.length})
+        </div>
+        {pays.length === 0 ? (
+          <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>No payments recorded yet</div>
+        ) : (
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr>{['Date','Amount','Mode','Months / Note','Receipt'].map(h=>(
+                  <th key={h} style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody>
+                {pays.map((p,i)=>(
+                  <tr key={p.id||i} style={{borderBottom:'1px solid #f1f5f9'}}>
+                    <td style={{padding:'12px 20px',fontSize:13,color:'#1e293b',fontWeight:600}}>
+                      {p.dt ? new Date(p.dt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—'}
+                    </td>
+                    <td style={{padding:'12px 20px',fontSize:14,fontWeight:800,color:'#059669'}}>₹{(p.amt||0).toLocaleString('en-IN')}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.md||p.mode||'—'}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.mn||p.note||'—'}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.rc||'—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
