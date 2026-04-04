@@ -1,6 +1,6 @@
 // ParentPortal — separate file to keep App.jsx manageable
 import React, { useState, useEffect } from 'react';
-import { getMessages, sendMessage } from './storage';
+import { getMessages, sendMessage, studentRegisterEmail } from './storage';
 
 const PARENT_NAV = [
   { id:'pdash',  icon:'home',          label:'Dashboard'   },
@@ -15,6 +15,10 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [page, setPage] = useState('pdash');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(!student.email);
+  const [emailInput, setEmailInput] = useState('');
+  const [emailErr, setEmailErr] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
   const name = (student.fn || '') + ' ' + (student.ln || '');
   const photo = student.photo || '';
   const ini = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -27,6 +31,17 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  const saveEmail = async () => {
+    if (!emailInput || !emailInput.includes('@')) { setEmailErr('Enter a valid email address'); return; }
+    setEmailSaving(true); setEmailErr('');
+    try {
+      await studentRegisterEmail(emailInput);
+      student.email = emailInput; // update local reference
+      setShowEmailPrompt(false);
+    } catch(e) { setEmailErr(e.message || 'Failed to save. Please try again.'); }
+    finally { setEmailSaving(false); }
+  };
 
   useEffect(() => {
     if (!isMobile) setMobileNavOpen(false);
@@ -47,6 +62,32 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
 
   return (
     <div className="parent-portal-shell" style={{ display: 'flex', height: '100vh', background: '#f7fafc', fontFamily: 'Inter,sans-serif' }}>
+
+      {/* Email Registration Prompt Modal */}
+      {showEmailPrompt && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+          <div style={{width:'100%',maxWidth:400,background:'#fff',borderRadius:16,padding:'28px 24px',boxShadow:'0 24px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{fontSize:18,fontWeight:800,color:'#0f172a',marginBottom:6}}>Register Your Email</div>
+            <div style={{fontSize:13,color:'#64748b',marginBottom:20,lineHeight:1.6}}>
+              Register your email address to enable self-service credential recovery in case you forget your username or password.
+            </div>
+            {emailErr && <div style={{background:'#fef2f2',color:'#dc2626',borderRadius:10,padding:'9px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid #fecaca'}}>{emailErr}</div>}
+            <input value={emailInput} onChange={e=>{setEmailInput(e.target.value);setEmailErr('');}}
+              type="email" placeholder="your@email.com"
+              style={{width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box',marginBottom:12}}
+              onKeyDown={e=>e.key==='Enter'&&saveEmail()}/>
+            <button onClick={saveEmail} disabled={emailSaving}
+              style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:8}}>
+              {emailSaving ? 'Saving…' : 'Register Email'}
+            </button>
+            <button onClick={()=>setShowEmailPrompt(false)}
+              style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'transparent',color:'#64748b',fontWeight:600,fontSize:12,cursor:'pointer'}}>
+              Do it Later
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="parent-portal-sidebar" style={{ width: 220, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)', display: 'flex', flexDirection: 'column', flexShrink: 0,
         position: isMobile ? 'fixed' : 'relative', left: 0, top: isMobile ? 0 : undefined, bottom: isMobile ? 0 : undefined,

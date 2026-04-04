@@ -10,6 +10,7 @@ import {
   getAdmins, createAdmin, updateAdmin, removeAdmin,
   getMessages, sendMessage, updateMessage, deleteMessage,
   requestOTP, verifyOTPChangePassword, requestEmailOTP, verifyEmailOTP, verifyCurrentEmailOTP, resetEmailWithPassword,
+  studentRecoverUsername, studentRequestOtp, studentVerifyOtp, studentResetPassword, studentRegisterEmail,
 } from './storage';
 import ParentPortal from './ParentPortal';
 import AdminMessages from './AdminMessages';
@@ -679,6 +680,123 @@ function SessionPicker({ sessions: initSessions, authSession, onPick, onCreate, 
   );
 }
 
+// ── ParentRecovery — multi-step credential recovery for parent portal ──
+function ParentRecovery({ step, setStep, identifier, setIdentifier, otp, setOtp, pw, setPw, pwConf, setPwConf, loading, setLoading, err, setErr, maskedEmail, setMaskedEmail, onBack }) {
+  const s = { fontFamily:'Inter,sans-serif', width:'100%' };
+  const inp = { width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #e2e8f0', background:'#f8fafc', fontSize:13, color:'#0f172a', outline:'none', boxSizing:'border-box', marginBottom:10 };
+  const btn = (bg) => ({ width:'100%', padding:'13px', borderRadius:12, border:'none', background:bg||'linear-gradient(135deg,#002045,#1960a3)', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', marginBottom:8 });
+  const back = () => { setErr(''); };
+
+  const doRecoverUsername = async () => {
+    if (!identifier) { setErr('Enter your admission number or email'); return; }
+    setLoading(true); setErr('');
+    try {
+      const r = await studentRecoverUsername(identifier);
+      if (r.noEmail) { setStep('no-email'); } else { setStep('username-sent'); }
+    } catch(e) { setErr(e.message||'Failed. Please try again.'); }
+    finally { setLoading(false); }
+  };
+
+  const doRequestOtp = async () => {
+    if (!identifier) { setErr('Enter your admission number or email'); return; }
+    setLoading(true); setErr('');
+    try {
+      const r = await studentRequestOtp(identifier);
+      if (r.noEmail) { setStep('no-email'); } else { setMaskedEmail(r.maskedEmail||''); setStep('otp-entry'); }
+    } catch(e) { setErr(e.message||'Failed. Please try again.'); }
+    finally { setLoading(false); }
+  };
+
+  const doVerifyOtp = async () => {
+    if (!otp) { setErr('Enter the OTP'); return; }
+    setLoading(true); setErr('');
+    try {
+      await studentVerifyOtp(identifier, otp);
+      setStep('new-password');
+    } catch(e) { setErr(e.message||'Invalid OTP'); }
+    finally { setLoading(false); }
+  };
+
+  const doResetPassword = async () => {
+    if (!pw || !pwConf) { setErr('Fill both fields'); return; }
+    if (pw !== pwConf) { setErr('Passwords do not match'); return; }
+    if (pw.length < 6) { setErr('Password must be at least 6 characters'); return; }
+    setLoading(true); setErr('');
+    try {
+      await studentResetPassword(identifier, otp, pw);
+      setStep('success');
+    } catch(e) { setErr(e.message||'Failed. Please try again.'); }
+    finally { setLoading(false); }
+  };
+
+  const card = (children) => (
+    <div style={{...s, background:'#fff', borderRadius:16, padding:'28px 24px', boxShadow:'0 4px 24px rgba(0,32,69,0.1)', border:'1px solid #e2e8f0'}}>
+      {children}
+    </div>
+  );
+
+  const title = (t, sub) => (
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:18,fontWeight:800,color:'#0f172a',marginBottom:4}}>{t}</div>
+      {sub && <div style={{fontSize:12,color:'#64748b'}}>{sub}</div>}
+    </div>
+  );
+
+  const errBox = err ? <div style={{background:'#fef2f2',color:'#dc2626',borderRadius:10,padding:'9px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid #fecaca'}}>{err}</div> : null;
+
+  if (step === 'choose') return card(<>
+    {title('Recover Credentials', 'Enter your admission number or registered email')}
+    {errBox}
+    <input style={inp} value={identifier} onChange={e=>setIdentifier(e.target.value)} placeholder="Admission No. or Email" onKeyDown={e=>e.key==='Enter'&&doRecoverUsername()}/>
+    <button style={btn('linear-gradient(135deg,#1960a3,#3b82f6)')} onClick={doRecoverUsername} disabled={loading}>
+      {loading?'Sending…':'Recover Username'}
+    </button>
+    <button style={btn('linear-gradient(135deg,#059669,#10b981)')} onClick={doRequestOtp} disabled={loading}>
+      {loading?'Sending…':'Reset Password via OTP'}
+    </button>
+    <button onClick={onBack} style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'transparent',color:'#64748b',fontWeight:600,fontSize:12,cursor:'pointer'}}>← Back to Login</button>
+  </>);
+
+  if (step === 'username-sent') return card(<>
+    {title('Username Sent ✓', `Your username has been sent to your registered email.`)}
+    <div style={{fontSize:13,color:'#475569',marginBottom:20}}>Check your inbox and use it to log in.</div>
+    <button style={btn()} onClick={onBack}>Back to Login</button>
+  </>);
+
+  if (step === 'otp-entry') return card(<>
+    {title('Enter OTP', `OTP sent to ${maskedEmail}`)}
+    {errBox}
+    <input style={inp} value={otp} onChange={e=>setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6} onKeyDown={e=>e.key==='Enter'&&doVerifyOtp()}/>
+    <button style={btn()} onClick={doVerifyOtp} disabled={loading}>{loading?'Verifying…':'Verify OTP'}</button>
+    <button onClick={()=>{setOtp('');setErr('');doRequestOtp();}} style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'transparent',color:'#1960a3',fontWeight:600,fontSize:12,cursor:'pointer',marginBottom:8}}>Resend OTP</button>
+    <button onClick={onBack} style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'transparent',color:'#64748b',fontWeight:600,fontSize:12,cursor:'pointer'}}>← Back to Login</button>
+  </>);
+
+  if (step === 'new-password') return card(<>
+    {title('Set New Password')}
+    {errBox}
+    <input style={inp} type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="New password (min 6 chars)"/>
+    <input style={inp} type="password" value={pwConf} onChange={e=>setPwConf(e.target.value)} placeholder="Confirm new password" onKeyDown={e=>e.key==='Enter'&&doResetPassword()}/>
+    <button style={btn()} onClick={doResetPassword} disabled={loading}>{loading?'Saving…':'Set New Password'}</button>
+  </>);
+
+  if (step === 'success') return card(<>
+    {title('Password Reset ✓', 'Your password has been updated successfully.')}
+    <button style={btn()} onClick={onBack}>Back to Login</button>
+  </>);
+
+  if (step === 'no-email') return card(<>
+    {title('No Email Registered')}
+    <div style={{fontSize:13,color:'#475569',lineHeight:1.7,marginBottom:20}}>
+      No email address is registered for this account.<br/>
+      <b>Login using your credentials</b> to register your email for future recovery, or <b>contact the school office</b>.
+    </div>
+    <button style={btn()} onClick={onBack}>Back to Login</button>
+  </>);
+
+  return null;
+}
+
 function Login({ db, onLogin }) {
   const [role, setRole] = useState('admin');
   const [u, setU] = useState('');
@@ -687,6 +805,17 @@ function Login({ db, onLogin }) {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Recovery flow state
+  const [recoveryStep, setRecoveryStep] = useState(null); // null | 'choose' | 'username-sent' | 'otp-entry' | 'new-password' | 'success' | 'no-email'
+  const [recoveryId, setRecoveryId] = useState('');
+  const [recoveryOtp, setRecoveryOtp] = useState('');
+  const [recoveryPw, setRecoveryPw] = useState('');
+  const [recoveryPwConf, setRecoveryPwConf] = useState('');
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryErr, setRecoveryErr] = useState('');
+  const [recoveryMaskedEmail, setRecoveryMaskedEmail] = useState('');
+  const resetRecovery = () => { setRecoveryStep(null); setRecoveryId(''); setRecoveryOtp(''); setRecoveryPw(''); setRecoveryPwConf(''); setRecoveryErr(''); setRecoveryMaskedEmail(''); };
 
   const genCaptcha = () => {
     const a = Math.floor(Math.random()*9)+1;
@@ -851,9 +980,24 @@ function Login({ db, onLogin }) {
         <div className="lp-center" style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 40px 32px',position:'relative',zIndex:2}}>
           <div style={{width:'100%',maxWidth:380}}>
 
+            {/* ── Recovery screens ── */}
+            {recoveryStep && <ParentRecovery
+              step={recoveryStep} setStep={setRecoveryStep}
+              identifier={recoveryId} setIdentifier={setRecoveryId}
+              otp={recoveryOtp} setOtp={setRecoveryOtp}
+              pw={recoveryPw} setPw={setRecoveryPw}
+              pwConf={recoveryPwConf} setPwConf={setRecoveryPwConf}
+              loading={recoveryLoading} setLoading={setRecoveryLoading}
+              err={recoveryErr} setErr={setRecoveryErr}
+              maskedEmail={recoveryMaskedEmail} setMaskedEmail={setRecoveryMaskedEmail}
+              onBack={resetRecovery}
+            />}
+
+            {/* ── Normal login form (hidden during recovery) ── */}
+            {!recoveryStep && <React.Fragment>
+
             {/* Logo + heading */}
-            <div style={{...anim(80),marginBottom:30,textAlign:'center'}}>
-              <div style={{width:64,height:64,borderRadius:20,background:'linear-gradient(135deg,#002045,#1960a3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 10px 28px rgba(25,96,163,0.32)'}}>
+            <div style={{...anim(80),marginBottom:30,textAlign:'center'}}>              <div style={{width:64,height:64,borderRadius:20,background:'linear-gradient(135deg,#002045,#1960a3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 10px 28px rgba(25,96,163,0.32)'}}>
                 <span className="material-symbols-outlined" style={{fontSize:30,color:'#fff',fontVariationSettings:"'FILL' 1"}}>school</span>
               </div>
               <h2 style={{fontSize:26,fontWeight:900,color:'#0f172a',letterSpacing:'-0.02em',margin:'0 0 5px',fontFamily:'Manrope,sans-serif'}}>Welcome Back</h2>
@@ -942,11 +1086,20 @@ function Login({ db, onLogin }) {
                   ?<><span className="material-symbols-outlined" style={{fontSize:18,animation:'lp-spin 700ms linear infinite'}}>progress_activity</span>Signing in…</>
                   :<><span className="material-symbols-outlined" style={{fontSize:18}}>login</span>Sign In</>}
               </button>
+              {role === 'parent' && (
+                <div style={{textAlign:'center',marginTop:12}}>
+                  <button onClick={()=>{setRecoveryStep('choose');setRecoveryErr('');}} style={{background:'none',border:'none',color:'#1960a3',fontSize:12,cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>
+                    Forgot username / password?
+                  </button>
+                </div>
+              )}
             </div>
 
 
 
-          </div>
+            </React.Fragment>}
+
+          </div>{/* end maxWidth div */}
         </div>
 
         {/* Footer */}

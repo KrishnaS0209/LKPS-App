@@ -480,6 +480,28 @@ export async function verifyEmailOTP(otp, newEmail) {
 export async function resetEmailWithPassword(password, newEmail) {
   return req('POST', '/auth/reset-email', { password, newEmail });
 }
+
+// ── Student credential recovery ───────────────────────────────────
+
+export async function studentRecoverUsername(identifier) {
+  return req('POST', '/auth/student-recover-username', { identifier });
+}
+
+export async function studentRequestOtp(identifier) {
+  return req('POST', '/auth/student-request-otp', { identifier });
+}
+
+export async function studentVerifyOtp(identifier, otp) {
+  return req('POST', '/auth/student-verify-otp', { identifier, otp });
+}
+
+export async function studentResetPassword(identifier, otp, newPassword) {
+  return req('POST', '/auth/student-reset-password', { identifier, otp, newPassword });
+}
+
+export async function studentRegisterEmail(email) {
+  return req('POST', '/auth/student-register-email', { email });
+}
 export async function migrateLegacyData() { return; }
 export async function saveSessions() { return; } // sessions managed via API
 

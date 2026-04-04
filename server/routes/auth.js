@@ -275,12 +275,118 @@ router.post('/parent-login', async (req, res) => {
       student: {
         id: student._id, sid: student.sid, fn: student.fn, ln: student.ln,
         cls: student.cls, sessionId: student.sessionId, photo: student.photo || '',
-        father: student.father, mother: student.mother,
+        father: student.father, mother: student.mother, email: student.email || '',
       },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Student credential recovery routes ───────────────────────────
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+async function findStudentByIdentifier(identifier) {
+  return Student.findOne({
+    $or: [
+      { admno: identifier },
+      { email: new RegExp('^' + escapeRegex(identifier) + '$', 'i') },
+    ]
+  }).sort({ createdAt: -1 });
+}
+
+// POST /api/auth/student-recover-username
+router.post('/student-recover-username', async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) return res.status(400).json({ error: 'Identifier required' });
+    const student = await findStudentByIdentifier(identifier);
+    if (!student || !student.email) return res.json({ ok: true, noEmail: true });
+    await sendMail({
+      to: student.email,
+      subject: 'Your LKPS Portal Username',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
+        <h2 style="color:#0d2b6e;">Username Recovery</h2>
+        <p style="color:#555;">Your portal username is:</p>
+        <div style="font-size:24px;font-weight:900;color:#0d2b6e;text-align:center;padding:16px;background:#eef2fb;border-radius:8px;margin:16px 0;">${student.puser}</div>
+        <p style="color:#888;font-size:12px;">If you did not request this, please contact the school office.</p>
+      </div>`,
+    });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/auth/student-request-otp
+router.post('/student-request-otp', async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) return res.status(400).json({ error: 'Identifier required' });
+    const student = await findStudentByIdentifier(identifier);
+    if (!student || !student.email) return res.json({ ok: true, noEmail: true });
+    const otp = makeOTP();
+    student.otp = otp;
+    student.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await student.save();
+    const masked = student.email.replace(/(.{2}).+(@.+)/, '$1***$2');
+    await sendMail({
+      to: student.email,
+      subject: 'Password Reset OTP — LKPS Portal',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
+        <h2 style="color:#0d2b6e;">Password Reset</h2>
+        <p style="color:#555;">Your OTP to reset your portal password is:</p>
+        <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
+        <p style="color:#888;font-size:12px;">Valid for <b>10 minutes</b>. Do not share it.</p>
+      </div>`,
+    });
+    res.json({ ok: true, maskedEmail: masked });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/auth/student-verify-otp
+router.post('/student-verify-otp', async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+    if (!identifier || !otp) return res.status(400).json({ error: 'Identifier and OTP required' });
+    const student = await findStudentByIdentifier(identifier);
+    if (!student || !student.otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (student.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (!student.otpExpiry || new Date() > student.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/auth/student-reset-password
+router.post('/student-reset-password', async (req, res) => {
+  try {
+    const { identifier, otp, newPassword } = req.body;
+    if (!identifier || !otp || !newPassword) return res.status(400).json({ error: 'All fields required' });
+    if (newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const student = await findStudentByIdentifier(identifier);
+    if (!student || !student.otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (student.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (!student.otpExpiry || new Date() > student.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
+    student.ppass = newPassword;
+    student.otp = '';
+    student.otpExpiry = null;
+    await student.save();
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/auth/student-register-email (authenticated — parent JWT)
+router.post('/student-register-email', auth, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    if (!req.user.studentId && !req.user.sid) return res.status(403).json({ error: 'Forbidden' });
+    const sid = req.user.sid;
+    const student = await Student.findOne({ sid }).sort({ createdAt: -1 });
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+    student.email = email;
+    await student.save();
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

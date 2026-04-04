@@ -27,6 +27,9 @@ const StudentSchema = new Schema({
   photo:     { type: String, default: '' },
   puser:     String,   // parent portal username
   ppass:     String,   // parent portal password
+  email:     { type: String, default: '' },   // for credential recovery
+  otp:       { type: String, default: '' },
+  otpExpiry: { type: Date,   default: null },
   // marksheet data saved from guest student generator
   _rcMarks:      { type: Schema.Types.Mixed, default: null },
   _rcSubjects:   { type: String, default: '' },
