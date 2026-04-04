@@ -4,7 +4,7 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const { auth } = require('../middleware/auth');
-const { Resend } = require('resend');
+const https = require('https');
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -15,15 +15,26 @@ function makeOTP() {
 }
 
 async function sendMail({ to, subject, html }) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const { data, error } = await resend.emails.send({
-    from: 'LKPS Portal <noreply@lkpschool.in>',
-    to,
-    subject,
-    html,
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY not set');
+  const body = JSON.stringify({ from: 'LKPS Portal <noreply@lkpschool.in>', to: [to], subject, html });
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.resend.com', path: '/emails', method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        const p = JSON.parse(data || '{}');
+        if (res.statusCode >= 400) reject(new Error(p.message || p.name || 'Email send failed'));
+        else resolve(p);
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
   });
-  if (error) throw new Error(error.message || JSON.stringify(error));
-  return data;
 }
 
 // GET /api/auth/test-mail
