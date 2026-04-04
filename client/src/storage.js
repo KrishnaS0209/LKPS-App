@@ -464,6 +464,14 @@ export async function requestOTP() {
 export async function verifyOTPChangePassword(otp, newPassword) {
   return req('POST', '/auth/verify-otp-change-password', { otp, newPassword });
 }
+
+export async function requestEmailOTP(newEmail) {
+  return req('POST', '/auth/request-email-otp', { newEmail });
+}
+
+export async function verifyEmailOTP(otp, newEmail) {
+  return req('POST', '/auth/verify-email-otp', { otp, newEmail });
+}
 export async function migrateLegacyData() { return; }
 export async function saveSessions() { return; } // sessions managed via API
 
