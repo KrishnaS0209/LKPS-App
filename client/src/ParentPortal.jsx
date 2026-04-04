@@ -335,7 +335,9 @@ function ParentFee({ db, child }) {
   const totalPaid = pays.reduce((s,p) => s + (p.amt||0), 0);
   const feeDue = Math.max(0, totalFee - totalPaid);
   const lastPay = pays[0];
-  const feeStatus = child.fst || (feeDue === 0 ? 'Paid' : 'Pending');
+  const feeStatus = totalFee > 0
+    ? (feeDue === 0 ? 'Paid' : totalPaid > 0 ? 'Partial' : 'Pending')
+    : (child.fst || 'Pending');
   const statusColor = feeStatus === 'Paid' ? '#059669' : feeStatus === 'Partial' ? '#d97706' : '#dc2626';
 
   return (
