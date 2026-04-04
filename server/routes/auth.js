@@ -4,7 +4,7 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const { auth } = require('../middleware/auth');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -15,14 +15,14 @@ function makeOTP() {
 }
 
 async function sendMail({ to, subject, html }) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const { error } = await resend.emails.send({
-    from: 'LKPS Portal <noreply@lkpschool.in>',
-    to,
-    subject,
-    html,
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
   });
-  if (error) throw new Error(error.message || JSON.stringify(error));
+  await transporter.sendMail({ from: `"LKPS Portal" <${process.env.MAIL_USER}>`, to, subject, html });
 }
 
 // GET /api/auth/test-mail
