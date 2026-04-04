@@ -469,6 +469,10 @@ export async function requestEmailOTP() {
   return req('POST', '/auth/request-email-otp');
 }
 
+export async function verifyCurrentEmailOTP(otp, newEmail) {
+  return req('POST', '/auth/verify-current-email-otp', { otp, newEmail });
+}
+
 export async function verifyEmailOTP(otp, newEmail) {
   return req('POST', '/auth/verify-email-otp', { otp, newEmail });
 }

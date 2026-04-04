@@ -66,8 +66,39 @@ router.post('/request-email-otp', auth, async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-email-otp
-router.post('/verify-email-otp', auth, async (req, res) => {
+// POST /api/auth/verify-current-email-otp  — verify OTP for current email, then send OTP to new email
+router.post('/verify-current-email-otp', auth, async (req, res) => {
+  try {
+    const { otp, newEmail } = req.body;
+    if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and new email required' });
+
+    const admin = await Admin.findById(req.user.adminId);
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    if (!admin.otp || admin.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (!admin.otpExpiry || new Date() > admin.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
+
+    // Send OTP to new email
+    const newOtp = makeOTP();
+    admin.otp = newOtp;
+    admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await admin.save();
+
+    await sendMail({
+      to: newEmail,
+      subject: 'Verify New Email — LKPS Portal',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
+        <h2 style="color:#0d2b6e;margin-bottom:8px;">Verify New Email</h2>
+        <p style="color:#555;font-size:14px;">Enter this OTP to confirm your new email address:</p>
+        <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${newOtp}</div>
+        <p style="color:#888;font-size:12px;">Valid for <b>10 minutes</b>. Do not share it.</p>
+      </div>`,
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
   try {
     const { otp, newEmail } = req.body;
     if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and new email required' });

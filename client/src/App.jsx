@@ -9,7 +9,7 @@ import {
   loadSessionData, saveSessionData, initShadow, saveSessionConfig,
   getAdmins, createAdmin, updateAdmin, removeAdmin,
   getMessages, sendMessage, updateMessage, deleteMessage,
-  requestOTP, verifyOTPChangePassword, requestEmailOTP, verifyEmailOTP, resetEmailWithPassword,
+  requestOTP, verifyOTPChangePassword, requestEmailOTP, verifyEmailOTP, verifyCurrentEmailOTP, resetEmailWithPassword,
 } from './storage';
 import ParentPortal from './ParentPortal';
 import AdminMessages from './AdminMessages';
@@ -8177,11 +8177,13 @@ function Settings({ db, save, user, setUser }) {
   const [auForm, setAuForm] = useState({});
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
+  // emailOtpStep: false | 'verify-current' | 'enter-new' | 'verify-new' | 'recover'
   const [emailOtpStep, setEmailOtpStep] = useState(false);
   const [emailOtpVal, setEmailOtpVal] = useState('');
   const [emailOtpSending, setEmailOtpSending] = useState(false);
   const [emailNew, setEmailNew] = useState('');
   const [emailRecoveryPw, setEmailRecoveryPw] = useState('');
+  const [emailPrev, setEmailPrev] = useState(''); // store previous email for revert
   const [cpOld, setCpOld] = useState(''); const [cpNew, setCpNew] = useState(''); const [cpConf, setCpConf] = useState('');
   const [cpOtpStep, setCpOtpStep] = useState(false); // false = form, true = otp entry
   const [cpOtp, setCpOtp] = useState('');
@@ -8230,20 +8232,41 @@ function Settings({ db, save, user, setUser }) {
     } catch(err) { toast(err.message,'err'); }
   };
 
+  const resetEmailFlow = () => { setEmailOtpStep(false); setEmailOtpVal(''); setEmailNew(''); setEmailRecoveryPw(''); };
+
   const sendEmailChangeOtp = async () => {
-    // If no current email, allow setting directly
-    if (!editForm.email) {
-      setEmailOtpStep('new');
-      return;
-    }
+    if (!editForm.email) { setEmailOtpStep('enter-new'); return; }
     try {
       setEmailOtpSending(true);
+      setEmailPrev(editForm.email);
       const res = await requestEmailOTP();
-      setEmailOtpStep('otp');
+      setEmailOtpStep('verify-current');
       toast(`OTP sent to ${res.email}`);
-    } catch(err) {
-      toast(err.message || 'Failed to send OTP', 'err');
-    } finally { setEmailOtpSending(false); }
+    } catch(err) { toast(err.message || 'Failed to send OTP', 'err'); }
+    finally { setEmailOtpSending(false); }
+  };
+
+  const verifyCurrentAndSendNew = async () => {
+    if (!emailOtpVal) { toast('Enter OTP','err'); return; }
+    if (!emailNew) { toast('Enter new email','err'); return; }
+    try {
+      await verifyCurrentEmailOTP(emailOtpVal, emailNew);
+      setEmailOtpVal('');
+      setEmailOtpStep('verify-new');
+      toast(`OTP sent to ${emailNew}`);
+    } catch(err) { toast(err.message,'err'); }
+  };
+
+  const verifyEmailAndSave = async () => {
+    if (!emailOtpVal) { toast('Enter OTP','err'); return; }
+    try {
+      await verifyEmailOTP(emailOtpVal, emailNew);
+      const admins = await getAdmins();
+      save({...db, admins});
+      setEditForm(f => ({...f, email: emailNew}));
+      resetEmailFlow();
+      toast('Email updated successfully');
+    } catch(err) { toast(err.message,'err'); }
   };
 
   const recoverEmail = async () => {
@@ -8253,32 +8276,20 @@ function Settings({ db, save, user, setUser }) {
       const admins = await getAdmins();
       save({...db, admins});
       setEditForm(f => ({...f, email: emailNew}));
-      setEmailOtpStep(false); setEmailNew(''); setEmailRecoveryPw('');
+      resetEmailFlow();
       toast('Email updated');
     } catch(err) { toast(err.message,'err'); }
   };
 
-  const saveEmailDirect = async () => {    if (!emailNew) { toast('Enter email','err'); return; }
+  const saveEmailDirect = async () => {
+    if (!emailNew) { toast('Enter email','err'); return; }
     try {
       await updateAdmin(editForm._id || editForm.id, { email: emailNew });
       const admins = await getAdmins();
       save({...db, admins});
       setEditForm(f => ({...f, email: emailNew}));
-      setEmailOtpStep(false); setEmailNew('');
+      resetEmailFlow();
       toast('Email saved');
-    } catch(err) { toast(err.message,'err'); }
-  };
-
-  const verifyEmailAndSave = async () => {
-    if (!emailOtpVal) { toast('Enter OTP','err'); return; }
-    if (!emailNew) { toast('Enter new email','err'); return; }
-    try {
-      await verifyEmailOTP(emailOtpVal, emailNew);
-      const admins = await getAdmins();
-      save({...db, admins});
-      setEditForm(f => ({...f, email: emailNew}));
-      setEmailOtpStep(false); setEmailOtpVal(''); setEmailNew('');
-      toast('Email updated successfully');
     } catch(err) { toast(err.message,'err'); }
   };
 
@@ -8458,45 +8469,55 @@ function Settings({ db, save, user, setUser }) {
               </Btn>
             )}
           </div>
-          {emailOtpStep === 'otp' && (
+          {emailOtpStep === 'verify-current' && (
             <div style={{display:'flex',flexDirection:'column',gap:10}}>
-              <div style={{fontSize:12,color:'#0369a1',fontWeight:600}}>OTP sent to your current email. Verify to proceed:</div>
-              <Input value={emailOtpVal} onChange={setEmailOtpVal} placeholder="Enter 6-digit OTP" maxLength={6}/>
+              <div style={{fontSize:12,color:'#0369a1',fontWeight:600}}>Step 1: Verify current email OTP</div>
+              <Input value={emailOtpVal} onChange={setEmailOtpVal} placeholder="Enter OTP sent to current email" maxLength={6}/>
               <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="Enter new email address"/>
               <div style={{display:'flex',gap:8}}>
-                <Btn variant="primary" size="sm" onClick={verifyEmailAndSave}>Verify & Save Email</Btn>
-                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
+                <Btn variant="primary" size="sm" onClick={verifyCurrentAndSendNew}>Verify & Send OTP to New Email</Btn>
+                <Btn size="sm" onClick={()=>{resetEmailFlow(); setEditForm(f=>({...f,email:emailPrev}));}}>Cancel</Btn>
+              </div>
+            </div>
+          )}
+          {emailOtpStep === 'verify-new' && (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{fontSize:12,color:'#059669',fontWeight:600}}>Step 2: Verify new email — OTP sent to <b>{emailNew}</b></div>
+              <Input value={emailOtpVal} onChange={setEmailOtpVal} placeholder="Enter OTP sent to new email" maxLength={6}/>
+              <div style={{display:'flex',gap:8}}>
+                <Btn variant="primary" size="sm" onClick={verifyEmailAndSave}>Confirm & Save</Btn>
+                <Btn size="sm" onClick={()=>{ setEmailOtpStep('verify-current'); setEmailOtpVal(''); }}>Wrong email? Go back</Btn>
               </div>
               <button onClick={()=>setEmailOtpStep('recover')} style={{fontSize:11,color:'#94a3b8',background:'none',border:'none',cursor:'pointer',textAlign:'left',textDecoration:'underline'}}>
-                Wrong email saved? Reset with password instead
+                Reset with password instead
               </button>
             </div>
           )}
-          {emailOtpStep === 'new' && (
+          {emailOtpStep === 'enter-new' && (
             <div style={{display:'flex',flexDirection:'column',gap:10}}>
               <div style={{fontSize:12,color:'#0369a1',fontWeight:600}}>Enter your email address:</div>
               <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="your@gmail.com"/>
               <div style={{display:'flex',gap:8}}>
                 <Btn variant="primary" size="sm" onClick={saveEmailDirect}>Save Email</Btn>
-                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailNew('');}}>Cancel</Btn>
+                <Btn size="sm" onClick={resetEmailFlow}>Cancel</Btn>
               </div>
             </div>
           )}
           {emailOtpStep === 'recover' && (
             <div style={{display:'flex',flexDirection:'column',gap:10}}>
-              <div style={{fontSize:12,color:'#dc2626',fontWeight:600}}>Reset email using your admin password:</div>
+              <div style={{fontSize:12,color:'#dc2626',fontWeight:600}}>Reset email using admin password:</div>
               <Input type="password" value={emailRecoveryPw} onChange={setEmailRecoveryPw} placeholder="Current admin password"/>
               <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="Correct email address"/>
               <div style={{display:'flex',gap:8}}>
                 <Btn variant="primary" size="sm" onClick={recoverEmail}>Reset Email</Btn>
-                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailNew('');setEmailRecoveryPw('');}}>Cancel</Btn>
+                <Btn size="sm" onClick={resetEmailFlow}>Cancel</Btn>
               </div>
             </div>
           )}
         </div>
 
         <ModalFooter>
-          <Btn onClick={()=>{setEditOpen(false);setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
+          <Btn onClick={()=>{setEditOpen(false);resetEmailFlow();}}>Cancel</Btn>
           <Btn variant="primary" onClick={saveEdit}>Save Changes</Btn>
         </ModalFooter>
       </Modal>
