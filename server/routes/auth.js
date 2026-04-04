@@ -377,16 +377,47 @@ router.post('/student-reset-password', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// POST /api/auth/student-register-email (authenticated — parent JWT)
-router.post('/student-register-email', auth, async (req, res) => {
+// POST /api/auth/student-request-register-otp (authenticated — send OTP to email before registering)
+router.post('/student-request-register-otp', auth, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email required' });
-    if (!req.user.studentId && !req.user.sid) return res.status(403).json({ error: 'Forbidden' });
-    const sid = req.user.sid;
-    const student = await Student.findOne({ sid }).sort({ createdAt: -1 });
+    if (!req.user.sid) return res.status(403).json({ error: 'Forbidden' });
+    const student = await Student.findOne({ sid: req.user.sid }).sort({ createdAt: -1 });
     if (!student) return res.status(404).json({ error: 'Student not found' });
+    const otp = makeOTP();
+    student.otp = otp;
+    student.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await student.save();
+    await sendMail({
+      to: email,
+      subject: 'Verify Your Email — LKPS Portal',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
+        <h2 style="color:#0d2b6e;">Verify Your Email</h2>
+        <p style="color:#555;">Enter this OTP to verify and register your email address:</p>
+        <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
+        <p style="color:#888;font-size:12px;">Valid for <b>10 minutes</b>. Do not share it.</p>
+      </div>`,
+    });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/auth/student-register-email (authenticated — verify OTP then save email to em field)
+router.post('/student-register-email', auth, async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP required' });
+    if (!req.user.sid) return res.status(403).json({ error: 'Forbidden' });
+    const student = await Student.findOne({ sid: req.user.sid }).sort({ createdAt: -1 });
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+    if (!student.otp || student.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (!student.otpExpiry || new Date() > student.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
+    // Save to both em (admin portal field) and email (recovery field)
+    student.em = email;
     student.email = email;
+    student.otp = '';
+    student.otpExpiry = null;
     await student.save();
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }

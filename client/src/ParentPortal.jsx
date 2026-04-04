@@ -1,6 +1,6 @@
 // ParentPortal — separate file to keep App.jsx manageable
 import React, { useState, useEffect } from 'react';
-import { getMessages, sendMessage, studentRegisterEmail } from './storage';
+import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterOtp } from './storage';
 
 const PARENT_NAV = [
   { id:'pdash',  icon:'home',          label:'Dashboard'   },
@@ -17,6 +17,8 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showEmailPrompt, setShowEmailPrompt] = useState(!(student.email || student.em));
   const [emailInput, setEmailInput] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailStep, setEmailStep] = useState('input'); // 'input' | 'otp'
   const [emailErr, setEmailErr] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
   const name = (student.fn || '') + ' ' + (student.ln || '');
@@ -32,12 +34,23 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const saveEmail = async () => {
+  const sendRegisterOtp = async () => {
     if (!emailInput || !emailInput.includes('@')) { setEmailErr('Enter a valid email address'); return; }
     setEmailSaving(true); setEmailErr('');
     try {
-      await studentRegisterEmail(emailInput);
-      student.email = emailInput; // update local reference
+      await studentRequestRegisterOtp(emailInput);
+      setEmailStep('otp');
+    } catch(e) { setEmailErr(e.message || 'Failed to send OTP. Please try again.'); }
+    finally { setEmailSaving(false); }
+  };
+
+  const saveEmail = async () => {
+    if (!emailOtp) { setEmailErr('Enter the OTP'); return; }
+    setEmailSaving(true); setEmailErr('');
+    try {
+      await studentRegisterEmail(emailInput, emailOtp);
+      student.email = emailInput;
+      student.em = emailInput;
       setShowEmailPrompt(false);
     } catch(e) { setEmailErr(e.message || 'Failed to save. Please try again.'); }
     finally { setEmailSaving(false); }
@@ -72,14 +85,29 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
               Register your email address to enable self-service credential recovery in case you forget your username or password.
             </div>
             {emailErr && <div style={{background:'#fef2f2',color:'#dc2626',borderRadius:10,padding:'9px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid #fecaca'}}>{emailErr}</div>}
-            <input value={emailInput} onChange={e=>{setEmailInput(e.target.value);setEmailErr('');}}
-              type="email" placeholder="your@email.com"
-              style={{width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box',marginBottom:12}}
-              onKeyDown={e=>e.key==='Enter'&&saveEmail()}/>
-            <button onClick={saveEmail} disabled={emailSaving}
-              style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:8}}>
-              {emailSaving ? 'Saving…' : 'Register Email'}
-            </button>
+            {emailStep === 'input' ? <>
+              <input value={emailInput} onChange={e=>{setEmailInput(e.target.value);setEmailErr('');}}
+                type="email" placeholder="your@email.com"
+                style={{width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box',marginBottom:12}}
+                onKeyDown={e=>e.key==='Enter'&&sendRegisterOtp()}/>
+              <button onClick={sendRegisterOtp} disabled={emailSaving}
+                style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:8}}>
+                {emailSaving ? 'Sending OTP…' : 'Send OTP to Verify'}
+              </button>
+            </> : <>
+              <div style={{fontSize:12,color:'#0369a1',fontWeight:600,marginBottom:8}}>OTP sent to <b>{emailInput}</b></div>
+              <input value={emailOtp} onChange={e=>{setEmailOtp(e.target.value);setEmailErr('');}}
+                placeholder="Enter 6-digit OTP" maxLength={6}
+                style={{width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8fafc',fontSize:13,color:'#0f172a',outline:'none',boxSizing:'border-box',marginBottom:12}}
+                onKeyDown={e=>e.key==='Enter'&&saveEmail()}/>
+              <button onClick={saveEmail} disabled={emailSaving}
+                style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:8}}>
+                {emailSaving ? 'Saving…' : 'Verify & Register Email'}
+              </button>
+              <button onClick={()=>{setEmailStep('input');setEmailOtp('');setEmailErr('');}} style={{width:'100%',padding:'8px',borderRadius:12,border:'none',background:'transparent',color:'#64748b',fontSize:12,cursor:'pointer',marginBottom:4}}>
+                Change email
+              </button>
+            </>}
             <button onClick={()=>setShowEmailPrompt(false)}
               style={{width:'100%',padding:'10px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'transparent',color:'#64748b',fontWeight:600,fontSize:12,cursor:'pointer'}}>
               Do it Later

@@ -499,8 +499,12 @@ export async function studentResetPassword(identifier, otp, newPassword) {
   return req('POST', '/auth/student-reset-password', { identifier, otp, newPassword });
 }
 
-export async function studentRegisterEmail(email) {
-  return req('POST', '/auth/student-register-email', { email });
+export async function studentRegisterEmail(email, otp) {
+  return req('POST', '/auth/student-register-email', { email, otp });
+}
+
+export async function studentRequestRegisterOtp(email) {
+  return req('POST', '/auth/student-request-register-otp', { email });
 }
 export async function migrateLegacyData() { return; }
 export async function saveSessions() { return; } // sessions managed via API
