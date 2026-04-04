@@ -111,7 +111,26 @@ router.post('/request-otp', auth, async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-otp-change-password
+// POST /api/auth/reset-email  — reset email using password (recovery, no OTP needed)
+router.post('/reset-email', auth, async (req, res) => {
+  try {
+    const { password, newEmail } = req.body;
+    if (!password || !newEmail) return res.status(400).json({ error: 'Password and new email required' });
+
+    const admin = await Admin.findById(req.user.adminId);
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    if (!(await admin.matchPassword(password))) return res.status(401).json({ error: 'Incorrect password' });
+
+    admin.email = newEmail;
+    admin.otp = '';
+    admin.otpExpiry = null;
+    await admin.save();
+
+    res.json({ ok: true, email: newEmail });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 router.post('/verify-otp-change-password', auth, async (req, res) => {
   try {
     const { otp, newPassword } = req.body;

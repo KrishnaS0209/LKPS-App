@@ -9,7 +9,7 @@ import {
   loadSessionData, saveSessionData, initShadow, saveSessionConfig,
   getAdmins, createAdmin, updateAdmin, removeAdmin,
   getMessages, sendMessage, updateMessage, deleteMessage,
-  requestOTP, verifyOTPChangePassword, requestEmailOTP, verifyEmailOTP,
+  requestOTP, verifyOTPChangePassword, requestEmailOTP, verifyEmailOTP, resetEmailWithPassword,
 } from './storage';
 import ParentPortal from './ParentPortal';
 import AdminMessages from './AdminMessages';
@@ -8181,6 +8181,7 @@ function Settings({ db, save, user, setUser }) {
   const [emailOtpVal, setEmailOtpVal] = useState('');
   const [emailOtpSending, setEmailOtpSending] = useState(false);
   const [emailNew, setEmailNew] = useState('');
+  const [emailRecoveryPw, setEmailRecoveryPw] = useState('');
   const [cpOld, setCpOld] = useState(''); const [cpNew, setCpNew] = useState(''); const [cpConf, setCpConf] = useState('');
   const [cpOtpStep, setCpOtpStep] = useState(false); // false = form, true = otp entry
   const [cpOtp, setCpOtp] = useState('');
@@ -8245,8 +8246,19 @@ function Settings({ db, save, user, setUser }) {
     } finally { setEmailOtpSending(false); }
   };
 
-  const saveEmailDirect = async () => {
-    if (!emailNew) { toast('Enter email','err'); return; }
+  const recoverEmail = async () => {
+    if (!emailRecoveryPw || !emailNew) { toast('Enter password and new email','err'); return; }
+    try {
+      await resetEmailWithPassword(emailRecoveryPw, emailNew);
+      const admins = await getAdmins();
+      save({...db, admins});
+      setEditForm(f => ({...f, email: emailNew}));
+      setEmailOtpStep(false); setEmailNew(''); setEmailRecoveryPw('');
+      toast('Email updated');
+    } catch(err) { toast(err.message,'err'); }
+  };
+
+  const saveEmailDirect = async () => {    if (!emailNew) { toast('Enter email','err'); return; }
     try {
       await updateAdmin(editForm._id || editForm.id, { email: emailNew });
       const admins = await getAdmins();
@@ -8455,6 +8467,9 @@ function Settings({ db, save, user, setUser }) {
                 <Btn variant="primary" size="sm" onClick={verifyEmailAndSave}>Verify & Save Email</Btn>
                 <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailOtpVal('');setEmailNew('');}}>Cancel</Btn>
               </div>
+              <button onClick={()=>setEmailOtpStep('recover')} style={{fontSize:11,color:'#94a3b8',background:'none',border:'none',cursor:'pointer',textAlign:'left',textDecoration:'underline'}}>
+                Wrong email saved? Reset with password instead
+              </button>
             </div>
           )}
           {emailOtpStep === 'new' && (
@@ -8464,6 +8479,17 @@ function Settings({ db, save, user, setUser }) {
               <div style={{display:'flex',gap:8}}>
                 <Btn variant="primary" size="sm" onClick={saveEmailDirect}>Save Email</Btn>
                 <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailNew('');}}>Cancel</Btn>
+              </div>
+            </div>
+          )}
+          {emailOtpStep === 'recover' && (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{fontSize:12,color:'#dc2626',fontWeight:600}}>Reset email using your admin password:</div>
+              <Input type="password" value={emailRecoveryPw} onChange={setEmailRecoveryPw} placeholder="Current admin password"/>
+              <Input type="email" value={emailNew} onChange={setEmailNew} placeholder="Correct email address"/>
+              <div style={{display:'flex',gap:8}}>
+                <Btn variant="primary" size="sm" onClick={recoverEmail}>Reset Email</Btn>
+                <Btn size="sm" onClick={()=>{setEmailOtpStep(false);setEmailNew('');setEmailRecoveryPw('');}}>Cancel</Btn>
               </div>
             </div>
           )}

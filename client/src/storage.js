@@ -472,6 +472,10 @@ export async function requestEmailOTP() {
 export async function verifyEmailOTP(otp, newEmail) {
   return req('POST', '/auth/verify-email-otp', { otp, newEmail });
 }
+
+export async function resetEmailWithPassword(password, newEmail) {
+  return req('POST', '/auth/reset-email', { password, newEmail });
+}
 export async function migrateLegacyData() { return; }
 export async function saveSessions() { return; } // sessions managed via API
 
