@@ -16,13 +16,18 @@ function makeOTP() {
 
 async function sendMail({ to, subject, html }) {
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
+    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false,
-    requireTLS: true,
-    auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+    auth: {
+      user: process.env.SMTP_USER || process.env.MAIL_USER,
+      pass: process.env.SMTP_PASS || process.env.MAIL_PASS,
+    },
   });
-  await transporter.sendMail({ from: `"LKPS Portal" <${process.env.MAIL_USER}>`, to, subject, html });
+  await transporter.sendMail({
+    from: `"LKPS Portal" <${process.env.SMTP_FROM || process.env.MAIL_USER}>`,
+    to, subject, html,
+  });
 }
 
 // GET /api/auth/test-mail
