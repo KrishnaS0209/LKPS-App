@@ -15,7 +15,7 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [page, setPage] = useState('pdash');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [showEmailPrompt, setShowEmailPrompt] = useState(!student.email);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(!(student.email || student.em));
   const [emailInput, setEmailInput] = useState('');
   const [emailErr, setEmailErr] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);

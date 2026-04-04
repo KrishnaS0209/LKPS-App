@@ -275,7 +275,7 @@ router.post('/parent-login', async (req, res) => {
       student: {
         id: student._id, sid: student.sid, fn: student.fn, ln: student.ln,
         cls: student.cls, sessionId: student.sessionId, photo: student.photo || '',
-        father: student.father, mother: student.mother, email: student.email || '',
+        father: student.father, mother: student.mother, email: student.email || student.em || '',
       },
     });
   } catch (err) {
@@ -292,6 +292,7 @@ async function findStudentByIdentifier(identifier) {
     $or: [
       { admno: identifier },
       { email: new RegExp('^' + escapeRegex(identifier) + '$', 'i') },
+      { em: new RegExp('^' + escapeRegex(identifier) + '$', 'i') },
     ]
   }).sort({ createdAt: -1 });
 }
@@ -302,9 +303,10 @@ router.post('/student-recover-username', async (req, res) => {
     const { identifier } = req.body;
     if (!identifier) return res.status(400).json({ error: 'Identifier required' });
     const student = await findStudentByIdentifier(identifier);
-    if (!student || !student.email) return res.json({ ok: true, noEmail: true });
+    const stuEmail = student?.email || student?.em || '';
+    if (!student || !stuEmail) return res.json({ ok: true, noEmail: true });
     await sendMail({
-      to: student.email,
+      to: stuEmail,
       subject: 'Your LKPS Portal Username',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
         <h2 style="color:#0d2b6e;">Username Recovery</h2>
@@ -323,14 +325,15 @@ router.post('/student-request-otp', async (req, res) => {
     const { identifier } = req.body;
     if (!identifier) return res.status(400).json({ error: 'Identifier required' });
     const student = await findStudentByIdentifier(identifier);
-    if (!student || !student.email) return res.json({ ok: true, noEmail: true });
+    const stuEmail = student?.email || student?.em || '';
+    if (!student || !stuEmail) return res.json({ ok: true, noEmail: true });
     const otp = makeOTP();
     student.otp = otp;
     student.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await student.save();
-    const masked = student.email.replace(/(.{2}).+(@.+)/, '$1***$2');
+    const masked = stuEmail.replace(/(.{2}).+(@.+)/, '$1***$2');
     await sendMail({
-      to: student.email,
+      to: stuEmail,
       subject: 'Password Reset OTP — LKPS Portal',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
         <h2 style="color:#0d2b6e;">Password Reset</h2>
