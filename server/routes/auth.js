@@ -17,9 +17,11 @@ function makeOTP() {
 function getMailer() {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+    tls: { rejectUnauthorized: false },
   });
 }
 
