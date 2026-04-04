@@ -4,7 +4,7 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const { auth } = require('../middleware/auth');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -14,34 +14,29 @@ function makeOTP() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-function getMailer() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
-    tls: { rejectUnauthorized: false },
+async function sendMail({ to, subject, html }) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: 'LKPS Portal <noreply@lkpschool.in>',
+    to,
+    subject,
+    html,
   });
+  if (error) throw new Error(error.message || JSON.stringify(error));
 }
 
-// GET /api/auth/test-mail  — test if mail config works (remove after testing)
+// GET /api/auth/test-mail
 router.get('/test-mail', auth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.user.adminId);
-    await getMailer().sendMail({
-      from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
-      to: process.env.MAIL_USER,
-      subject: 'LKPS Mail Test',
-      text: `Mail config working. MAIL_USER=${process.env.MAIL_USER}`,
-    });
-    res.json({ ok: true, mailUser: process.env.MAIL_USER, adminEmail: admin?.email });
+    await sendMail({ to: process.env.MAIL_USER || admin?.email, subject: 'LKPS Mail Test', html: '<p>Mail config working.</p>' });
+    res.json({ ok: true, adminEmail: admin?.email });
   } catch(err) {
-    res.status(500).json({ error: err.message, mailUser: process.env.MAIL_USER });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/auth/request-email-otp  — send OTP to CURRENT email before allowing email change
+// POST /api/auth/request-email-otp
 router.post('/request-email-otp', auth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.user.adminId);
@@ -53,8 +48,7 @@ router.post('/request-email-otp', auth, async (req, res) => {
     admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await admin.save();
 
-    await getMailer().sendMail({
-      from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
+    await sendMail({
       to: admin.email,
       subject: 'Email Change OTP — LKPS Portal',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
@@ -62,7 +56,6 @@ router.post('/request-email-otp', auth, async (req, res) => {
         <p style="color:#555;font-size:14px;">Your OTP to authorize changing your email address is:</p>
         <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
         <p style="color:#888;font-size:12px;">This OTP is valid for <b>10 minutes</b>. Do not share it with anyone.</p>
-        <p style="color:#888;font-size:12px;">If you did not request this, please secure your account immediately.</p>
       </div>`,
     });
 
@@ -72,27 +65,23 @@ router.post('/request-email-otp', auth, async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-email-otp  — verify OTP then save new email
+// POST /api/auth/verify-email-otp
 router.post('/verify-email-otp', auth, async (req, res) => {
   try {
     const { otp, newEmail } = req.body;
     if (!otp || !newEmail) return res.status(400).json({ error: 'OTP and new email required' });
-
     const admin = await Admin.findById(req.user.adminId);
     if (!admin) return res.status(404).json({ error: 'Admin not found' });
     if (!admin.otp || admin.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
     if (!admin.otpExpiry || new Date() > admin.otpExpiry) return res.status(400).json({ error: 'OTP has expired' });
-
-    admin.email = newEmail;
-    admin.otp = '';
-    admin.otpExpiry = null;
+    admin.email = newEmail; admin.otp = ''; admin.otpExpiry = null;
     await admin.save();
-
     res.json({ ok: true, email: newEmail });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 router.post('/request-otp', auth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.user.adminId);
@@ -101,11 +90,10 @@ router.post('/request-otp', auth, async (req, res) => {
 
     const otp = makeOTP();
     admin.otp = otp;
-    admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await admin.save();
 
-    await getMailer().sendMail({
-      from: `"LKPS Portal" <${process.env.MAIL_USER}>`,
+    await sendMail({
       to: admin.email,
       subject: 'Password Change OTP — LKPS Portal',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e8f0;border-radius:12px;">
@@ -113,7 +101,6 @@ router.post('/request-otp', auth, async (req, res) => {
         <p style="color:#555;font-size:14px;">Your OTP to change the admin password is:</p>
         <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0d2b6e;text-align:center;padding:20px;background:#eef2fb;border-radius:8px;margin:20px 0;">${otp}</div>
         <p style="color:#888;font-size:12px;">This OTP is valid for <b>10 minutes</b>. Do not share it with anyone.</p>
-        <p style="color:#888;font-size:12px;">If you did not request this, please secure your account immediately.</p>
       </div>`,
     });
 
