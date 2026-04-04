@@ -11,6 +11,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'https://lkps-app.vercel.app',
+    'https://lkpschool.in',
+    'https://www.lkpschool.in',
     /\.vercel\.app$/,
   ],
   credentials: true,
