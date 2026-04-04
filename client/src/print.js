@@ -84,7 +84,7 @@ function buildCardFront(s, photo, logo, phone, year, prin, theme) {
 
 <!-- Footer -->
 <div style="background:${th.h1};padding:8px 14px;text-align:center;">
-  <span style="font-size:12px;color:rgba(255,255,255,.85);font-family:'Roboto',sans-serif;letter-spacing:1px;font-weight:500;">lkps-app.vercel.app</span>
+  <span style="font-size:12px;color:rgba(255,255,255,.85);font-family:'Roboto',sans-serif;letter-spacing:1px;font-weight:500;">www.lkpschool.in</span>
 </div>
 </div>`;
 }
