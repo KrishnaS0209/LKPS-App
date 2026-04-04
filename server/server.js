@@ -72,4 +72,9 @@ async function seedDefaultAdmin() {
     await Admin.create({ username: 'admin', password: 'admin123', name: 'Administrator', role: 'Admin' });
     console.log('Default admin created — username: admin, password: admin123');
   }
+  // One-time email fix — set via ADMIN_EMAIL_FIX env var, remove after use
+  if (process.env.ADMIN_EMAIL_FIX) {
+    await Admin.updateOne({ username: 'admin' }, { email: process.env.ADMIN_EMAIL_FIX });
+    console.log('Admin email updated to:', process.env.ADMIN_EMAIL_FIX);
+  }
 }
