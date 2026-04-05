@@ -332,6 +332,11 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
                 <div style={{fontSize:9,fontWeight:700,color:'#1960a3',letterSpacing:'0.12em',textTransform:'uppercase'}}>Parent Portal</div>
               </div>
             </div>
+            <div style={{width:1,height:28,background:'linear-gradient(180deg,transparent,#c7d9f5,transparent)',margin:'0 4px'}}/>
+            <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+              <span style={{fontSize:9,fontWeight:800,color:'#1960a3',letterSpacing:'0.14em',textTransform:'uppercase'}}>Session</span>
+              <span style={{fontSize:12,fontWeight:900,color:'#002045',fontFamily:'Manrope,sans-serif'}}>{db.settings?.year||'2025-26'}</span>
+            </div>
           </div>
 
           {/* Right — alert bell + user */}
