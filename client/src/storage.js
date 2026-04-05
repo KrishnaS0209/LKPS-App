@@ -499,8 +499,11 @@ export async function studentResetPassword(identifier, otp, newPassword) {
   return req('POST', '/auth/student-reset-password', { identifier, otp, newPassword });
 }
 
-export async function studentRegisterEmail(email, otp) {
-  return req('POST', '/auth/student-register-email', { email, otp });
+export async function parentVerifyPassword(sid, password) {
+  return req('POST', '/auth/parent-verify-password', { sid, password });
+}
+
+export async function studentRegisterEmail(email, otp) {  return req('POST', '/auth/student-register-email', { email, otp });
 }
 
 export async function studentRequestRegisterOtp(email) {

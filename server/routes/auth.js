@@ -198,7 +198,16 @@ router.post('/verify-otp-change-password', auth, async (req, res) => {
   }
 });
 
-// POST /api/auth/login  — admin login
+// POST /api/auth/parent-verify-password — verify parent password for lock screen
+router.post('/parent-verify-password', async (req, res) => {
+  try {
+    const { sid, password } = req.body;
+    if (!sid || !password) return res.status(400).json({ error: 'sid and password required' });
+    const student = await Student.findOne({ sid, ppass: password }).sort({ createdAt: -1 });
+    if (!student) return res.status(401).json({ error: 'Incorrect password' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;

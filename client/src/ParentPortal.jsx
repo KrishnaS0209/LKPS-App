@@ -1,6 +1,6 @@
 // ParentPortal — separate file to keep App.jsx manageable
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterOtp, apiParentLogin } from './storage';
+import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterOtp, apiParentLogin, parentVerifyPassword } from './storage';
 
 const PARENT_NAV = [
   { id:'pdash',  icon:'home',          label:'Dashboard'   },
@@ -87,17 +87,15 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
 
   const tryUnlock = async () => {
     if (!lockPw) { setLockErr('Enter your password'); return; }
+    // child record has puser (username) — use it to re-authenticate
+    const s = db.students.find(x => (x.sid||x.id) === student.sid);
+    const puser = s?.puser || student.puser || '';
+    if (!puser) { setLockErr('Cannot verify — contact school office'); return; }
     try {
-      await apiParentLogin(student.puser || '', lockPw);
+      await apiParentLogin(puser, lockPw);
       setLocked(false); setLockPw(''); setLockErr(''); resetIdleTimer();
     } catch(e) {
-      // fallback: check against student record in db
-      const s = db.students.find(x => (x.sid||x.id) === student.sid);
-      if (s && s.ppass === lockPw) {
-        setLocked(false); setLockPw(''); setLockErr(''); resetIdleTimer();
-      } else {
-        setLockErr('Incorrect password'); setLockPw('');
-      }
+      setLockErr('Incorrect password'); setLockPw('');
     }
   };
 
