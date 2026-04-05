@@ -309,26 +309,65 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
       {/* Main */}
       <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0,overflow:'hidden'}}>
         {/* Top bar */}
-        <header style={{height:60,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',background:'#fff',borderBottom:'1px solid #e8edf5',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',zIndex:10}}>
+        <header style={{
+          height:64, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between',
+          padding:'0 24px', background:'#ffffff', borderBottom:'1px solid #e8edf5',
+          boxShadow:'0 2px 12px rgba(0,31,77,0.07)', zIndex:100,
+        }}>
+          {/* Left — school name */}
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             {isMobile && (
               <button onClick={()=>setMobileNavOpen(v=>!v)}
-                style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#1960a3',flexShrink:0}}>
-                <span className="material-symbols-outlined" style={{fontSize:20}}>{mobileNavOpen?'close':'menu'}</span>
+                style={{border:0,background:'transparent',cursor:'pointer',color:'#1960a3',padding:4,display:'flex',alignItems:'center'}}>
+                <span className="material-symbols-outlined" style={{fontSize:22}}>menu</span>
               </button>
             )}
-            <div className="pp-header-title">
-              <div style={{fontSize:13,fontWeight:800,color:'#1e293b'}}>LORD KRISHNA PUBLIC SCHOOL</div>
-              <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,letterSpacing:'0.06em',textTransform:'uppercase'}}>Parent Portal</div>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:32,height:32,borderRadius:10,background:'linear-gradient(135deg,#002045,#1960a3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <span className="material-symbols-outlined" style={{fontSize:17,color:'#fff',fontVariationSettings:"'FILL' 1"}}>school</span>
+              </div>
+              <div>
+                <div style={{fontSize:13,fontWeight:900,color:'#002045',fontFamily:'Manrope,sans-serif',letterSpacing:'0.01em',lineHeight:1.1}}>LORD KRISHNA PUBLIC SCHOOL</div>
+                <div style={{fontSize:9,fontWeight:700,color:'#1960a3',letterSpacing:'0.12em',textTransform:'uppercase'}}>Parent Portal</div>
+              </div>
+            </div>
+            <div style={{width:1,height:28,background:'linear-gradient(180deg,transparent,#c7d9f5,transparent)',margin:'0 4px'}}/>
+            <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+              <span style={{fontSize:9,fontWeight:800,color:'#1960a3',letterSpacing:'0.14em',textTransform:'uppercase'}}>Session</span>
+              <span style={{fontSize:12,fontWeight:900,color:'#002045',fontFamily:'Manrope,sans-serif'}}>{db.settings?.year||'2025-26'}</span>
             </div>
           </div>
+
+          {/* Right — session badge + alerts + user */}
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{textAlign:'right'}}>
-              <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{name}</div>
-              <div style={{fontSize:10,color:'#94a3b8'}}>Class {child.cls||'—'}</div>
+            {/* Session badge (display only) */}
+            <div style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',display:'flex',alignItems:'center',gap:5}}>
+              <span className="material-symbols-outlined" style={{fontSize:13}}>calendar_today</span>
+              {db.settings?.year||'2025-26'}
             </div>
-            <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#fff',overflow:'hidden',flexShrink:0}}>
-              {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
+            {/* Notification bell — unread messages */}
+            {(() => {
+              const unread = (db.messages||[]).filter(m=>m.studentSid===(child.sid||child.id)&&m.status==='read').length;
+              return (
+                <button onClick={()=>setPage('pmsg')}
+                  style={{position:'relative',width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#64748b',transition:'all 150ms'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.color='#1960a3';e.currentTarget.style.borderColor='#c7d9f5';}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0';}}>
+                  <span className="material-symbols-outlined" style={{fontSize:20}}>notifications</span>
+                  {unread > 0 && <span style={{position:'absolute',top:4,right:4,width:8,height:8,borderRadius:'50%',background:'#dc2626',border:'1.5px solid #fff'}}/>}
+                </button>
+              );
+            })()}
+            <div style={{width:1,height:28,background:'#e2e8f0'}}/>
+            {/* User */}
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{name}</div>
+                <div style={{fontSize:10,color:'#94a3b8'}}>Class {child.cls||'—'}</div>
+              </div>
+              <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#fff',overflow:'hidden',flexShrink:0}}>
+                {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
+              </div>
             </div>
           </div>
         </header>
