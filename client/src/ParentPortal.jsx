@@ -165,13 +165,14 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   );
 
   const pages = {
-    pdash:  <ParentDash db={db} child={child} student={student} setPage={setPage} />,
-    pfee:   <ParentFee db={db} child={child} />,
-    patt:   <ParentAttendance db={db} child={child} />,
-    pmarks: <ParentMarks db={db} child={child} />,
-    pexam:  <ParentExams db={db} child={child} />,
-    pcal:   <ParentCalendar db={db} />,
-    pmsg:   <ParentMessages db={db} child={child} student={student} activeSessionId={activeSessionId} />,
+    pdash:    <ParentDash db={db} child={child} student={student} setPage={setPage} />,
+    pfee:     <ParentFee db={db} child={child} />,
+    patt:     <ParentAttendance db={db} child={child} />,
+    pmarks:   <ParentMarks db={db} child={child} />,
+    pexam:    <ParentExams db={db} child={child} />,
+    pcal:     <ParentCalendar db={db} />,
+    pmsg:     <ParentMessages db={db} child={child} student={student} activeSessionId={activeSessionId} />,
+    pprofile: <ParentProfile child={child} db={db} />,
   };
 
   return (
@@ -272,8 +273,11 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
             <div style={{fontSize:11,fontWeight:800,color:'#fff'}}>LKPS</div>
           </div>
         </div>
-        {/* Student avatar */}
-        <div style={{padding:'12px 0',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10,paddingLeft:isMobile?18:0,justifyContent:isMobile?'flex-start':'center',overflow:'hidden'}}>
+        {/* Student avatar — clickable → profile */}
+        <div onClick={()=>{setPage('pprofile');if(isMobile)setMobileNavOpen(false);}}
+          style={{padding:'12px 0',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10,paddingLeft:isMobile?18:0,justifyContent:isMobile?'flex-start':'center',overflow:'hidden',cursor:'pointer'}}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(96,165,250,0.08)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
           <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'#fff',flexShrink:0,overflow:'hidden'}}>
             {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
           </div>
@@ -434,6 +438,67 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
         <main style={{flex:1,overflowY:'auto',padding:'28px 32px'}} className="pp-main-pad">
           {pages[page] || pages.pdash}
         </main>
+      </div>
+    </div>
+  );
+}
+
+// ── Parent Profile ────────────────────────────────────────────────
+function ParentProfile({ child, db }) {
+  const photo = (db.photos||{})[child.sid||child.id] || child.photo || '';
+  const name = (child.fn||'') + ' ' + (child.ln||'');
+  const ini = name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const dob = child.dob ? new Date(child.dob).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : '—';
+
+  const row = (label, val) => val ? (
+    <div style={{display:'flex',gap:16,padding:'12px 0',borderBottom:'1px solid #f1f5f9'}}>
+      <div style={{fontSize:12,color:'#64748b',fontWeight:600,minWidth:140}}>{label}</div>
+      <div style={{fontSize:13,color:'#1e293b',fontWeight:600}}>{val}</div>
+    </div>
+  ) : null;
+
+  return (
+    <div>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>Student Profile</div>
+        <h1 style={{fontSize:28,fontWeight:900,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>{name}</h1>
+      </div>
+
+      {/* Profile card */}
+      <div style={{background:'#fff',borderRadius:16,padding:'28px',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',marginBottom:20,display:'flex',gap:24,alignItems:'flex-start',flexWrap:'wrap'}}>
+        <div style={{width:100,height:100,borderRadius:16,background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:32,fontWeight:900,color:'#fff',overflow:'hidden',flexShrink:0}}>
+          {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
+        </div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:22,fontWeight:900,color:'#1e293b',fontFamily:'Manrope,sans-serif',marginBottom:4}}>{name}</div>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:12}}>Class {child.cls||'—'} · {db.settings?.year||''}</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {child.roll && <span style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5'}}>Roll: {child.roll}</span>}
+            {child.admno && <span style={{background:'#f0fdf4',color:'#059669',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #bbf7d0'}}>Adm: {child.admno}</span>}
+            {child.blood && <span style={{background:'#fef2f2',color:'#dc2626',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #fecaca'}}>{child.blood}</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Details */}
+      <div style={{background:'#fff',borderRadius:16,padding:'20px 24px',boxShadow:'0 1px 8px rgba(0,31,77,0.06)'}}>
+        <div style={{fontSize:12,fontWeight:800,color:'#1e293b',marginBottom:4}}>Personal Information</div>
+        {row('Date of Birth', dob)}
+        {row('Gender', child.gn)}
+        {row('Class / Section', child.cls)}
+        {row('Roll Number', child.roll)}
+        {row('Admission No.', child.admno)}
+        {row('Blood Group', child.blood)}
+        {row('Caste', child.caste)}
+        {row('Aadhaar No.', child.aadhar)}
+        <div style={{fontSize:12,fontWeight:800,color:'#1e293b',margin:'16px 0 4px'}}>Family Information</div>
+        {row("Father's Name", child.father)}
+        {row("Mother's Name", child.mother)}
+        {row("Father's Phone", child.fphone)}
+        {row('Student Phone', child.ph)}
+        {row('Email', child.em || child.email)}
+        <div style={{fontSize:12,fontWeight:800,color:'#1e293b',margin:'16px 0 4px'}}>Address</div>
+        {row('Address', [child.addr, child.city, child.pin ? 'Pin-'+child.pin : ''].filter(Boolean).join(', '))}
       </div>
     </div>
   );
