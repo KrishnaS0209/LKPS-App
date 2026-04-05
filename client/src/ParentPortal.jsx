@@ -537,11 +537,11 @@ function ParentDash({ db, child, student, setPage }) {
   const monthlyFee = child.mf || 0;
   const lastPay = pays.sort((a,b)=>(b.dt||'').localeCompare(a.dt||''))[0];
   const paidMonths = new Set();
-  pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m)); });
+  pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m.toLowerCase())); });
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const currentMonth = MONTHS[new Date().getMonth()];
-  const currentMonthPaid = paidMonths.has(currentMonth);
-  const feeStatusLabel = !monthlyFee ? (child.fst||'Pending') : currentMonthPaid ? 'Paid' : 'Due';
+  const currentMonthPaid = paidMonths.has(currentMonth.toLowerCase());
+  const feeStatusLabel = currentMonthPaid ? 'Paid' : (child.fst === 'Paid' ? 'Paid' : 'Due');
 
   const STATS = [
     { icon: 'fact_check', label: 'Attendance', value: attPct + '%', color: attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626', page: 'patt' },
@@ -624,18 +624,20 @@ function ParentFee({ db, child }) {
 
   // Determine paid months from payment records
   const paidMonths = new Set();
-  pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m)); });
+  pays.forEach(p => {
+    if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m.toLowerCase()));
+  });
 
   // Current month due status
   const now = new Date();
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const currentMonth = MONTHS[now.getMonth()];
   const nextMonth = MONTHS[(now.getMonth()+1)%12];
-  const nextMonthDueDate = new Date(now.getFullYear(), now.getMonth()+1, 10); // due by 10th of next month
-  const currentMonthPaid = paidMonths.has(currentMonth);
+  const nextMonthDueDate = new Date(now.getFullYear(), now.getMonth()+1, 10);
+  const currentMonthPaid = paidMonths.has(currentMonth.toLowerCase());
 
-  // Status based on current month
-  const feeStatus = !monthlyFee ? (child.fst||'Pending') : currentMonthPaid ? 'Paid' : 'Due';
+  // Status: if current month paid → Paid, else if any payment exists → check, else Pending
+  const feeStatus = currentMonthPaid ? 'Paid' : (child.fst === 'Paid' ? 'Paid' : 'Due');
   const statusColor = feeStatus === 'Paid' ? '#059669' : '#dc2626';
 
   return (
