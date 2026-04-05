@@ -64,6 +64,7 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [lockWarning, setLockWarning] = useState(false);
   const [lockPw, setLockPw] = useState('');
   const [lockErr, setLockErr] = useState('');
+  const [alertOpen, setAlertOpen] = useState(false);
   const idleTimer = useRef(null);
   const warnTimer = useRef(null);
 
@@ -312,9 +313,9 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
         <header style={{
           height:64, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between',
           padding:'0 24px', background:'#ffffff', borderBottom:'1px solid #e8edf5',
-          boxShadow:'0 2px 12px rgba(0,31,77,0.07)', zIndex:100,
+          boxShadow:'0 2px 12px rgba(0,31,77,0.07)', zIndex:100, position:'relative',
         }}>
-          {/* Left — school name */}
+          {/* Left — logo + school name (clickable → dashboard) */}
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             {isMobile && (
               <button onClick={()=>setMobileNavOpen(v=>!v)}
@@ -322,42 +323,101 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
                 <span className="material-symbols-outlined" style={{fontSize:22}}>menu</span>
               </button>
             )}
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:32,height:32,borderRadius:10,background:'linear-gradient(135deg,#002045,#1960a3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <span className="material-symbols-outlined" style={{fontSize:17,color:'#fff',fontVariationSettings:"'FILL' 1"}}>school</span>
-              </div>
+            <div onClick={()=>setPage('pdash')} style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}}>
+              <img src={process.env.PUBLIC_URL+'/assets/logo.png'} alt="LKPS"
+                style={{width:36,height:36,objectFit:'contain',flexShrink:0}}
+                onError={e=>{e.target.style.display='none';}}/>
               <div>
                 <div style={{fontSize:13,fontWeight:900,color:'#002045',fontFamily:'Manrope,sans-serif',letterSpacing:'0.01em',lineHeight:1.1}}>LORD KRISHNA PUBLIC SCHOOL</div>
                 <div style={{fontSize:9,fontWeight:700,color:'#1960a3',letterSpacing:'0.12em',textTransform:'uppercase'}}>Parent Portal</div>
               </div>
             </div>
-            <div style={{width:1,height:28,background:'linear-gradient(180deg,transparent,#c7d9f5,transparent)',margin:'0 4px'}}/>
-            <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
-              <span style={{fontSize:9,fontWeight:800,color:'#1960a3',letterSpacing:'0.14em',textTransform:'uppercase'}}>Session</span>
-              <span style={{fontSize:12,fontWeight:900,color:'#002045',fontFamily:'Manrope,sans-serif'}}>{db.settings?.year||'2025-26'}</span>
-            </div>
           </div>
 
-          {/* Right — session badge + alerts + user */}
+          {/* Right — session badge + alert bell + user */}
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            {/* Session badge (display only) */}
+            {/* Session badge */}
             <div style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',display:'flex',alignItems:'center',gap:5}}>
               <span className="material-symbols-outlined" style={{fontSize:13}}>calendar_today</span>
               {db.settings?.year||'2025-26'}
             </div>
-            {/* Notification bell — unread messages */}
+
+            {/* Alert bell — dropdown with pending fees, upcoming exams, events */}
             {(() => {
-              const unread = (db.messages||[]).filter(m=>m.studentSid===(child.sid||child.id)&&m.status==='read').length;
+              const sid = child.sid || child.id;
+              const pays = (db.pays||[]).filter(p=>p.sid===sid);
+              const totalPaid = pays.reduce((s,p)=>s+(p.amt||0),0);
+              const feeDue = Math.max(0,(child.fee||0)-totalPaid);
+              const today = new Date().toISOString().split('T')[0];
+              const upcomingExams = (db.exams||[]).filter(e=>(!e.cls||e.cls===child.cls)&&(e.dt||'')>=today&&e.st!=='Completed').slice(0,3);
+              const upcomingEvents = (db.events||[]).filter(e=>e.dt>=today).slice(0,3);
+              const alertCount = (feeDue>0?1:0) + upcomingExams.length + upcomingEvents.length;
+
               return (
-                <button onClick={()=>setPage('pmsg')}
-                  style={{position:'relative',width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#64748b',transition:'all 150ms'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.color='#1960a3';e.currentTarget.style.borderColor='#c7d9f5';}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0';}}>
-                  <span className="material-symbols-outlined" style={{fontSize:20}}>notifications</span>
-                  {unread > 0 && <span style={{position:'absolute',top:4,right:4,width:8,height:8,borderRadius:'50%',background:'#dc2626',border:'1.5px solid #fff'}}/>}
-                </button>
+                <div style={{position:'relative'}}>
+                  <button onClick={()=>setAlertOpen(v=>!v)}
+                    style={{position:'relative',width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#64748b',transition:'all 150ms'}}
+                    onMouseEnter={e=>{e.currentTarget.style.background='#eef4ff';e.currentTarget.style.color='#1960a3';e.currentTarget.style.borderColor='#c7d9f5';}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.color='#64748b';e.currentTarget.style.borderColor='#e2e8f0';}}>
+                    <span className="material-symbols-outlined" style={{fontSize:20}}>notifications</span>
+                    {alertCount > 0 && <span style={{position:'absolute',top:4,right:4,width:8,height:8,borderRadius:'50%',background:'#dc2626',border:'1.5px solid #fff'}}/>}
+                  </button>
+                  {alertOpen && (
+                    <>
+                      <div onClick={()=>setAlertOpen(false)} style={{position:'fixed',inset:0,zIndex:199}}/>
+                      <div style={{position:'absolute',right:0,top:44,width:300,background:'#fff',borderRadius:14,boxShadow:'0 8px 32px rgba(0,31,77,0.15)',border:'1px solid #e2e8f0',zIndex:200,overflow:'hidden'}}>
+                        <div style={{padding:'12px 16px',borderBottom:'1px solid #f1f5f9',fontSize:12,fontWeight:800,color:'#1e293b'}}>Alerts & Reminders</div>
+                        <div style={{maxHeight:320,overflowY:'auto'}}>
+                          {feeDue > 0 && (
+                            <div onClick={()=>{setPage('pfee');setAlertOpen(false);}} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderBottom:'1px solid #f1f5f9',cursor:'pointer',background:'#fff'}}
+                              onMouseEnter={e=>e.currentTarget.style.background='#fef2f2'}
+                              onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+                              <div style={{width:32,height:32,borderRadius:8,background:'#fee2e2',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                <span className="material-symbols-outlined" style={{fontSize:16,color:'#dc2626',fontVariationSettings:"'FILL' 1"}}>payments</span>
+                              </div>
+                              <div>
+                                <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>Fee Due</div>
+                                <div style={{fontSize:11,color:'#dc2626',fontWeight:600}}>₹{feeDue.toLocaleString('en-IN')} pending</div>
+                              </div>
+                            </div>
+                          )}
+                          {upcomingExams.map((e,i)=>(
+                            <div key={i} onClick={()=>{setPage('pexam');setAlertOpen(false);}} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderBottom:'1px solid #f1f5f9',cursor:'pointer',background:'#fff'}}
+                              onMouseEnter={ev=>ev.currentTarget.style.background='#f5f3ff'}
+                              onMouseLeave={ev=>ev.currentTarget.style.background='#fff'}>
+                              <div style={{width:32,height:32,borderRadius:8,background:'#ede9fe',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                <span className="material-symbols-outlined" style={{fontSize:16,color:'#7c3aed',fontVariationSettings:"'FILL' 1"}}>quiz</span>
+                              </div>
+                              <div>
+                                <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{e.name}</div>
+                                <div style={{fontSize:11,color:'#7c3aed',fontWeight:600}}>{e.dt||'TBD'} · {e.su||''}</div>
+                              </div>
+                            </div>
+                          ))}
+                          {upcomingEvents.map((e,i)=>(
+                            <div key={i} onClick={()=>{setPage('pcal');setAlertOpen(false);}} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderBottom:'1px solid #f1f5f9',cursor:'pointer',background:'#fff'}}
+                              onMouseEnter={ev=>ev.currentTarget.style.background='#f0fdf4'}
+                              onMouseLeave={ev=>ev.currentTarget.style.background='#fff'}>
+                              <div style={{width:32,height:32,borderRadius:8,background:'#dcfce7',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                <span className="material-symbols-outlined" style={{fontSize:16,color:'#059669',fontVariationSettings:"'FILL' 1"}}>event</span>
+                              </div>
+                              <div>
+                                <div style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{e.title}</div>
+                                <div style={{fontSize:11,color:'#059669',fontWeight:600}}>{e.dt}</div>
+                              </div>
+                            </div>
+                          ))}
+                          {alertCount === 0 && (
+                            <div style={{padding:'24px 16px',textAlign:'center',color:'#94a3b8',fontSize:12}}>No alerts right now</div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               );
             })()}
+
             <div style={{width:1,height:28,background:'#e2e8f0'}}/>
             {/* User */}
             <div style={{display:'flex',alignItems:'center',gap:8}}>
