@@ -534,7 +534,8 @@ function ParentDash({ db, child, student, setPage }) {
   // Fee summary
   const pays = (db.pays || []).filter(p => p.sid === sid);
   const totalPaid = pays.reduce((s, p) => s + (p.amt || 0), 0);
-  const monthlyFee = child.mf || 0;
+  const classFee = (db.settings?.classFees || {})[child.cls] || {};
+  const monthlyFee = parseFloat(classFee.monthly) || child.mf || 0;
   const lastPay = pays.sort((a,b)=>(b.dt||'').localeCompare(a.dt||''))[0];
   const paidMonths = new Set();
   pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m.toLowerCase())); });
@@ -619,7 +620,9 @@ function ParentFee({ db, child }) {
   const sid = child.sid || child.id;
   const pays = (db.pays || []).filter(p => p.sid === sid).sort((a,b)=>(b.dt||'').localeCompare(a.dt||''));
   const totalPaid = pays.reduce((s,p) => s + (p.amt||0), 0);
-  const monthlyFee = child.mf || 0;
+  // Get monthly fee from class fee structure first, fall back to student's mf field
+  const classFee = (db.settings?.classFees || {})[child.cls] || {};
+  const monthlyFee = parseFloat(classFee.monthly) || child.mf || 0;
   const lastPay = pays[0];
 
   // Determine paid months from payment records
