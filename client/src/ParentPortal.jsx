@@ -103,10 +103,6 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   };
 
   useEffect(() => {
-    if (!isMobile) setMobileNavOpen(false);
-  }, [isMobile]);
-
-  useEffect(() => {
     if (isMobile) setMobileNavOpen(false);
   }, [page, isMobile]);
 
@@ -210,8 +206,8 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
         </div>
       )}
 
-      {/* Sidebar overlay (mobile) */}
-      {isMobile && mobileNavOpen && (
+      {/* Sidebar overlay */}
+      {mobileNavOpen && (
         <div onClick={() => setMobileNavOpen(false)}
           style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1100,backdropFilter:'blur(2px)'}} />
       )}
@@ -220,12 +216,11 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
       <aside style={{
         width: 240, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
-        position: isMobile ? 'fixed' : 'relative',
-        left: 0, top: 0, bottom: 0,
-        transform: isMobile ? (mobileNavOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        position: 'fixed', left: 0, top: 0, bottom: 0,
+        transform: mobileNavOpen ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 240ms cubic-bezier(0.4,0,0.2,1)',
-        zIndex: isMobile ? 1200 : 'auto',
-        boxShadow: isMobile && mobileNavOpen ? '4px 0 32px rgba(0,0,0,0.4)' : 'none',
+        zIndex: 1200,
+        boxShadow: mobileNavOpen ? '4px 0 32px rgba(0,0,0,0.4)' : 'none',
       }}>
         {/* Header */}
         <div style={{padding:'20px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
