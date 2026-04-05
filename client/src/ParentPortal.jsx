@@ -637,6 +637,13 @@ function ParentFee({ db, child }) {
   const currentMonth = MONTHS[now.getMonth()];
   const nextMonth = MONTHS[(now.getMonth()+1)%12];
   const nextMonthDueDate = new Date(now.getFullYear(), now.getMonth()+1, 10);
+  const nextMonthPaid = paidMonths.has(nextMonth.toLowerCase());
+
+  // Find first unpaid upcoming month
+  let dueMontIdx = now.getMonth() + 1;
+  while (dueMontIdx < 12 && paidMonths.has(MONTHS[dueMontIdx].toLowerCase())) dueMontIdx++;
+  const dueMonth = dueMontIdx < 12 ? MONTHS[dueMontIdx] : null;
+  const dueDateObj = dueMonth ? new Date(now.getFullYear(), dueMontIdx, 10) : null;
   const currentMonthPaid = paidMonths.has(currentMonth.toLowerCase());
 
   // Status: if current month paid → Paid, else if any payment exists → check, else Pending
@@ -676,10 +683,12 @@ function ParentFee({ db, child }) {
           </div>
           <div style={{flex:1}}>
             <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:2}}>Next Month Due</div>
-            <div style={{fontSize:20,fontWeight:900,color:'#fff',fontFamily:'Manrope,sans-serif'}}>₹{monthlyFee.toLocaleString('en-IN')} · {nextMonth}</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:2}}>
-              Due by {nextMonthDueDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
-            </div>
+            {dueMonth ? <>
+              <div style={{fontSize:20,fontWeight:900,color:'#fff',fontFamily:'Manrope,sans-serif'}}>₹{monthlyFee.toLocaleString('en-IN')} · {dueMonth}</div>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:2}}>
+                Due by {dueDateObj.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
+              </div>
+            </> : <div style={{fontSize:16,fontWeight:700,color:'#6ee7b7'}}>All months paid ✓</div>}
           </div>
           {lastPay && (
             <div style={{textAlign:'right'}}>
