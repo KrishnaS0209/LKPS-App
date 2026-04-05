@@ -177,14 +177,24 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
     <div style={{ display: 'flex', height: '100vh', background: '#f0f4ff', fontFamily: 'Inter,sans-serif', overflow: 'hidden' }}>
       <style>{`
         @keyframes pp-slidein{from{opacity:0;transform:translateX(-100%)}to{opacity:1;transform:none}}
+        @keyframes pp-fadein{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pp-pulse{0%,100%{box-shadow:0 0 0 0 rgba(25,96,163,0.25)}50%{box-shadow:0 0 0 6px rgba(25,96,163,0)}}
+        @keyframes pp-bar-grow{from{height:0}to{height:var(--bar-h)}}
+        @keyframes pp-progress{from{stroke-dashoffset:var(--dash-total)}to{stroke-dashoffset:var(--dash-offset)}}
         .pp-nav-btn:hover{background:rgba(96,165,250,0.15)!important;color:#60a5fa!important}
         .pp-nav-btn.active{background:rgba(96,165,250,0.18)!important;color:#60a5fa!important}
-        .pp-stat:hover{transform:translateY(-3px)!important;box-shadow:0 8px 24px rgba(0,31,77,0.12)!important}
+        .pp-stat{transition:all 200ms cubic-bezier(0.4,0,0.2,1)!important}
+        .pp-stat:hover{transform:translateY(-4px)!important;box-shadow:0 12px 32px rgba(0,31,77,0.14)!important}
+        .pp-card{transition:all 200ms cubic-bezier(0.4,0,0.2,1)!important}
+        .pp-card:hover{box-shadow:0 8px 28px rgba(0,31,77,0.11)!important}
+        .pp-fadein{animation:pp-fadein 0.45s ease both}
+        .pp-pulse-badge{animation:pp-pulse 2s infinite}
         @media(max-width:768px){
           .pp-main-pad{padding:20px 16px!important}
           .pp-stats-grid{grid-template-columns:1fr 1fr!important}
           .pp-dash-grid{grid-template-columns:1fr!important}
           .pp-header-title{display:none!important}
+          .pp-fee-timeline{grid-template-columns:repeat(4,1fr)!important}
         }
       `}</style>
 
@@ -502,6 +512,57 @@ function ParentProfile({ child, db }) {
   );
 }
 
+// ── Attendance Donut Chart (SVG) ──────────────────────────────────
+function AttendanceDonut({ present, absent, late, size = 120 }) {
+  const total = present + absent + late || 1;
+  const r = 44; const cx = 60; const cy = 60;
+  const circ = 2 * Math.PI * r;
+  const pPct = present / total; const lPct = late / total; const aPct = absent / total;
+  const pDash = circ * pPct; const lDash = circ * lPct; const aDash = circ * aPct;
+  const pOffset = 0;
+  const lOffset = -(circ * pPct);
+  const aOffset = -(circ * (pPct + lPct));
+  const attPct = Math.round((present + late) / total * 100);
+  const col = attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626';
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" style={{display:'block',flexShrink:0}}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth="14"/>
+      {present > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#059669" strokeWidth="14"
+        strokeDasharray={`${pDash} ${circ - pDash}`} strokeDashoffset={pOffset}
+        strokeLinecap="butt" transform="rotate(-90 60 60)" style={{transition:'stroke-dasharray 0.8s ease'}}/>}
+      {late > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#d97706" strokeWidth="14"
+        strokeDasharray={`${lDash} ${circ - lDash}`} strokeDashoffset={lOffset}
+        strokeLinecap="butt" transform="rotate(-90 60 60)" style={{transition:'stroke-dasharray 0.8s ease'}}/>}
+      {absent > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ef4444" strokeWidth="14"
+        strokeDasharray={`${aDash} ${circ - aDash}`} strokeDashoffset={aOffset}
+        strokeLinecap="butt" transform="rotate(-90 60 60)" style={{transition:'stroke-dasharray 0.8s ease'}}/>}
+      <text x={cx} y={cy - 6} textAnchor="middle" fontSize="18" fontWeight="900" fill={col} fontFamily="Manrope,sans-serif">{attPct}%</text>
+      <text x={cx} y={cy + 10} textAnchor="middle" fontSize="9" fontWeight="700" fill="#94a3b8">Attendance</text>
+    </svg>
+  );
+}
+
+// ── Count-up hook ─────────────────────────────────────────────────
+function useCountUp(target, duration = 900) {
+  const [val, setVal] = useState(0);
+  const raf = useRef(null);
+  useEffect(() => {
+    const start = performance.now();
+    const isNum = typeof target === 'number';
+    if (!isNum) { setVal(target); return; }
+    const tick = (now) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.round(eased * target));
+      if (progress < 1) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, duration]);
+  return val;
+}
+
 // ── Parent Dashboard ──────────────────────────────────────────────
 function ParentDash({ db, child, student, setPage }) {
   const sid = child.sid || child.id;
@@ -542,68 +603,134 @@ function ParentDash({ db, child, student, setPage }) {
   const currentMonthPaid = paidMonths.has(currentMonth.toLowerCase());
   const feeStatusLabel = currentMonthPaid ? 'Paid' : (child.fst === 'Paid' ? 'Paid' : 'Due');
 
-  const STATS = [
-    { icon: 'fact_check', label: 'Attendance', value: attPct + '%', color: attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626', page: 'patt' },
-    { icon: 'payments', label: 'This Month', value: feeStatusLabel, color: feeStatusLabel==='Paid'?'#059669':'#dc2626', page: 'pfee' },
-    { icon: 'quiz', label: 'Exams Taken', value: recentMarks.length, color: '#1960a3', page: 'pmarks' },
-    { icon: 'event_note', label: 'Upcoming Exams', value: upcoming.length, color: '#7c3aed', page: 'pexam' },
+  const attColor = attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626';
+  const feeColor = feeStatusLabel === 'Paid' ? '#059669' : '#dc2626';
+
+  const countExams = useCountUp(recentMarks.length);
+  const countUpcoming = useCountUp(upcoming.length);
+
+  const motivations = [
+    'Keep up the great work! 🌟', 'Every day is a new opportunity to learn! 📚',
+    'Consistency is the key to success! 🎯', 'Stay focused and keep growing! 🚀',
   ];
+  const motivation = motivations[Math.floor((new Date().getDate()) % motivations.length)];
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Parent Dashboard</div>
-        <h1 style={{ fontSize: 30, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', margin: 0 }}>{name}</h1>
-        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Class {child.cls || '—'} · {db.settings?.year || ''}</div>
+    <div className="pp-fadein">
+      {/* Welcome Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #002045 0%, #1960a3 60%, #3b82f6 100%)',
+        borderRadius: 20, padding: '28px 32px', marginBottom: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+        boxShadow: '0 8px 32px rgba(0,31,77,0.18)',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(255,255,255,0.05)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-40,right:80,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.04)',pointerEvents:'none'}}/>
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:6}}>Welcome back</div>
+          <h1 style={{fontSize:26,fontWeight:900,color:'#fff',fontFamily:'Manrope,sans-serif',margin:'0 0 4px'}}>{name}</h1>
+          <div style={{fontSize:13,color:'rgba(255,255,255,0.65)',marginBottom:10}}>Class {child.cls || '—'} · {db.settings?.year || ''}</div>
+          <div style={{fontSize:13,color:'rgba(255,255,255,0.8)',fontStyle:'italic'}}>{motivation}</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+          {/* Donut chart */}
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+            <AttendanceDonut present={p} absent={a} late={l} size={110}/>
+            <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+              {[['#059669','Present',p],['#d97706','Late',l],['#ef4444','Absent',a]].map(([c,lbl,v])=>(
+                <div key={lbl} style={{display:'flex',alignItems:'center',gap:4}}>
+                  <div style={{width:8,height:8,borderRadius:'50%',background:c,flexShrink:0}}/>
+                  <span style={{fontSize:10,color:'rgba(255,255,255,0.65)',fontWeight:600}}>{lbl}: {v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Fee mini-card */}
+          <div style={{background:'rgba(255,255,255,0.1)',borderRadius:14,padding:'16px 20px',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.15)',minWidth:130}}>
+            <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>This Month Fee</div>
+            <div style={{fontSize:20,fontWeight:900,color: feeStatusLabel==='Paid'?'#6ee7b7':'#fca5a5',fontFamily:'Manrope,sans-serif',marginBottom:4}}>{feeStatusLabel}</div>
+            {monthlyFee > 0 && <div style={{fontSize:11,color:'rgba(255,255,255,0.5)'}}>₹{monthlyFee.toLocaleString('en-IN')}/mo</div>}
+            <div className="pp-pulse-badge" style={{display:'inline-block',marginTop:8,padding:'3px 10px',borderRadius:20,background: feeStatusLabel==='Paid'?'rgba(110,231,183,0.2)':'rgba(252,165,165,0.2)',border:`1px solid ${feeStatusLabel==='Paid'?'rgba(110,231,183,0.4)':'rgba(252,165,165,0.4)'}`,fontSize:10,fontWeight:700,color: feeStatusLabel==='Paid'?'#6ee7b7':'#fca5a5'}}>
+              {feeStatusLabel === 'Paid' ? '✓ Cleared' : '⚠ Due'}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="parent-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
-        {STATS.map(s => (
-          <div key={s.label} onClick={() => s.page && setPage(s.page)}
-            style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', cursor: s.page ? 'pointer' : 'default', transition: 'all 150ms' }}
-            onMouseEnter={e => { if (s.page) e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: s.color }}>{s.icon}</span>
+      {/* Stats grid */}
+      <div className="pp-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+        {[
+          { icon: 'fact_check', label: 'Attendance', rawVal: attPct, value: attPct + '%', color: attColor, page: 'patt' },
+          { icon: 'payments', label: 'Fee Status', value: feeStatusLabel, color: feeColor, page: 'pfee' },
+          { icon: 'quiz', label: 'Exams Taken', rawVal: recentMarks.length, value: countExams, color: '#1960a3', page: 'pmarks' },
+          { icon: 'event_note', label: 'Upcoming', rawVal: upcoming.length, value: countUpcoming, color: '#7c3aed', page: 'pexam' },
+        ].map(s => (
+          <div key={s.label} className="pp-stat" onClick={() => s.page && setPage(s.page)}
+            style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', cursor: s.page ? 'pointer' : 'default', border: '1px solid #f1f5f9' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 19, color: s.color, fontVariationSettings:"'FILL' 1" }}>{s.icon}</span>
             </div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: s.color, fontFamily: 'Manrope,sans-serif' }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{s.label}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: s.color, fontFamily: 'Manrope,sans-serif', lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 6, fontWeight: 600 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Upcoming exams */}
-      <div className="parent-dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#1e293b', marginBottom: 14 }}>Upcoming Exams</div>
+      {/* Bottom grid */}
+      <div className="pp-dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        {/* Upcoming exams */}
+        <div className="pp-card" style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>📅 Upcoming Exams</div>
+            <button onClick={() => setPage('pexam')} style={{ fontSize: 11, color: '#1960a3', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
+          </div>
           {upcoming.length === 0 ? (
-            <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>No upcoming exams</div>
+            <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+              <div style={{ fontSize: 12 }}>No upcoming exams</div>
+            </div>
           ) : upcoming.map(e => (
-            <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#7c3aed' }}>quiz</span>
+            <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f8fafc' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 17, color: '#7c3aed', fontVariationSettings:"'FILL' 1" }}>quiz</span>
               </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{e.name}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{e.su || ''} · {e.dt || 'TBD'}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{e.su || ''}{e.su && e.dt ? ' · ' : ''}{e.dt || 'TBD'}</div>
               </div>
+              <span style={{ padding: '3px 9px', borderRadius: 20, background: '#ede9fe', color: '#7c3aed', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>Soon</span>
             </div>
           ))}
         </div>
 
-        {/* Recent marks */}
-        <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#1e293b', marginBottom: 14 }}>Recent Results</div>
+        {/* Recent results */}
+        <div className="pp-card" style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>🏆 Recent Results</div>
+            <button onClick={() => setPage('pmarks')} style={{ fontSize: 11, color: '#1960a3', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>View all →</button>
+          </div>
           {recentMarks.length === 0 ? (
-            <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>No results yet</div>
+            <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📊</div>
+              <div style={{ fontSize: 12 }}>No results yet</div>
+            </div>
           ) : recentMarks.slice(-5).reverse().map((m, i) => {
             const pct = Math.round(m.marks / m.max * 100);
             const col = pct >= 75 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+            const g = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : pct >= 50 ? 'C' : 'F';
             return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ fontSize: 12, color: '#1e293b', fontWeight: 600 }}>{m.exam}</div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: col }}>{m.marks}/{m.max}</div>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid #f8fafc' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, color: '#1e293b', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.exam}</div>
+                  <div style={{ height: 4, borderRadius: 4, background: '#f1f5f9', marginTop: 5, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: pct + '%', background: col, borderRadius: 4, transition: 'width 0.8s ease' }}/>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: col }}>{m.marks}/{m.max}</div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: col }}>{g}</span>
+                </div>
               </div>
             );
           })}
@@ -618,18 +745,15 @@ function ParentFee({ db, child }) {
   const sid = child.sid || child.id;
   const pays = (db.pays || []).filter(p => p.sid === sid).sort((a,b)=>(b.dt||'').localeCompare(a.dt||''));
   const totalPaid = pays.reduce((s,p) => s + (p.amt||0), 0);
-  // Get monthly fee from class fee structure first, fall back to student's mf field
   const classFee = (db.settings?.classFees || {})[child.cls] || {};
   const monthlyFee = parseFloat(classFee.monthly) || child.mf || 0;
   const lastPay = pays[0];
 
-  // Determine paid months from payment records
   const paidMonths = new Set();
   pays.forEach(p => {
     if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m.toLowerCase()));
   });
 
-  // Current month due status
   const now = new Date();
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const currentMonth = MONTHS[now.getMonth()];
@@ -637,40 +761,83 @@ function ParentFee({ db, child }) {
   const nextMonthDueDate = new Date(now.getFullYear(), now.getMonth()+1, 10);
   const nextMonthPaid = paidMonths.has(nextMonth.toLowerCase());
 
-  // Find first unpaid upcoming month
   let dueMontIdx = now.getMonth() + 1;
   while (dueMontIdx < 12 && paidMonths.has(MONTHS[dueMontIdx].toLowerCase())) dueMontIdx++;
   const dueMonth = dueMontIdx < 12 ? MONTHS[dueMontIdx] : null;
   const dueDateObj = dueMonth ? new Date(now.getFullYear(), dueMontIdx, 10) : null;
   const currentMonthPaid = paidMonths.has(currentMonth.toLowerCase());
 
-  // Status: if current month paid → Paid, else if any payment exists → check, else Pending
   const feeStatus = currentMonthPaid ? 'Paid' : (child.fst === 'Paid' ? 'Paid' : 'Due');
   const statusColor = feeStatus === 'Paid' ? '#059669' : '#dc2626';
 
+  // Academic year months (April → March)
+  const academicMonths = ['April','May','June','July','August','September','October','November','December','January','February','March'];
+  const currentMonthIdx = now.getMonth();
+
   return (
-    <div>
+    <div className="pp-fadein">
       <div style={{marginBottom:24}}>
         <div style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>Fee Status</div>
         <h1 style={{fontSize:28,fontWeight:900,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>{child.fn} {child.ln}</h1>
         <div style={{fontSize:13,color:'#64748b',marginTop:4}}>Class {child.cls||'—'} · {db.settings?.year||''}</div>
       </div>
 
-      {/* Summary cards — no annual fee */}
+      {/* Summary cards */}
       <div className="pp-stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
         {[
-          {label:'Monthly Fee',   value: monthlyFee ? '₹'+monthlyFee.toLocaleString('en-IN') : '—', color:'#1960a3', icon:'receipt_long'},
-          {label:'Total Paid',    value:'₹'+totalPaid.toLocaleString('en-IN'), color:'#059669', icon:'check_circle'},
-          {label:'This Month',    value:feeStatus, color:statusColor, icon: feeStatus==='Paid'?'verified':'pending'},
+          {label:'Monthly Fee', value: monthlyFee ? '₹'+monthlyFee.toLocaleString('en-IN') : '—', color:'#1960a3', icon:'receipt_long'},
+          {label:'Total Paid',  value:'₹'+totalPaid.toLocaleString('en-IN'), color:'#059669', icon:'check_circle'},
+          {label:'This Month',  value:feeStatus, color:statusColor, icon: feeStatus==='Paid'?'verified':'pending'},
         ].map(s=>(
-          <div key={s.label} className="pp-stat" style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',transition:'all 150ms'}}>
-            <div style={{width:36,height:36,borderRadius:10,background:s.color+'18',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
-              <span className="material-symbols-outlined" style={{fontSize:18,color:s.color,fontVariationSettings:"'FILL' 1"}}>{s.icon}</span>
+          <div key={s.label} className="pp-stat" style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 2px 12px rgba(0,31,77,0.07)',border:'1px solid #f1f5f9'}}>
+            <div style={{width:38,height:38,borderRadius:11,background:s.color+'18',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
+              <span className="material-symbols-outlined" style={{fontSize:19,color:s.color,fontVariationSettings:"'FILL' 1"}}>{s.icon}</span>
             </div>
-            <div style={{fontSize:20,fontWeight:900,color:s.color,fontFamily:'Manrope,sans-serif'}}>{s.value}</div>
-            <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{s.label}</div>
+            <div style={{fontSize:22,fontWeight:900,color:s.color,fontFamily:'Manrope,sans-serif'}}>{s.value}</div>
+            <div style={{fontSize:11,color:'#64748b',marginTop:4,fontWeight:600}}>{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Payment Timeline */}
+      <div className="pp-card" style={{background:'#fff',borderRadius:16,padding:'24px',boxShadow:'0 2px 12px rgba(0,31,77,0.07)',border:'1px solid #f1f5f9',marginBottom:24}}>
+        <div style={{fontSize:13,fontWeight:800,color:'#1e293b',marginBottom:6}}>📅 Academic Year Payment Timeline</div>
+        <div style={{fontSize:11,color:'#94a3b8',marginBottom:18}}>{db.settings?.year || 'Current Year'} · April to March</div>
+        <div className="pp-fee-timeline" style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:8}}>
+          {academicMonths.map((month, idx) => {
+            const isPaid = paidMonths.has(month.toLowerCase());
+            const mIdx = MONTHS.indexOf(month);
+            const isCurrent = mIdx === currentMonthIdx;
+            const isFuture = !isPaid && (
+              (mIdx > currentMonthIdx && mIdx < 12) ||
+              (currentMonthIdx >= 9 && mIdx < 3)
+            );
+            let bg, color, border, emoji;
+            if (isPaid) { bg = '#dcfce7'; color = '#059669'; border = '#bbf7d0'; emoji = '✓'; }
+            else if (isCurrent) { bg = '#fef2f2'; color = '#dc2626'; border = '#fecaca'; emoji = '!'; }
+            else if (isFuture) { bg = '#f8fafc'; color = '#94a3b8'; border = '#e2e8f0'; emoji = '·'; }
+            else { bg = '#fef2f2'; color = '#dc2626'; border = '#fecaca'; emoji = '✗'; }
+            return (
+              <div key={month} style={{
+                borderRadius: 10, padding: '10px 6px', textAlign: 'center',
+                background: bg, border: `1.5px solid ${border}`,
+                boxShadow: isCurrent ? '0 0 0 3px rgba(220,38,38,0.15)' : 'none',
+                transition: 'all 150ms',
+              }}>
+                <div style={{fontSize:16,marginBottom:2}}>{emoji}</div>
+                <div style={{fontSize:10,fontWeight:800,color,lineHeight:1.2}}>{month.slice(0,3)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap'}}>
+          {[['#059669','#dcfce7','Paid'],['#dc2626','#fef2f2','Unpaid / Due'],['#94a3b8','#f8fafc','Upcoming']].map(([c,bg,lbl])=>(
+            <div key={lbl} style={{display:'flex',alignItems:'center',gap:6}}>
+              <div style={{width:12,height:12,borderRadius:3,background:bg,border:`1.5px solid ${c}33`}}/>
+              <span style={{fontSize:11,color:'#64748b',fontWeight:600}}>{lbl}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Next month due */}
@@ -702,12 +869,15 @@ function ParentFee({ db, child }) {
       )}
 
       {/* Payment history */}
-      <div style={{background:'#fff',borderRadius:16,boxShadow:'0 1px 8px rgba(0,31,77,0.06)',overflow:'hidden'}}>
+      <div className="pp-card" style={{background:'#fff',borderRadius:16,boxShadow:'0 2px 12px rgba(0,31,77,0.07)',overflow:'hidden',border:'1px solid #f1f5f9'}}>
         <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',fontSize:13,fontWeight:700,color:'#1e293b'}}>
           Payment History ({pays.length})
         </div>
         {pays.length === 0 ? (
-          <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>No payments recorded yet</div>
+          <div style={{padding:'48px',textAlign:'center',color:'#94a3b8'}}>
+            <div style={{fontSize:32,marginBottom:8}}>💳</div>
+            <div style={{fontSize:13}}>No payments recorded yet</div>
+          </div>
         ) : (
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse'}}>
@@ -742,48 +912,153 @@ function ParentAttendance({ db, child }) {
   const sid = child.sid || child.id;
   let p = 0, a = 0, l = 0;
   const history = [];
+  // Monthly breakdown
+  const monthlyData = {};
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
   Object.entries(db.att || {}).forEach(([date, d]) => {
     const v = d[sid];
     if (v === 'P') p++;
     else if (v === 'L') l++;
     else if (v === 'A') a++;
-    if (v) history.push({ date, status: v });
+    if (v) {
+      history.push({ date, status: v });
+      const mo = new Date(date).getMonth();
+      if (!monthlyData[mo]) monthlyData[mo] = { p: 0, a: 0, l: 0 };
+      if (v === 'P') monthlyData[mo].p++;
+      else if (v === 'A') monthlyData[mo].a++;
+      else if (v === 'L') monthlyData[mo].l++;
+    }
   });
   history.sort((a, b) => b.date.localeCompare(a.date));
   const tot = p + a + l;
   const pct = tot > 0 ? Math.round((p + l) / tot * 100) : 0;
   const col = pct >= 90 ? '#059669' : pct >= 75 ? '#d97706' : '#dc2626';
 
+  // Bar chart data — last 6 months with data
+  const chartMonths = Object.keys(monthlyData).map(Number).sort((a,b)=>a-b).slice(-6);
+  const maxDays = Math.max(...chartMonths.map(m => (monthlyData[m]?.p||0) + (monthlyData[m]?.a||0) + (monthlyData[m]?.l||0)), 1);
+
+  // Recent 30 days for calendar-style view
+  const recent30 = history.slice(0, 30);
+
   return (
-    <div>
+    <div className="pp-fadein">
       <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e293b', fontFamily: 'Manrope,sans-serif', marginBottom: 24 }}>Attendance</h1>
-      <div className="parent-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        {[{ label: 'Present', val: p, c: '#059669' }, { label: 'Absent', val: a, c: '#dc2626' }, { label: 'Late', val: l, c: '#d97706' }, { label: 'Attendance %', val: pct + '%', c: col }].map(s => (
-          <div key={s.label} style={{ background: '#fff', borderRadius: 14, padding: '18px', boxShadow: '0 1px 8px rgba(0,31,77,0.06)', textAlign: 'center' }}>
+
+      {/* Stat cards */}
+      <div className="pp-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+        {[{ label: 'Present', val: p, c: '#059669', icon: 'check_circle' },
+          { label: 'Absent', val: a, c: '#dc2626', icon: 'cancel' },
+          { label: 'Late', val: l, c: '#d97706', icon: 'schedule' },
+          { label: 'Attendance %', val: pct + '%', c: col, icon: 'fact_check' }].map(s => (
+          <div key={s.label} className="pp-stat" style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9', textAlign: 'center' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: s.c + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 19, color: s.c, fontVariationSettings:"'FILL' 1" }}>{s.icon}</span>
+            </div>
             <div style={{ fontSize: 26, fontWeight: 900, color: s.c, fontFamily: 'Manrope,sans-serif' }}>{s.val}</div>
-            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, fontWeight: 600 }}>{s.label}</div>
           </div>
         ))}
       </div>
-      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 1px 8px rgba(0,31,77,0.06)', overflow: 'hidden' }}>
+
+      {/* Animated progress bar */}
+      <div className="pp-card" style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>Overall Attendance</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: col, fontFamily: 'Manrope,sans-serif' }}>{pct}%</div>
+        </div>
+        <div style={{ height: 10, borderRadius: 10, background: '#f1f5f9', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: pct + '%', background: `linear-gradient(90deg, ${col}, ${col}cc)`, borderRadius: 10, transition: 'width 1s cubic-bezier(0.4,0,0.2,1)' }}/>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>0%</span>
+          <span style={{ fontSize: 10, color: pct >= 75 ? '#059669' : '#dc2626', fontWeight: 700 }}>
+            {pct >= 90 ? '🌟 Excellent' : pct >= 75 ? '✓ Satisfactory' : '⚠ Below Required (75%)'}
+          </span>
+          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>100%</span>
+        </div>
+      </div>
+
+      {/* Monthly bar chart (SVG) */}
+      {chartMonths.length > 0 && (
+        <div className="pp-card" style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginBottom: 16 }}>📊 Monthly Attendance</div>
+          <svg width="100%" viewBox={`0 0 ${chartMonths.length * 70} 120`} style={{ overflow: 'visible' }}>
+            {chartMonths.map((mo, i) => {
+              const d = monthlyData[mo] || { p: 0, a: 0, l: 0 };
+              const total = d.p + d.a + d.l;
+              const attPctM = total > 0 ? (d.p + d.l) / total : 0;
+              const barH = Math.round(attPctM * 80);
+              const barColor = attPctM >= 0.9 ? '#059669' : attPctM >= 0.75 ? '#d97706' : '#ef4444';
+              const x = i * 70 + 10;
+              return (
+                <g key={mo}>
+                  <rect x={x} y={80 - barH} width={50} height={barH} rx={6} fill={barColor} opacity="0.85"
+                    style={{ transition: 'height 0.8s ease, y 0.8s ease' }}/>
+                  <text x={x + 25} y={98} textAnchor="middle" fontSize="9" fontWeight="700" fill="#64748b">{MONTHS[mo]}</text>
+                  <text x={x + 25} y={80 - barH - 4} textAnchor="middle" fontSize="9" fontWeight="800" fill={barColor}>{Math.round(attPctM * 100)}%</text>
+                </g>
+              );
+            })}
+            <line x1="0" y1="80" x2={chartMonths.length * 70} y2="80" stroke="#f1f5f9" strokeWidth="1"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Calendar-style recent attendance */}
+      {recent30.length > 0 && (
+        <div className="pp-card" style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,31,77,0.07)', border: '1px solid #f1f5f9', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', marginBottom: 4 }}>🗓 Recent Attendance</div>
+          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 14 }}>Last {recent30.length} school days</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {recent30.map((r, i) => {
+              const sc = r.status === 'P' ? '#059669' : r.status === 'A' ? '#dc2626' : '#d97706';
+              const bg = r.status === 'P' ? '#dcfce7' : r.status === 'A' ? '#fee2e2' : '#fef3c7';
+              const d = new Date(r.date);
+              return (
+                <div key={i} title={`${d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})} — ${r.status === 'P' ? 'Present' : r.status === 'A' ? 'Absent' : 'Late'}`}
+                  style={{ width: 32, height: 32, borderRadius: 8, background: bg, border: `1.5px solid ${sc}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'default' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: sc, lineHeight: 1 }}>{d.getDate()}</div>
+                  <div style={{ fontSize: 7, fontWeight: 700, color: sc + 'aa', lineHeight: 1 }}>{d.toLocaleDateString('en-IN',{month:'short'})}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 14, marginTop: 12, flexWrap: 'wrap' }}>
+            {[['#059669','#dcfce7','Present'],['#dc2626','#fee2e2','Absent'],['#d97706','#fef3c7','Late']].map(([c,bg,lbl])=>(
+              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 12, height: 12, borderRadius: 3, background: bg, border: `1.5px solid ${c}44` }}/>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Full history table */}
+      <div className="pp-card" style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,31,77,0.07)', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', fontSize: 13, fontWeight: 700, color: '#1e293b' }}>Attendance History</div>
         {history.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No attendance records yet</div>
+          <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+            <div style={{ fontSize: 13 }}>No attendance records yet</div>
+          </div>
         ) : (
-          <div className="parent-table-wrap" style={{ overflowX:'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Date', 'Status'].map(h => <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', background: '#f8fafc' }}>{h}</th>)}</tr></thead>
-            <tbody>{history.slice(0, 60).map((r, i) => {
-              const sc = r.status === 'P' ? '#059669' : r.status === 'A' ? '#dc2626' : '#d97706';
-              const sl = r.status === 'P' ? 'Present' : r.status === 'A' ? 'Absent' : 'Late';
-              return (
-                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '10px 20px', fontSize: 13, color: '#1e293b' }}>{new Date(r.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                  <td style={{ padding: '10px 20px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc + '18', color: sc, fontSize: 11, fontWeight: 700 }}>{sl}</span></td>
-                </tr>
-              );
-            })}</tbody>
-          </table>
+          <div className="parent-table-wrap" style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr>{['Date', 'Status'].map(h => <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', background: '#f8fafc' }}>{h}</th>)}</tr></thead>
+              <tbody>{history.slice(0, 60).map((r, i) => {
+                const sc = r.status === 'P' ? '#059669' : r.status === 'A' ? '#dc2626' : '#d97706';
+                const sl = r.status === 'P' ? 'Present' : r.status === 'A' ? 'Absent' : 'Late';
+                return (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '10px 20px', fontSize: 13, color: '#1e293b' }}>{new Date(r.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td style={{ padding: '10px 20px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc + '18', color: sc, fontSize: 11, fontWeight: 700 }}>{sl}</span></td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
           </div>
         )}
       </div>
