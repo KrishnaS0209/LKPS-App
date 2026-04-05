@@ -26,7 +26,40 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [emailErr, setEmailErr] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
 
-  // Security: idle lock
+  const sideRef = React.useRef(null);
+  const sideOpen = React.useRef(false);
+
+  const expandSide = () => {
+    if (sideOpen.current) return;
+    sideOpen.current = true;
+    const el = sideRef.current; if (!el) return;
+    el.style.width = '230px';
+    el.querySelectorAll('.sb-label').forEach(n => { n.style.opacity='1'; n.style.maxWidth='180px'; });
+    el.querySelectorAll('.sb-user').forEach(n => { n.style.opacity='1'; n.style.maxWidth='160px'; });
+    el.querySelectorAll('.sb-btn').forEach(n => { n.style.justifyContent='flex-start'; n.style.padding='10px 12px'; });
+  };
+
+  const collapseSide = () => {
+    if (!sideOpen.current) return;
+    sideOpen.current = false;
+    const el = sideRef.current; if (!el) return;
+    el.style.width = '60px';
+    el.querySelectorAll('.sb-label').forEach(n => { n.style.opacity='0'; n.style.maxWidth='0'; });
+    el.querySelectorAll('.sb-user').forEach(n => { n.style.opacity='0'; n.style.maxWidth='0'; });
+    el.querySelectorAll('.sb-btn').forEach(n => { n.style.justifyContent='center'; n.style.padding='10px 0'; });
+  };
+
+  // Init collapsed state on desktop
+  React.useEffect(() => {
+    if (!isMobile) collapseSide();
+    else {
+      const el = sideRef.current; if (!el) return;
+      el.querySelectorAll('.sb-label').forEach(n => { n.style.opacity='1'; n.style.maxWidth='180px'; });
+      el.querySelectorAll('.sb-user').forEach(n => { n.style.opacity='1'; n.style.maxWidth='160px'; });
+      el.querySelectorAll('.sb-btn').forEach(n => { n.style.justifyContent='flex-start'; n.style.padding='10px 12px'; });
+      sideOpen.current = true;
+    }
+  }, [isMobile]);
   const [locked, setLocked] = useState(false);
   const [lockWarning, setLockWarning] = useState(false);
   const [lockPw, setLockPw] = useState('');
@@ -207,57 +240,68 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
       )}
 
       {/* Sidebar overlay */}
-      {mobileNavOpen && (
+      {/* Mobile overlay */}
+      {isMobile && mobileNavOpen && (
         <div onClick={() => setMobileNavOpen(false)}
           style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:1100,backdropFilter:'blur(2px)'}} />
       )}
 
-      {/* Sidebar */}
-      <aside style={{
-        width: 240, background: 'linear-gradient(180deg,#001530 0%,#002045 100%)',
-        display: 'flex', flexDirection: 'column', flexShrink: 0,
-        position: 'fixed', left: 0, top: 0, bottom: 0,
-        transform: mobileNavOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 240ms cubic-bezier(0.4,0,0.2,1)',
-        zIndex: 1200,
-        boxShadow: mobileNavOpen ? '4px 0 32px rgba(0,0,0,0.4)' : 'none',
-      }}>
-        {/* Header */}
-        <div style={{padding:'20px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
-          <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:4}}>Parent Portal</div>
-          <div style={{fontSize:13,fontWeight:800,color:'#fff',lineHeight:1.3}}>LORD KRISHNA<br/>PUBLIC SCHOOL</div>
+      {/* Sidebar — collapsed icon-only on desktop, hover to expand; drawer on mobile */}
+      <aside ref={sideRef}
+        onMouseEnter={isMobile ? undefined : expandSide}
+        onMouseLeave={isMobile ? undefined : collapseSide}
+        style={{
+          width: isMobile ? 230 : 60, flexShrink:0,
+          background:'linear-gradient(180deg,#001530 0%,#002045 100%)',
+          display:'flex', flexDirection:'column', overflow:'hidden',
+          position: isMobile ? 'fixed' : 'relative',
+          left:0, top: isMobile ? 0 : undefined, bottom: isMobile ? 0 : undefined,
+          transform: isMobile ? (mobileNavOpen ? 'translateX(0)' : 'translateX(-110%)') : 'none',
+          transition: isMobile ? 'transform 220ms ease' : 'width 260ms cubic-bezier(0.4,0,0.2,1)',
+          zIndex: isMobile ? 1200 : 50,
+          boxShadow:'4px 0 20px rgba(0,20,60,0.18)',
+        }}>
+        {/* Logo row */}
+        <div style={{padding:'16px 0 14px',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10,paddingLeft:isMobile?18:0,justifyContent:isMobile?'flex-start':'center',overflow:'hidden'}}>
+          <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <span className="material-symbols-outlined" style={{fontSize:16,color:'#fff',fontVariationSettings:"'FILL' 1"}}>school</span>
+          </div>
+          <div className="sb-label" style={{opacity:0,maxWidth:0,overflow:'hidden',transition:'opacity 200ms,max-width 260ms',whiteSpace:'nowrap'}}>
+            <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',letterSpacing:'0.15em',textTransform:'uppercase'}}>Parent Portal</div>
+            <div style={{fontSize:11,fontWeight:800,color:'#fff'}}>LKPS</div>
+          </div>
         </div>
-        {/* Student info */}
-        <div style={{padding:'14px 18px',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,color:'#fff',flexShrink:0,overflow:'hidden'}}>
+        {/* Student avatar */}
+        <div style={{padding:'12px 0',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:10,paddingLeft:isMobile?18:0,justifyContent:isMobile?'flex-start':'center',overflow:'hidden'}}>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'#fff',flexShrink:0,overflow:'hidden'}}>
             {photo ? <img src={photo} alt={name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : ini}
           </div>
-          <div style={{minWidth:0}}>
-            <div style={{fontSize:12,fontWeight:700,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
-            <div style={{fontSize:10,color:'rgba(255,255,255,0.4)'}}>Class {child.cls||'—'}</div>
+          <div className="sb-user" style={{opacity:0,maxWidth:0,overflow:'hidden',transition:'opacity 200ms,max-width 260ms',whiteSpace:'nowrap',minWidth:0}}>
+            <div style={{fontSize:11,fontWeight:700,color:'#fff',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
+            <div style={{fontSize:9,color:'rgba(255,255,255,0.4)'}}>Class {child.cls||'—'}</div>
           </div>
         </div>
         {/* Nav */}
-        <nav style={{flex:1,padding:'10px 10px',overflowY:'auto'}}>
+        <nav style={{flex:1,padding:'8px 8px',overflowY:'auto'}}>
           {PARENT_NAV.map(item => (
-            <button key={item.id} onClick={()=>setPage(item.id)}
-              className={`pp-nav-btn${page===item.id?' active':''}`}
-              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',marginBottom:2,fontWeight:600,fontSize:13,transition:'all 150ms',textAlign:'left',
+            <button key={item.id} onClick={()=>{setPage(item.id);if(isMobile)setMobileNavOpen(false);}}
+              className="sb-btn"
+              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 0',borderRadius:10,border:'none',cursor:'pointer',marginBottom:2,fontWeight:600,fontSize:13,transition:'all 150ms',textAlign:'left',justifyContent:'center',
                 background: page===item.id ? 'rgba(96,165,250,0.18)' : 'transparent',
                 color: page===item.id ? '#60a5fa' : 'rgba(255,255,255,0.55)'}}>
-              <span className="material-symbols-outlined" style={{fontSize:18,fontVariationSettings:page===item.id?"'FILL' 1":"'FILL' 0"}}>{item.icon}</span>
-              {item.label}
+              <span className="material-symbols-outlined" style={{fontSize:20,flexShrink:0,fontVariationSettings:page===item.id?"'FILL' 1":"'FILL' 0"}}>{item.icon}</span>
+              <span className="sb-label" style={{opacity:0,maxWidth:0,overflow:'hidden',transition:'opacity 200ms,max-width 260ms',whiteSpace:'nowrap',fontSize:13}}>{item.label}</span>
             </button>
           ))}
         </nav>
         {/* Logout */}
-        <div style={{padding:'12px 10px',borderTop:'1px solid rgba(255,255,255,0.07)'}}>
-          <button onClick={onLogout}
-            style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',background:'transparent',color:'rgba(255,255,255,0.45)',fontWeight:600,fontSize:13,transition:'all 150ms'}}
+        <div style={{padding:'8px 8px',borderTop:'1px solid rgba(255,255,255,0.07)'}}>
+          <button onClick={onLogout} className="sb-btn"
+            style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 0',borderRadius:10,border:'none',cursor:'pointer',background:'transparent',color:'rgba(255,255,255,0.45)',fontWeight:600,fontSize:13,transition:'all 150ms',justifyContent:'center'}}
             onMouseEnter={e=>{e.currentTarget.style.background='rgba(239,68,68,0.15)';e.currentTarget.style.color='#fca5a5';}}
             onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.45)';}}>
-            <span className="material-symbols-outlined" style={{fontSize:18}}>logout</span>
-            Sign Out
+            <span className="material-symbols-outlined" style={{fontSize:20,flexShrink:0}}>logout</span>
+            <span className="sb-label" style={{opacity:0,maxWidth:0,overflow:'hidden',transition:'opacity 200ms,max-width 260ms',whiteSpace:'nowrap',fontSize:13}}>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -267,10 +311,12 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
         {/* Top bar */}
         <header style={{height:60,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',background:'#fff',borderBottom:'1px solid #e8edf5',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',zIndex:10}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <button onClick={()=>setMobileNavOpen(v=>!v)}
-              style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#1960a3',flexShrink:0}}>
-              <span className="material-symbols-outlined" style={{fontSize:20}}>{mobileNavOpen?'close':'menu'}</span>
-            </button>
+            {isMobile && (
+              <button onClick={()=>setMobileNavOpen(v=>!v)}
+                style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#1960a3',flexShrink:0}}>
+                <span className="material-symbols-outlined" style={{fontSize:20}}>{mobileNavOpen?'close':'menu'}</span>
+              </button>
+            )}
             <div className="pp-header-title">
               <div style={{fontSize:13,fontWeight:800,color:'#1e293b'}}>LORD KRISHNA PUBLIC SCHOOL</div>
               <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,letterSpacing:'0.06em',textTransform:'uppercase'}}>Parent Portal</div>
