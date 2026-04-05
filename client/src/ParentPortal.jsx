@@ -534,13 +534,18 @@ function ParentDash({ db, child, student, setPage }) {
   // Fee summary
   const pays = (db.pays || []).filter(p => p.sid === sid);
   const totalPaid = pays.reduce((s, p) => s + (p.amt || 0), 0);
-  const totalFee = child.fee || 0;
-  const feeDue = Math.max(0, totalFee - totalPaid);
+  const monthlyFee = child.mf || 0;
   const lastPay = pays.sort((a,b)=>(b.dt||'').localeCompare(a.dt||''))[0];
+  const paidMonths = new Set();
+  pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m)); });
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const currentMonth = MONTHS[new Date().getMonth()];
+  const currentMonthPaid = paidMonths.has(currentMonth);
+  const feeStatusLabel = !monthlyFee ? (child.fst||'Pending') : currentMonthPaid ? 'Paid' : 'Due';
 
   const STATS = [
     { icon: 'fact_check', label: 'Attendance', value: attPct + '%', color: attPct >= 90 ? '#059669' : attPct >= 75 ? '#d97706' : '#dc2626', page: 'patt' },
-    { icon: 'payments', label: 'Fee Due', value: '₹'+feeDue.toLocaleString('en-IN'), color: feeDue > 0 ? '#dc2626' : '#059669', page: 'pfee' },
+    { icon: 'payments', label: 'This Month', value: feeStatusLabel, color: feeStatusLabel==='Paid'?'#059669':'#dc2626', page: 'pfee' },
     { icon: 'quiz', label: 'Exams Taken', value: recentMarks.length, color: '#1960a3', page: 'pmarks' },
     { icon: 'event_note', label: 'Upcoming Exams', value: upcoming.length, color: '#7c3aed', page: 'pexam' },
   ];
@@ -613,14 +618,112 @@ function ParentDash({ db, child, student, setPage }) {
 function ParentFee({ db, child }) {
   const sid = child.sid || child.id;
   const pays = (db.pays || []).filter(p => p.sid === sid).sort((a,b)=>(b.dt||'').localeCompare(a.dt||''));
-  const totalFee = child.fee || 0;
   const totalPaid = pays.reduce((s,p) => s + (p.amt||0), 0);
-  const feeDue = Math.max(0, totalFee - totalPaid);
+  const monthlyFee = child.mf || 0;
   const lastPay = pays[0];
-  const feeStatus = totalFee > 0
-    ? (feeDue === 0 ? 'Paid' : totalPaid > 0 ? 'Partial' : 'Pending')
-    : (child.fst || 'Pending');
-  const statusColor = feeStatus === 'Paid' ? '#059669' : feeStatus === 'Partial' ? '#d97706' : '#dc2626';
+
+  // Determine paid months from payment records
+  const paidMonths = new Set();
+  pays.forEach(p => { if (p.mn) p.mn.split(',').map(m=>m.trim()).filter(Boolean).forEach(m=>paidMonths.add(m)); });
+
+  // Current month due status
+  const now = new Date();
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const currentMonth = MONTHS[now.getMonth()];
+  const nextMonth = MONTHS[(now.getMonth()+1)%12];
+  const nextMonthDueDate = new Date(now.getFullYear(), now.getMonth()+1, 10); // due by 10th of next month
+  const currentMonthPaid = paidMonths.has(currentMonth);
+
+  // Status based on current month
+  const feeStatus = !monthlyFee ? (child.fst||'Pending') : currentMonthPaid ? 'Paid' : 'Due';
+  const statusColor = feeStatus === 'Paid' ? '#059669' : '#dc2626';
+
+  return (
+    <div>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:11,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:6}}>Fee Status</div>
+        <h1 style={{fontSize:28,fontWeight:900,color:'#1e293b',fontFamily:'Manrope,sans-serif',margin:0}}>{child.fn} {child.ln}</h1>
+        <div style={{fontSize:13,color:'#64748b',marginTop:4}}>Class {child.cls||'—'} · {db.settings?.year||''}</div>
+      </div>
+
+      {/* Summary cards — no annual fee */}
+      <div className="pp-stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
+        {[
+          {label:'Monthly Fee',   value: monthlyFee ? '₹'+monthlyFee.toLocaleString('en-IN') : '—', color:'#1960a3', icon:'receipt_long'},
+          {label:'Total Paid',    value:'₹'+totalPaid.toLocaleString('en-IN'), color:'#059669', icon:'check_circle'},
+          {label:'This Month',    value:feeStatus, color:statusColor, icon: feeStatus==='Paid'?'verified':'pending'},
+        ].map(s=>(
+          <div key={s.label} className="pp-stat" style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 1px 8px rgba(0,31,77,0.06)',transition:'all 150ms'}}>
+            <div style={{width:36,height:36,borderRadius:10,background:s.color+'18',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
+              <span className="material-symbols-outlined" style={{fontSize:18,color:s.color,fontVariationSettings:"'FILL' 1"}}>{s.icon}</span>
+            </div>
+            <div style={{fontSize:20,fontWeight:900,color:s.color,fontFamily:'Manrope,sans-serif'}}>{s.value}</div>
+            <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Next month due */}
+      {monthlyFee > 0 && (
+        <div style={{background:'linear-gradient(135deg,#002045,#1960a3)',borderRadius:16,padding:'20px 24px',marginBottom:24,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+          <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <span className="material-symbols-outlined" style={{fontSize:22,color:'#fff',fontVariationSettings:"'FILL' 1"}}>event_upcoming</span>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.55)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:2}}>Next Month Due</div>
+            <div style={{fontSize:20,fontWeight:900,color:'#fff',fontFamily:'Manrope,sans-serif'}}>₹{monthlyFee.toLocaleString('en-IN')} · {nextMonth}</div>
+            <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginTop:2}}>
+              Due by {nextMonthDueDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
+            </div>
+          </div>
+          {lastPay && (
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:2}}>Last Payment</div>
+              <div style={{fontSize:16,fontWeight:800,color:'#fff'}}>₹{(lastPay.amt||0).toLocaleString('en-IN')}</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.55)'}}>
+                {lastPay.dt ? new Date(lastPay.dt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—'}
+                {lastPay.mn ? ` · ${lastPay.mn}` : ''}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Payment history */}
+      <div style={{background:'#fff',borderRadius:16,boxShadow:'0 1px 8px rgba(0,31,77,0.06)',overflow:'hidden'}}>
+        <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',fontSize:13,fontWeight:700,color:'#1e293b'}}>
+          Payment History ({pays.length})
+        </div>
+        {pays.length === 0 ? (
+          <div style={{padding:'48px',textAlign:'center',color:'#94a3b8',fontSize:13}}>No payments recorded yet</div>
+        ) : (
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr>{['Date','Amount','Mode','Month / Note','Receipt'].map(h=>(
+                  <th key={h} style={{padding:'10px 20px',textAlign:'left',fontSize:10,fontWeight:800,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',background:'#f8fafc'}}>{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody>
+                {pays.map((p,i)=>(
+                  <tr key={p.id||i} style={{borderBottom:'1px solid #f1f5f9'}}>
+                    <td style={{padding:'12px 20px',fontSize:13,color:'#1e293b',fontWeight:600}}>
+                      {p.dt ? new Date(p.dt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—'}
+                    </td>
+                    <td style={{padding:'12px 20px',fontSize:14,fontWeight:800,color:'#059669'}}>₹{(p.amt||0).toLocaleString('en-IN')}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.md||p.mode||'—'}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.mn||p.note||'—'}</td>
+                    <td style={{padding:'12px 20px',fontSize:12,color:'#64748b'}}>{p.rc||'—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
   return (
     <div>
