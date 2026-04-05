@@ -334,13 +334,8 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
             </div>
           </div>
 
-          {/* Right — session badge + alert bell + user */}
+          {/* Right — alert bell + user */}
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            {/* Session badge */}
-            <div style={{background:'#eef4ff',color:'#1960a3',fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:20,border:'1px solid #c7d9f5',letterSpacing:'0.04em',display:'flex',alignItems:'center',gap:5}}>
-              <span className="material-symbols-outlined" style={{fontSize:13}}>calendar_today</span>
-              {db.settings?.year||'2025-26'}
-            </div>
 
             {/* Alert bell — dropdown with pending fees, upcoming exams, events */}
             {(() => {
