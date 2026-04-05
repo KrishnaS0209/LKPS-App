@@ -1,6 +1,6 @@
 // ParentPortal — separate file to keep App.jsx manageable
-import React, { useState, useEffect } from 'react';
-import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterOtp } from './storage';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getMessages, sendMessage, studentRegisterEmail, studentRequestRegisterOtp, apiParentLogin } from './storage';
 
 const PARENT_NAV = [
   { id:'pdash',  icon:'home',          label:'Dashboard'   },
@@ -12,6 +12,9 @@ const PARENT_NAV = [
   { id:'pmsg',   icon:'mail',          label:'Messages'    },
 ];
 
+const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 min → lock
+const WARN_BEFORE  =  2 * 60 * 1000; // warn 2 min before
+
 export default function ParentPortal({ db, student, activeSessionId, onLogout }) {
   const [page, setPage] = useState('pdash');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
@@ -19,9 +22,51 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
   const [showEmailPrompt, setShowEmailPrompt] = useState(!(student.email || student.em));
   const [emailInput, setEmailInput] = useState('');
   const [emailOtp, setEmailOtp] = useState('');
-  const [emailStep, setEmailStep] = useState('input'); // 'input' | 'otp'
+  const [emailStep, setEmailStep] = useState('input');
   const [emailErr, setEmailErr] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
+
+  // Security: idle lock
+  const [locked, setLocked] = useState(false);
+  const [lockWarning, setLockWarning] = useState(false);
+  const [lockPw, setLockPw] = useState('');
+  const [lockErr, setLockErr] = useState('');
+  const idleTimer = useRef(null);
+  const warnTimer = useRef(null);
+
+  const clearTimers = () => { clearTimeout(idleTimer.current); clearTimeout(warnTimer.current); };
+
+  const resetIdleTimer = useCallback(() => {
+    if (locked) return;
+    clearTimers();
+    setLockWarning(false);
+    warnTimer.current = setTimeout(() => setLockWarning(true), IDLE_TIMEOUT - WARN_BEFORE);
+    idleTimer.current = setTimeout(() => { setLocked(true); setLockWarning(false); }, IDLE_TIMEOUT);
+  }, [locked]);
+
+  useEffect(() => {
+    const events = ['mousemove','keydown','mousedown','touchstart','scroll','click'];
+    events.forEach(e => window.addEventListener(e, resetIdleTimer, { passive: true }));
+    resetIdleTimer();
+    return () => { events.forEach(e => window.removeEventListener(e, resetIdleTimer)); clearTimers(); };
+  }, [resetIdleTimer]);
+
+  const tryUnlock = async () => {
+    if (!lockPw) { setLockErr('Enter your password'); return; }
+    try {
+      await apiParentLogin(student.puser || '', lockPw);
+      setLocked(false); setLockPw(''); setLockErr(''); resetIdleTimer();
+    } catch(e) {
+      // fallback: check against student record in db
+      const s = db.students.find(x => (x.sid||x.id) === student.sid);
+      if (s && s.ppass === lockPw) {
+        setLocked(false); setLockPw(''); setLockErr(''); resetIdleTimer();
+      } else {
+        setLockErr('Incorrect password'); setLockPw('');
+      }
+    }
+  };
+
   const name = (student.fn || '') + ' ' + (student.ln || '');
   const photo = student.photo || '';
   const ini = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -65,6 +110,30 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
     if (isMobile) setMobileNavOpen(false);
   }, [page, isMobile]);
 
+  // Lock screen
+  if (locked) return (
+    <div style={{position:'fixed',inset:0,background:'linear-gradient(145deg,#001530,#002045)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:99999,fontFamily:'Inter,sans-serif'}}>
+      <div style={{width:'100%',maxWidth:340,padding:'32px 28px',borderRadius:20,background:'rgba(255,255,255,0.06)',border:'1.5px solid rgba(255,255,255,0.12)',backdropFilter:'blur(20px)',boxShadow:'0 24px 60px rgba(0,0,0,0.5)',textAlign:'center'}}>
+        <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#1960a3,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',boxShadow:'0 8px 24px rgba(25,96,163,0.4)'}}>
+          <span className="material-symbols-outlined" style={{fontSize:26,color:'#fff',fontVariationSettings:"'FILL' 1"}}>lock</span>
+        </div>
+        <div style={{fontSize:17,fontWeight:800,color:'#fff',marginBottom:4}}>Session Locked</div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginBottom:6}}>Locked due to inactivity</div>
+        <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.55)',marginBottom:16}}>{name}</div>
+        {lockErr && <div style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:10,padding:'8px 12px',fontSize:12,fontWeight:600,marginBottom:12,border:'1px solid rgba(239,68,68,0.3)'}}>{lockErr}</div>}
+        <input value={lockPw} onChange={e=>{setLockPw(e.target.value);setLockErr('');}} type="password"
+          placeholder="Enter your password" onKeyDown={e=>e.key==='Enter'&&tryUnlock()} autoFocus
+          style={{width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.07)',fontSize:13,color:'#fff',outline:'none',boxSizing:'border-box',marginBottom:12}}/>
+        <button onClick={tryUnlock} style={{width:'100%',padding:'12px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#002045,#1960a3)',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer',marginBottom:10}}>
+          Unlock
+        </button>
+        <button onClick={onLogout} style={{width:'100%',padding:'9px',borderRadius:12,border:'1.5px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.45)',fontWeight:600,fontSize:12,cursor:'pointer'}}>
+          Sign out instead
+        </button>
+      </div>
+    </div>
+  );
+
   const pages = {
     pdash:  <ParentDash db={db} child={child} student={student} setPage={setPage} />,
     pfee:   <ParentFee db={db} child={child} />,
@@ -89,6 +158,14 @@ export default function ParentPortal({ db, student, activeSessionId, onLogout })
           .pp-header-title{display:none!important}
         }
       `}</style>
+
+      {/* Idle warning banner */}
+      {lockWarning && (
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9998,background:'#b45309',color:'#fff',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:13,fontWeight:600,boxShadow:'0 2px 12px rgba(0,0,0,0.3)'}}>
+          <span>⚠️ You'll be locked out in 2 minutes due to inactivity.</span>
+          <button onClick={resetIdleTimer} style={{background:'rgba(255,255,255,0.2)',border:'none',color:'#fff',padding:'5px 14px',borderRadius:8,cursor:'pointer',fontWeight:700,fontSize:12}}>Stay Active</button>
+        </div>
+      )}
 
       {/* Email Registration Prompt Modal */}
       {showEmailPrompt && (
